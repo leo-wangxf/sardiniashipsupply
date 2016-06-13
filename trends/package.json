@@ -1,0 +1,22 @@
+{
+  "name": "trends",
+  "version": "0.0.1",
+  "description": "Trends save and search routine",
+  "main": "server.js",
+  "dependencies": {
+    "boom": "^3.2.1",
+    "hapi": "^13.4.1",
+    "hapi-fields": "^0.2.0",
+    "hapi-paginate": "^0.4.1",
+    "joi": "^8.4.1",
+    "mongoose": "^4.4.20"
+  },
+  "keywords": [
+    "hapi",
+    "mongo",
+    "mongoose",
+    "analytics"
+  ],
+  "author": "Mauro",
+  "license": "MIT"
+}
