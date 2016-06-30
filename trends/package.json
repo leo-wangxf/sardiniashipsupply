@@ -9,6 +9,7 @@
     "hapi-fields": "^0.2.0",
     "hapi-paginate": "^0.4.1",
     "joi": "^8.4.1",
+    "lout": "^9.0.1",
     "mongoose": "^4.4.20"
   },
   "keywords": [

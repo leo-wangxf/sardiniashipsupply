@@ -23,9 +23,11 @@ exports.index = function(server) {
     server.route({
         method: 'GET',
         path: '/trends',
-        config: {
-
-        },
+        // config: {
+        //     description: 'Say hello!',
+        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
+        //     tags: ['api', 'greeting']
+        // },
         handler: function(request, reply) {
             var query = request.query;
             if ("dateFrom" in request.query || "dateTo" in request.query) {
@@ -50,7 +52,6 @@ exports.index = function(server) {
                     reply(Boom.badImplementation(err)); // 500 error
                 }
             });
-
         }
     });
 };
