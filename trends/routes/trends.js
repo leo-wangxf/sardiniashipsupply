@@ -10,6 +10,10 @@ module.exports = exports = function(server) {
     exports.create(server);
     exports.show(server);
     exports.remove(server);
+    exports.mostWanted(server);
+    exports.notfound(server);
+    exports.rare(server);
+    exports.mostFound(server);
 };
 
 /**
@@ -45,13 +49,115 @@ exports.index = function(server) {
                 }
 
             }
-            Trend.find(query, function(err, trends) {
+            Trend.find(query, null, {skip: request.limit * (request.page-1), limit: request.limit},function(err, results) {
                 if (!err) {
-                    reply( trends );
+                    reply( results );
                 } else {
                     reply(Boom.badImplementation(err)); // 500 error
                 }
             });
+        }
+    });
+};
+
+exports.mostWanted = function(server) {
+    // GET /events
+    server.route({
+        method: 'GET',
+        path: '/trends/mostwanted',
+        // config: {
+        //     description: 'Say hello!',
+        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
+        //     tags: ['api', 'greeting']
+        // },
+        handler: function(request, reply) {
+
+            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}},{ $sort : { count : -1} },  { $limit : request.limit }], function (err, result) {
+                if (err) {
+                    console.log(err);
+                    return  reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(result);
+                reply( result );
+            });
+
+        }
+    });
+};
+
+exports.mostFound = function(server) {
+    // GET /events
+    server.route({
+        method: 'GET',
+        path: '/trends/mostfound',
+        // config: {
+        //     description: 'Say hello!',
+        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
+        //     tags: ['api', 'greeting']
+        // },
+        handler: function(request, reply) {
+
+            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}},{ $sort : { results : -1} },{$skip : (request.page-1)*request.limit},  { $limit : request.limit }], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return  reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply( results );
+            });
+
+        }
+    });
+};
+
+exports.rare = function(server) {
+    // GET /events
+    server.route({
+        method: 'GET',
+        path: '/trends/rare',
+        // config: {
+        //     description: 'Say hello!',
+        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
+        //     tags: ['api', 'greeting']
+        // },
+        handler: function(request, reply) {
+
+
+
+            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}}, { $sort : { count : 1, results:1} }, {$skip : (request.page-1)*request.limit}, { $limit : request.limit }], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return  reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply( results );
+            });
+
+        }
+    });
+};
+
+exports.notfound = function(server) {
+    // GET /events
+    server.route({
+        method: 'GET',
+        path: '/trends/notfound',
+        // config: {
+        //     description: 'Say hello!',
+        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
+        //     tags: ['api', 'greeting']
+        // },
+        handler: function(request, reply) {
+
+            Trend.aggregate([{ $match: { results : {$lt: 1} } },{ "$group": {_id: "$keyword", results :{$sum:"$results" }, count :{$sum:1}} }, { $sort : { count : -1} }, { $limit:request.limit }, {$skip:(request.page-1)*request.limit}], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return  reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply( results );
+            });
+
         }
     });
 };

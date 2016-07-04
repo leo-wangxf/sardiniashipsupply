@@ -10,7 +10,7 @@ var Mongoose = require('mongoose');
 
 
 // MongoDB Connection
-Mongoose.connect('mongodb://localhost/trends');
+Mongoose.connect('mongodb://seidue.crs4.it:3996/trends');
 
 var rootHandler = function (request, reply) {
     reply({message: "Hello from Trends!"});
@@ -88,10 +88,10 @@ server.register([require('vision'), require('inert'), {register: require('lout')
 server.register({
     register: require('hapi-paginate'),
     options: {
-        limit: 100,
+        limit: 20,
         name: 'metadata',
         results: 'results',
-        routes: ['/trends']
+        routes: ['/trends','/trends/mostfound','/trends/mostwanted','/trends/rare', '/trends/notfound']
     }
 });
 
