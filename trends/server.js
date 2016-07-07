@@ -17,17 +17,17 @@ var rootHandler = function (request, reply) {
 };
 
 // Set root route
-server.route({
-    method: 'GET',
-    path: '/',
-    handler: rootHandler,
-    config: {
-        plugins: {
-            lout: false
-        }
-    }
-
-});
+// server.route({
+//     method: 'GET',
+//     path: '/',
+//     handler: rootHandler,
+//     config: {
+//         plugins: {
+//             lout: false
+//         }
+//     }
+//
+// });
 
 routes.init(server);
 
@@ -91,11 +91,31 @@ server.register({
         limit: 20,
         name: 'metadata',
         results: 'results',
-        routes: ['/trends','/trends/mostfound','/trends/mostwanted','/trends/rare', '/trends/notfound']
+        routes: ['/api/trends', '/api/trends/mostfound', '/api/trends/mostwanted', '/api/trends/rare', '/api/trends/notfound']
     }
 });
 
 
+server.register(require('inert'), function (err) {
+
+    if (err) {
+        throw err;
+    }
+
+    server.route({
+        method: 'GET',
+        path: '/{param*}',
+        handler: {
+            directory: {
+                path: 'static',
+                listing: true
+            }
+        }
+    });
+
+});
+
 server.start(function () {
     console.log('Server started at: ' + server.info.uri);
 });
+

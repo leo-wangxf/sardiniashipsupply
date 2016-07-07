@@ -5,7 +5,7 @@ var Trend = require('../models/trends').Trend; // Mongoose ODM
 // Exports = exports? Huh? Read: http://stackoverflow.com/a/7142924/5210
 module.exports = exports = function(server) {
 
-    console.log('Loading events routes');
+    console.log('Loading trends routes');
     exports.index(server);
     exports.create(server);
     exports.show(server);
@@ -23,10 +23,10 @@ module.exports = exports = function(server) {
  * @param server - The Hapi Server
  */
 exports.index = function(server) {
-    // GET /events
+    // GET /trends
     server.route({
         method: 'GET',
-        path: '/trends',
+        path: '/api/trends',
         // config: {
         //     description: 'Say hello!',
         //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
@@ -61,10 +61,10 @@ exports.index = function(server) {
 };
 
 exports.mostWanted = function(server) {
-    // GET /events
+    // GET /trends
     server.route({
         method: 'GET',
-        path: '/trends/mostwanted',
+        path: '/api/trends/mostwanted',
         // config: {
         //     description: 'Say hello!',
         //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
@@ -72,7 +72,7 @@ exports.mostWanted = function(server) {
         // },
         handler: function(request, reply) {
 
-            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}},{ $sort : { count : -1} },  { $limit : request.limit }], function (err, result) {
+            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"},fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"} }},{ $sort : { count : -1} },  { $limit : request.limit }], function (err, result) {
                 if (err) {
                     console.log(err);
                     return  reply(Boom.badImplementation(err)); // 500 error;
@@ -86,10 +86,10 @@ exports.mostWanted = function(server) {
 };
 
 exports.mostFound = function(server) {
-    // GET /events
+    // GET /trends
     server.route({
         method: 'GET',
-        path: '/trends/mostfound',
+        path: '/api/trends/mostfound',
         // config: {
         //     description: 'Say hello!',
         //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
@@ -97,7 +97,7 @@ exports.mostFound = function(server) {
         // },
         handler: function(request, reply) {
 
-            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}},{ $sort : { results : -1} },{$skip : (request.page-1)*request.limit},  { $limit : request.limit }], function (err, results) {
+            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"},fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"}}},{ $sort : { results : -1} },{$skip : (request.page-1)*request.limit},  { $limit : request.limit }], function (err, results) {
                 if (err) {
                     console.log(err);
                     return  reply(Boom.badImplementation(err)); // 500 error;
@@ -111,10 +111,10 @@ exports.mostFound = function(server) {
 };
 
 exports.rare = function(server) {
-    // GET /events
+    // GET /trends
     server.route({
         method: 'GET',
-        path: '/trends/rare',
+        path: '/api/trends/rare',
         // config: {
         //     description: 'Say hello!',
         //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
@@ -138,10 +138,10 @@ exports.rare = function(server) {
 };
 
 exports.notfound = function(server) {
-    // GET /events
+    // GET /trends
     server.route({
         method: 'GET',
-        path: '/trends/notfound',
+        path: '/api/trends/notfound',
         // config: {
         //     description: 'Say hello!',
         //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
@@ -149,7 +149,7 @@ exports.notfound = function(server) {
         // },
         handler: function(request, reply) {
 
-            Trend.aggregate([{ $match: { results : {$lt: 1} } },{ "$group": {_id: "$keyword", results :{$sum:"$results" }, count :{$sum:1}} }, { $sort : { count : -1} }, { $limit:request.limit }, {$skip:(request.page-1)*request.limit}], function (err, results) {
+            Trend.aggregate([{ $match: { results : {$lt: 1} } },{ "$group": {_id: "$keyword", results :{$sum:"$results" }, count :{$sum:1}, fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"}} }, { $sort : { count : -1} }, { $limit:request.limit }, {$skip:(request.page-1)*request.limit}], function (err, results) {
                 if (err) {
                     console.log(err);
                     return  reply(Boom.badImplementation(err)); // 500 error;
@@ -174,7 +174,7 @@ exports.create = function(server) {
 
     server.route({
         method: 'POST',
-        path: '/trends',
+        path: '/api/trends',
         handler: function(request, reply) {
 
             trend = new Trend();
@@ -186,7 +186,7 @@ exports.create = function(server) {
 
             trend.save(function(err) {
                 if (!err) {
-                    reply(trend).created('/trends/' + trend._id); // HTTP 201
+                    reply(trend).created('/api/trends/' + trend._id); // HTTP 201
                 } else {
                     reply(Boom.forbidden(getErrorMessageFrom(err))); // HTTP 403
                 }
@@ -205,7 +205,7 @@ exports.show = function(server) {
 
     server.route({
         method: 'GET',
-        path: '/trends/{id}',
+        path: '/api/trends/{id}',
         config: {
             validate: {
                 params: {
@@ -239,7 +239,7 @@ exports.show = function(server) {
 exports.remove = function(server) {
     server.route({
         method: 'DELETE',
-        path: '/trends/{id}',
+        path: '/api/trends/{id}',
         config: {
             validate: {
                 params: {
