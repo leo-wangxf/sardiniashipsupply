@@ -5,8 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <meta name="description" content="">
-    <meta name="author" content="">
+
+    <meta name="description" content="Trends example">
+    <meta name="author" content="Mauro">
     <link rel="icon" href="../../favicon.ico">
 
     <title>Trends example</title>
@@ -28,7 +29,7 @@
             text-align: center;
         }
     </style>
-    <![endif]-->
+
 </head>
 
 <body>
@@ -89,162 +90,11 @@
             </div>
         </div>
 
-        <script type="text/javascript">
-
-            (function () { // open IIFE
-
-                var container = document.getElementById('mostwanted');
-
-                $.get("/api/trends/mostwanted?limit=10", function (data, status) {
-
-                    console.log(data.results);
-                    var items = [];
-                    for (var i = 0; i < data.results.length; ++i) {
-                        var e = data.results[i];
-                        console.log(e);
-                        items.push({x: i, label: {content: e._id}, y: e.count});
-                    }
-                    console.log(items);
-                    var dataset = new vis.DataSet(items);
-                    var options = {
-                        style: 'bar',
-                        barChart: {width: 50, align: 'center'}, // align: left, center, right
-                        drawPoints: {
-                            onRender: function (item, group, grap2d) {
-                                return item.label != null;
-                            },
-                            style: 'circle'
-                        },
-                        dataAxis: {
-                            icons: true
-                        },
-                        orientation: 'top'
-
-                    };
-                    var graph2d = new vis.Graph2d(container, items, options);
-
-                });
-
-
-            }()); // close IIFE
-
-            (function () { // open IIFE
-
-                var container = document.getElementById('mostfound');
-
-                $.get("/api/trends/mostfound?limit=10", function (data, status) {
-
-                    console.log(data.results);
-                    var items = [];
-                    for (var i = 0; i < data.results.length; ++i) {
-                        var e = data.results[i];
-                        console.log(e);
-                        items.push({x: i, label: {content: e._id}, y: e.results});
-                    }
-                    console.log(items);
-                    var dataset = new vis.DataSet(items);
-                    var options = {
-                        style: 'bar',
-                        barChart: {width: 50, align: 'center'}, // align: left, center, right
-                        drawPoints: {
-                            onRender: function (item, group, grap2d) {
-                                return item.label != null;
-                            },
-                            style: 'circle'
-                        },
-                        dataAxis: {
-                            icons: true
-                        },
-                        orientation: 'top'
-
-                    };
-                    var graph2d = new vis.Graph2d(container, items, options);
-
-                });
-
-
-            }()); // close IIFE
-
-
-            (function () { // open IIFE
-
-                var container = document.getElementById('rare');
-
-                $.get("/api/trends/rare?limit=10", function (data, status) {
-
-                    console.log(data.results);
-                    var items = [];
-                    for (var i = 0; i < data.results.length; ++i) {
-                        var e = data.results[i];
-                        console.log(e);
-                        items.push({x: i, label: {content: e._id}, y: e.results});
-                    }
-                    console.log(items);
-                    var dataset = new vis.DataSet(items);
-                    var options = {
-                        style: 'bar',
-                        barChart: {width: 50, align: 'center'}, // align: left, center, right
-                        drawPoints: {
-                            onRender: function (item, group, grap2d) {
-                                return item.label != null;
-                            },
-                            style: 'circle'
-                        },
-                        dataAxis: {
-                            icons: true
-                        },
-                        orientation: 'top'
-
-                    };
-                    var graph2d = new vis.Graph2d(container, items, options);
-
-                });
-
-
-            }()); // close IIFE
-            (function () { // open IIFE
-
-                var container = document.getElementById('notfound');
-
-                $.get("/api/trends/notfound?limit=10", function (data, status) {
-
-                    console.log(data.results);
-                    var items = [];
-                    for (var i = 0; i < data.results.length; ++i) {
-                        var e = data.results[i];
-                        console.log(e);
-                        items.push({x: i, label: {content: e._id}, y: e.results});
-                    }
-                    console.log(items);
-                    var dataset = new vis.DataSet(items);
-                    var options = {
-                        style: 'bar',
-                        barChart: {width: 50, align: 'center'}, // align: left, center, right
-                        drawPoints: {
-                            onRender: function (item, group, grap2d) {
-                                return item.label != null;
-                            },
-                            style: 'circle'
-                        },
-                        dataAxis: {
-                            icons: true
-                        },
-                        orientation: 'top'
-
-                    };
-                    var graph2d = new vis.Graph2d(container, items, options);
-
-                });
-
-
-            }()); // close IIFE
-        </script>
+        <script type="text/javascript" src="js/trends.js"></script>
     </div>
 
 </div><!-- /.container -->
 
 
-<!-- Bootstrap core JavaScript
-================================================== -->
 </body>
 </html>

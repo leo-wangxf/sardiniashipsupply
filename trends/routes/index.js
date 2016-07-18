@@ -11,7 +11,4 @@ exports.init = function(server) {
   require('./trends')(server);
 
 
-
-  
-
 };

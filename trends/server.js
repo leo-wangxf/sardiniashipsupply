@@ -12,79 +12,25 @@ var Mongoose = require('mongoose');
 // MongoDB Connection
 Mongoose.connect('mongodb://seidue.crs4.it:3996/trends');
 
-var rootHandler = function (request, reply) {
-    reply({message: "Hello from Trends!"});
-};
-
-// Set root route
-// server.route({
-//     method: 'GET',
-//     path: '/',
-//     handler: rootHandler,
-//     config: {
-//         plugins: {
-//             lout: false
-//         }
-//     }
-//
-// });
-
 routes.init(server);
 
 
+//
+//PLUGINS SETUP
+//
+
+// a plugin for handling fields in get urls (https://www.npmjs.com/package/hapi-fields)
 server.register({register: require('hapi-fields')}, function (err) {
     if (err) throw err;
 });
 
+// a plugin for automatic documentation generation
 server.register([require('vision'), require('inert'), {register: require('lout')}], function (err) {
+    if (err) throw err;
 });
 
-/*
- const options = {
- query: {
- page: {
- name: 'page' // The page parameter will now be called the_page
- },
- limit: {
- name: 'limit', // The limit will now be called per_page
- default: 10       // The default value will be 10
- }
- },
- meta: {
- name: 'metadata', // The meta object will be called metadata
- count: {
- active: true,
- name: 'count'
- },
- pageCount: {
- name: 'totalPages'
- },
- self: {
- active: true // Will not generate the self link
- },
- first: {
- active: true // Will not generate the first link
- },
- last: {
- active: true // Will not generate the last link
- }
- },
- routes: {
- include: ['/trends'],
- }
- };
 
- server.register(
- {register:
- require('hapi-pagination')
- , options: options
- }
- , function(err) {
- if (err)
- throw err;
- });
- */
-
+// a plugin for pagination  (https://www.npmjs.com/package/hapi-paginate)
 server.register({
     register: require('hapi-paginate'),
     options: {
@@ -95,13 +41,11 @@ server.register({
     }
 });
 
-
+// a plugin for serving static files (https://www.npmjs.com/package/inert)
 server.register(require('inert'), function (err) {
-
     if (err) {
         throw err;
     }
-
     server.route({
         method: 'GET',
         path: '/{param*}',
@@ -110,10 +54,19 @@ server.register(require('inert'), function (err) {
                 path: 'static',
                 listing: true
             }
+        },
+        config: {
+            plugins: {
+                lout: false  // disable documentation for static file serving route
+            }
         }
-    });
 
+    });
 });
+
+//
+//SERVER START
+//
 
 server.start(function () {
     console.log('Server started at: ' + server.info.uri);

@@ -3,7 +3,7 @@ var Joi = require('joi'); // Validation
 var Trend = require('../models/trends').Trend; // Mongoose ODM
 
 // Exports = exports? Huh? Read: http://stackoverflow.com/a/7142924/5210
-module.exports = exports = function(server) {
+module.exports = exports = function (server) {
 
     console.log('Loading trends routes');
     exports.index(server);
@@ -16,23 +16,28 @@ module.exports = exports = function(server) {
     exports.mostFound(server);
 };
 
+//
+//TRENDS CRUD
+//
+
+
 /**
  * GET /trends
  * Gets all the trends from MongoDb and returns them.
  *
  * @param server - The Hapi Server
  */
-exports.index = function(server) {
-    // GET /trends
+exports.index = function (server) {
+    // GET /api/trends
     server.route({
         method: 'GET',
         path: '/api/trends',
-        // config: {
-        //     description: 'Say hello!',
-        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
-        //     tags: ['api', 'greeting']
-        // },
-        handler: function(request, reply) {
+        config: {
+            description: 'Get trends records from db',
+            notes: 'Endpoint for getting trends from db, by querying between date interval (dateFrom and dateTo) and/or selecting specific fields.',
+            tags: ['api', 'CRUD', 'get', 'trends']
+        },
+        handler: function (request, reply) {
             var query = request.query;
             if ("dateFrom" in request.query || "dateTo" in request.query) {
                 var from = request.query.dateFrom;
@@ -49,9 +54,12 @@ exports.index = function(server) {
                 }
 
             }
-            Trend.find(query, null, {skip: request.limit * (request.page-1), limit: request.limit},function(err, results) {
+            Trend.find(query, null, {
+                skip: request.limit * (request.page - 1),
+                limit: request.limit
+            }, function (err, results) {
                 if (!err) {
-                    reply( results );
+                    reply(results);  // HTTP 200 ok
                 } else {
                     reply(Boom.badImplementation(err)); // 500 error
                 }
@@ -60,107 +68,6 @@ exports.index = function(server) {
     });
 };
 
-exports.mostWanted = function(server) {
-    // GET /trends
-    server.route({
-        method: 'GET',
-        path: '/api/trends/mostwanted',
-        // config: {
-        //     description: 'Say hello!',
-        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
-        //     tags: ['api', 'greeting']
-        // },
-        handler: function(request, reply) {
-
-            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"},fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"} }},{ $sort : { count : -1} },  { $limit : request.limit }], function (err, result) {
-                if (err) {
-                    console.log(err);
-                    return  reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(result);
-                reply( result );
-            });
-
-        }
-    });
-};
-
-exports.mostFound = function(server) {
-    // GET /trends
-    server.route({
-        method: 'GET',
-        path: '/api/trends/mostfound',
-        // config: {
-        //     description: 'Say hello!',
-        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
-        //     tags: ['api', 'greeting']
-        // },
-        handler: function(request, reply) {
-
-            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"},fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"}}},{ $sort : { results : -1} },{$skip : (request.page-1)*request.limit},  { $limit : request.limit }], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return  reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
-                reply( results );
-            });
-
-        }
-    });
-};
-
-exports.rare = function(server) {
-    // GET /trends
-    server.route({
-        method: 'GET',
-        path: '/api/trends/rare',
-        // config: {
-        //     description: 'Say hello!',
-        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
-        //     tags: ['api', 'greeting']
-        // },
-        handler: function(request, reply) {
-
-
-
-            Trend.aggregate([{ "$group": {_id: "$keyword", count: { "$sum": 1}, results:{$min:"$results"}}}, { $sort : { count : 1, results:1} }, {$skip : (request.page-1)*request.limit}, { $limit : request.limit }], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return  reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
-                reply( results );
-            });
-
-        }
-    });
-};
-
-exports.notfound = function(server) {
-    // GET /trends
-    server.route({
-        method: 'GET',
-        path: '/api/trends/notfound',
-        // config: {
-        //     description: 'Say hello!',
-        //     notes: 'The user parameter defaults to \'stranger\' if unspecified',
-        //     tags: ['api', 'greeting']
-        // },
-        handler: function(request, reply) {
-
-            Trend.aggregate([{ $match: { results : {$lt: 1} } },{ "$group": {_id: "$keyword", results :{$sum:"$results" }, count :{$sum:1}, fromDate:{$min:"$createdAt"}, toDate:{$max:"$createdAt"}} }, { $sort : { count : -1} }, { $limit:request.limit }, {$skip:(request.page-1)*request.limit}], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return  reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
-                reply( results );
-            });
-
-        }
-    });
-};
 
 /**
  * POST /trends
@@ -168,14 +75,19 @@ exports.notfound = function(server) {
  *
  * @param server - The Hapi Serve
  */
-exports.create = function(server) {
-    // POST /trends
+exports.create = function (server) {
+    // POST /api/trends
     var trend;
 
     server.route({
         method: 'POST',
         path: '/api/trends',
-        handler: function(request, reply) {
+        config: {
+            description: 'Create a trend record',
+            notes: 'Endpoint that creates a trend record.',
+            tags: ['api', 'CRUD', 'post', 'create', 'trends']
+        },
+        handler: function (request, reply) {
 
             trend = new Trend();
             trend.dateCreated = request.payload.dateCreated;
@@ -184,9 +96,9 @@ exports.create = function(server) {
             trend.keyword = request.payload.keyword;
             trend.results = request.payload.results;
 
-            trend.save(function(err) {
+            trend.save(function (err) {
                 if (!err) {
-                    reply(trend).created('/api/trends/' + trend._id); // HTTP 201
+                    reply(trend).created('/api/trends/' + trend._id); // HTTP 201 created
                 } else {
                     reply(Boom.forbidden(getErrorMessageFrom(err))); // HTTP 403
                 }
@@ -201,7 +113,7 @@ exports.create = function(server) {
  *
  * @param server
  */
-exports.show = function(server) {
+exports.show = function (server) {
 
     server.route({
         method: 'GET',
@@ -211,19 +123,24 @@ exports.show = function(server) {
                 params: {
                     id: Joi.string().alphanum().min(5).required()
                 }
-            }
+            },
+            description: 'Get a trend record by id',
+            notes: 'Endpoint that get a trend record identified by id.',
+            tags: ['api', 'CRUD', 'get', 'byId', 'trends']
+
         },
-        handler: function(request, reply) {
-            Trend.findById(request.params.id, function(err, trend) {
+
+        handler: function (request, reply) {
+            Trend.findById(request.params.id, function (err, trend) {
                 if (!err && trend) {
-                    reply(trend);
+                    reply(trend);  // HTTP 200 ok
                 } else if (err) {
                     // Log it, but don't show the user, don't want to expose ourselves (think security)
                     console.log(err);
-                    reply(Boom.notFound());
+                    reply(Boom.notFound());  // Error 404
                 } else {
 
-                    reply(Boom.notFound());
+                    reply(Boom.notFound());  // Error 404
                 }
             });
         }
@@ -236,7 +153,7 @@ exports.show = function(server) {
  *
  * @param server - The Hapi Server
  */
-exports.remove = function(server) {
+exports.remove = function (server) {
     server.route({
         method: 'DELETE',
         path: '/api/trends/{id}',
@@ -245,26 +162,177 @@ exports.remove = function(server) {
                 params: {
                     id: Joi.string().alphanum().min(5).required()
                 }
-            }
+            },
+            description: 'Delete a trend record by id',
+            notes: 'Endpoint that delete a trend record identified by id.',
+            tags: ['api', 'CRUD', 'delete', 'byId', 'trends']
         },
-        handler: function(request, reply) {
-            Trend.findById(request.params.id, function(err, trend) {
+        handler: function (request, reply) {
+            Trend.findById(request.params.id, function (err, trend) {
                 if (!err && trend) {
                     trend.remove();
                     reply({
                         message: "Trend deleted successfully"
-                    });
+                    });  // HTTP 200 ok
                 } else if (!err) {
                     // Couldn't find the object.
-                    reply(Boom.notFound());
+                    reply(Boom.notFound());   // Error 404
                 } else {
                     console.log(err);
-                    reply(Boom.badRequest("Could not delete Trend"));
+                    reply(Boom.badRequest("Could not delete Trend"));   // Error 400
                 }
             });
         }
     })
 };
+
+
+//
+//TRENDS STATISTICS
+//
+
+
+exports.mostWanted = function (server) {
+    // GET /api/trends/mostwanted
+    server.route({
+        method: 'GET',
+        path: '/api/trends/mostwanted',
+        config: {
+            description: 'Get a list of the most frequent search keywords',
+            notes: 'Endpoint for getting the "most wanted" "products", in fact the most searched keywords',
+            tags: ['api', 'keywords','trends','statistics']
+        },
+        handler: function (request, reply) {
+
+            Trend.aggregate([{
+                "$group": {
+                    _id: "$keyword",
+                    count: {"$sum": 1},
+                    results: {$min: "$results"},
+                    fromDate: {$min: "$createdAt"},
+                    toDate: {$max: "$createdAt"}
+                }
+            }, {$sort: {count: -1}}, {$limit: request.limit}], function (err, result) {
+                if (err) {
+                    console.log(err);
+                    return reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(result);
+                reply(result);      // HTTP 200 ok
+            });
+
+        }
+    });
+};
+
+exports.mostFound = function (server) {
+    // GET /api/trends/mostfound
+    server.route({
+        method: 'GET',
+        path: '/api/trends/mostfound',
+        config: {
+            description: 'Most found searches by keyword',
+            notes: 'Endpoint to get the searches giving more results; it allows to know what kind of searches are better satisfied, which keywords/phrase have more supplier/products then others.',
+            tags: ['api', 'results', 'found','trends','statistics']
+        },
+        handler: function (request, reply) {
+
+            Trend.aggregate([{
+                "$group": {
+                    _id: "$keyword",
+                    count: {"$sum": 1},
+                    results: {$min: "$results"},
+                    fromDate: {$min: "$createdAt"},
+                    toDate: {$max: "$createdAt"}
+                }
+            }, {$sort: {results: -1}}, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply(results);      // HTTP 200 ok
+            });
+
+        }
+    });
+};
+
+exports.rare = function (server) {
+    // GET /api/trends/rare
+    server.route({
+        method: 'GET',
+        path: '/api/trends/rare',
+        config: {
+            description: 'Most rare products/suppliers',
+            notes: 'Endpoint that collect the searches with minor number of results, but not zero; allows to know which are the keywords/phrases giving at least one result, ordered asc.',
+            tags: ['api', 'rare','trends','statistics']
+        },
+        handler: function (request, reply) {
+
+
+            Trend.aggregate([{
+                "$group": {
+                    _id: "$keyword",
+                    count: {"$sum": 1},
+                    results: {$min: "$results"}
+                }
+            }, {
+                $sort: {
+                    count: 1,
+                    results: 1
+                }
+            }, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply(results);   // HTTP 200 ok
+            });
+
+        }
+    });
+};
+
+exports.notfound = function (server) {
+    // GET /api/trends/notfound
+    server.route({
+        method: 'GET',
+        path: '/api/trends/notfound',
+        config: {
+            description: 'Not found keywords/products/suppliers',
+            notes: 'Endpoint that collects the searches with zero results.',
+            tags: ['api', 'notfound','trends','statistics']
+        },
+        handler: function (request, reply) {
+
+            Trend.aggregate([{$match: {results: {$lt: 1}}}, {
+                "$group": {
+                    _id: "$keyword",
+                    results: {$sum: "$results"},
+                    count: {$sum: 1},
+                    fromDate: {$min: "$createdAt"},
+                    toDate: {$max: "$createdAt"}
+                }
+            }, {$sort: {count: -1}}, {$limit: request.limit}, {$skip: (request.page - 1) * request.limit}], function (err, results) {
+                if (err) {
+                    console.log(err);
+                    return reply(Boom.badImplementation(err)); // 500 error;
+                }
+                console.log(results);
+                reply(results);  // HTTP 200 ok
+            });
+
+        }
+    });
+};
+
+
+//
+//UTILS
+//
+
 
 /**
  * Formats an error message that is returned from Mongoose.
