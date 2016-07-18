@@ -24,7 +24,7 @@ server.register({register: require('hapi-fields')}, function (err) {
     if (err) throw err;
 });
 
-// a plugin for automatic documentation generation
+// a plugin for automatic documentation generation (https://www.npmjs.com/package/lout)
 server.register([require('vision'), require('inert'), {register: require('lout')}], function (err) {
     if (err) throw err;
 });
