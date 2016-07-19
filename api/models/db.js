@@ -3,11 +3,7 @@ var app = require('../app');
 var debug = require('debug')('models:db');
 
 
-var conf = {
-    dbHost: "seidue.crs4.it",
-    dbPort: "3996",
-    dbName: "api"
-};
+var conf = app.get("conf");
 
 var dbUrl = conf.dbHost + ':' + conf.dbPort + '/' + conf.dbName;
 
@@ -21,7 +17,7 @@ var options = {
 };
 
 exports.connect = function connect(callback) {
-
+    mongoose.Promise = global.Promise;
     mongoose.connect(dbUrl, options, function (err, res) {
 
         if (err) {
@@ -29,7 +25,7 @@ exports.connect = function connect(callback) {
             callback(err);
         } else {
             var msg = 'Connected to database ' + dbUrl;
-            console.log(msg);
+            //console.log(msg);
             debug(msg);
             callback();
 

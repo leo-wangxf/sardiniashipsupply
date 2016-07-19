@@ -1,5 +1,4 @@
 var should = require('should');
-var mongoose = require('mongoose');
 var _ = require('underscore')._;
 var async = require('async');
 var db = require("../models/db");
@@ -11,7 +10,9 @@ describe('Category Model', function() {
 
     before(function (done) {
 
-        db.connect(function () {
+        db.connect(function (err) {
+            if (err)
+                console.log("error connecting to db")
             done();
         });
     });
@@ -42,7 +43,7 @@ describe('Category Model', function() {
             });
 
         }, function (err) {
-
+            if (err) throw err;
             done();
 
         });
@@ -57,7 +58,7 @@ describe('Category Model', function() {
     });
 
 
-    describe('find({page:2, limit:30})', function () {
+    describe('paginate({page:2, limit:30})', function () {
 
         it('must include metadata with correct values', function (done) {
 
