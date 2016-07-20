@@ -32,7 +32,7 @@ router.get('/categories',
             if (entities.total === 0)
                 res.boom.notFound("No Categories found for query " + JSON.stringify(query)); // Error 404
             else
-                res.send(entities);
+                res.send(entities); // HTTP 200 ok
 
         });
 
@@ -71,6 +71,35 @@ router.post('/categories',
     });
 
 
+router.get('/categories/:id',
+    au.doku({  // json documentation
+        description: 'Get a category by id',
+        params: {
+            id: {type: "String", required: true}
+        }
+    }), function (req, res) {
+        var id = req.params['id'].toString();
+
+        var newVals = req.body; // body already parsed
+
+        Category.findById(id, newVals, function (err, entities) {
+
+            if (err) {
+                if (err.name === "CastError")
+                    return res.boom.badData("Id malformed"); // Error 422
+                else
+                    return res.boom.badImplementation(err);// Error 500
+            }
+
+            if (_.isEmpty(entities))
+                return res.boom.notFound("No entry with id " + id); // Error 404
+            else
+                return res.send(entities);  // HTTP 200 ok
+        });
+    }
+);
+
+
 var putCallback = function (req, res) {
 
     if (_.isEmpty(req.body))
@@ -80,43 +109,78 @@ var putCallback = function (req, res) {
 
     var newVals = req.body; // body already parsed
 
-    Category.findOneAndUpdate({_id: id}, newVals, function (err, entities) {
+    Category.findByIdAndUpdate(id, newVals, function (err, entities) {
 
         if (err) {
             if (err.name === "ValidationError")
                 return res.boom.badData(err.message); // Error 422
+            else if (err.name === "CastError")
+                return res.boom.badData("Id malformed"); // Error 422
             else
                 return res.boom.badImplementation(err);// Error 500
         }
 
-        if (!entities)
-            return res.boom.badImplementation("Someting strange"); // Error 500
+        if (_.isEmpty(entities))
+            return res.boom.notFound("No entry with id " + id); // Error 404
         else
-            return res.send(entities);  // HTTP 201 created
+            return res.send(entities);  // HTTP 200 ok
     });
 
 };
 
+
 router.put('/categories/:id',
     au.doku({  // json documentation
-        description: 'Update a category in db',
+        description: 'Update a category by id',
+        params: {
+            id: {type: "String", required: true}
+        },
         fields: {
             unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
             name: {type: "String", required: true},
             description: {type: "String", required: false}
         }
-    }),putCallback
-    );
+    }), putCallback
+);
 
 router.patch('/categories/:id',
     au.doku({  // json documentation
-        description: 'Update a category in db',
+        description: 'Update a category by id',
+        params: {
+            id: {type: "String", required: true}
+        },
         fields: {
             unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
             name: {type: "String", required: true},
             description: {type: "String", required: false}
         }
-    }),putCallback
+    }), putCallback
 );
+
+
+router.delete('/categories/:id',
+    au.doku({  // json documentation
+        description: 'Delete a category by id',
+        params: {
+            id: {type: "String", required: true}
+        }
+    }),
+    function (req, res) {
+
+        var id = req.params['id'].toString();
+
+        Category.findByIdAndRemove(id, function (err, entities) {
+
+            if (err) {
+                if (err.name === "CastError")
+                    return res.boom.badData("Id malformed"); // Error 422
+                else
+                    return res.boom.badImplementation(err);// Error 500
+            } else
+                return res.status(204).send();  // HTTP 204 ok, no body
+        });
+
+    });
+
 
 module.exports = router;

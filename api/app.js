@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
-//var users = require('./routes/users');
+var users = require('./routes/users');
 
 var categories = require('./routes/categories');
 
@@ -35,7 +35,6 @@ if (process.env['NODE_ENV'] === 'dev') {
 else{
     app.set("conf",configs.production );
 }
-
 
 
 
@@ -77,11 +76,12 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
   app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
+      res.boom.notFound(err.message);
+    //res.status(err.status || 500);
+    //res.render('error', {
+    //  message: err.message,
+    //  error: err
+    //});
   });
 }
 
@@ -94,5 +94,7 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
+
+
 
 module.exports = app;
