@@ -13,7 +13,7 @@ var ProductSchema = new Schema({
     supplierId: {type: ObjectId, ref: 'User'},
     categories:[{type: ObjectId, ref: 'Category'}],
     images:[{type: String}]
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 ProductSchema.plugin(mongoosePaginate);
 

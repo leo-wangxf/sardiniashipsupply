@@ -10,7 +10,7 @@ var CategorySchema = new Schema({
     unspsc: {type: String, index: true, required: true},
     name:  {type: String, required: true},
     description: String
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 CategorySchema.plugin(mongoosePaginate);
 

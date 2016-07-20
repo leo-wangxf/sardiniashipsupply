@@ -18,7 +18,7 @@ var ConversationSchema = new Schema({
     messages:[{type: ObjectId, ref: 'Message'}],
     requests:[{type: ObjectId, ref: 'Request'}],
     hidden:  {type: Boolean, default: false}
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 ConversationSchema.plugin(mongoosePaginate);
 

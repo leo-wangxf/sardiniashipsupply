@@ -12,7 +12,7 @@ var MessageSchema = new Schema({
     draft: {type: Boolean, default: false},
     text:String,
     attachments: {type: String}
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 MessageSchema.plugin(mongoosePaginate);
 

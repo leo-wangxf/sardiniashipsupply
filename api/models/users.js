@@ -9,7 +9,7 @@ var UserSchema = new Schema({
     // _id  implicit id
     name:  {type: String, required: true}
     //description: String
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 UserSchema.plugin(mongoosePaginate);
 

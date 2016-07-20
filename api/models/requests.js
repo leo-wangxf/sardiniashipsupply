@@ -13,7 +13,7 @@ var RequestSchema = new Schema({
     quantityOffer: Number,
     quoteRequest: Number,
     quoteOffer: Number
-}, {strict: "throw"});
+}, {strict: "throw", versionKey: false });
 
 RequestSchema.plugin(mongoosePaginate);
 

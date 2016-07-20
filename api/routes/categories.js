@@ -39,4 +39,84 @@ router.get('/categories',
     });
 
 
+router.post('/categories',
+    au.doku({  // json documentation
+        description: 'Create a categories in db',
+        fields: {
+            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
+            name: {type: "String", required: true},
+            description: {type: "String", required: false}
+        }
+    }),
+    function (req, res) {
+
+        if (_.isEmpty(req.body))
+            return res.boom.badData("Empty boby"); // Error 422
+
+        Category.create(req.body, function (err, entities) {
+
+            if (err) {
+                if (err.name === "ValidationError")
+                    return res.boom.badData(err.message); // Error 422
+                else
+                    return res.boom.badImplementation(err);// Error 500
+            }
+
+            if (!entities)
+                return res.boom.badImplementation("Someting strange"); // Error 500
+            else
+                return res.status(201).send(entities);  // HTTP 201 created
+        });
+
+    });
+
+
+var putCallback = function (req, res) {
+
+    if (_.isEmpty(req.body))
+        return res.boom.badData("Empty boby"); // Error 422
+
+    var id = req.params['id'].toString();
+
+    var newVals = req.body; // body already parsed
+
+    Category.findOneAndUpdate({_id: id}, newVals, function (err, entities) {
+
+        if (err) {
+            if (err.name === "ValidationError")
+                return res.boom.badData(err.message); // Error 422
+            else
+                return res.boom.badImplementation(err);// Error 500
+        }
+
+        if (!entities)
+            return res.boom.badImplementation("Someting strange"); // Error 500
+        else
+            return res.send(entities);  // HTTP 201 created
+    });
+
+};
+
+router.put('/categories/:id',
+    au.doku({  // json documentation
+        description: 'Update a category in db',
+        fields: {
+            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
+            name: {type: "String", required: true},
+            description: {type: "String", required: false}
+        }
+    }),putCallback
+    );
+
+router.patch('/categories/:id',
+    au.doku({  // json documentation
+        description: 'Update a category in db',
+        fields: {
+            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
+            name: {type: "String", required: true},
+            description: {type: "String", required: false}
+        }
+    }),putCallback
+);
+
 module.exports = router;
