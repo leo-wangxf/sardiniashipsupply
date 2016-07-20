@@ -21,11 +21,16 @@ router.get('/categories',
         }
     }),
     function (req, res) {
-        Category.paginate({}, {page: req.query.page, limit: req.query.limit},function (err,entities) {
+
+        var query = _.extend({}, req.query);
+        if (query.hasOwnProperty('page')) delete query.page;
+        if (query.hasOwnProperty('limit')) delete query.limit;
+
+        Category.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, entities) {
             if (err) return res.boom.badImplementation(err); // Error 500
 
             if (entities.total === 0)
-                res.boom.notFound("No Categories found for query " + JSON.stringify(req.query)); // Error 404
+                res.boom.notFound("No Categories found for query " + JSON.stringify(query)); // Error 404
             else
                 res.send(entities);
 
