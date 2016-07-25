@@ -5,11 +5,9 @@ var db = require("../models/db");
 var Category = require('../models/categories').Category;
 
 
-
 describe('Category Model', function() {
 
     before(function (done) {
-
         db.connect(function (err) {
             if (err)
                 console.log("error connecting to db")
@@ -74,6 +72,22 @@ describe('Category Model', function() {
                     results.total.should.be.equal(100);
 
                 }
+                done();
+
+            });
+
+        });
+
+    });
+    describe('Create with more fields than defined', function () {
+
+        it('must not save with more than the fields required', function (done) {
+
+            Category.create({unspsc: '834284032', name : 'dfadfsa', title :'not defined'}, {page: 2, limit: 30}, function (err, results) {
+
+                should.exist(err); //  err;
+                err.name.should.be.equal('ValidationError');
+
                 done();
 
             });

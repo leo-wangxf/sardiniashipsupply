@@ -7,11 +7,11 @@ var Category = require('../models/categories').Category;
 var app = require('../app');
 var request = require('request');
 
-var apihost = "http://localhost";
+var apihost = 'http://localhost';
 
-var apiprefix = "/api";
+var apiprefix = app.get('apiprefix');
 
-var testCategoryId;
+var testCategoryId = '';
 var tooShortId = '008f4fdc09de51d364';
 var notExistingId = '008f4fdc09dd8c1c3e51d364';
 
@@ -47,7 +47,7 @@ describe('Categories API', function () {
     beforeEach(function (done) {
 
 
-        var range = _.range(99);
+        var range = _.range(100);
 
         async.each(range, function (e, cb) {
             var cat = new Category({
@@ -63,19 +63,11 @@ describe('Categories API', function () {
 
         }, function (err) {
 
-
-            var cat = new Category({
-                unspsc: "293843437",
-                name: "test 293843437",
-                description: "test description"
-            });
-
-            cat.save(function (err, cat) {
+            Category.findOne({}, function (err, cat) {
                 if (err) throw err;
                 testCategoryId = cat._id;
                 done();
             });
-
 
         });
 
@@ -117,7 +109,7 @@ describe('Categories API', function () {
 
     });
 
-    describe('POST '+apiprefix+'/categories', function () {
+    describe('POST ' + apiprefix + '/categories', function () {
 
         it('must create one categorie with given fields', function (done) {
 
@@ -153,7 +145,7 @@ describe('Categories API', function () {
     });
 
 
-    describe('POST '+apiprefix+'/categories', function () {
+    describe('POST ' + apiprefix + '/categories', function () {
 
         it('must get bad data error (empty request body)', function (done) {
 
@@ -170,7 +162,7 @@ describe('Categories API', function () {
         });
     });
 
-    describe('POST '+apiprefix+'/categories', function () {
+    describe('POST ' + apiprefix + '/categories', function () {
 
         it('must get bad data error (missing data in body req)', function (done) {
 
@@ -196,24 +188,32 @@ describe('Categories API', function () {
     });
 
 
-    describe('PUT '+apiprefix+'/categories/:id', function () {
+    describe('PUT ' + apiprefix + '/categories/:id', function () {
 
-        it('must update the category with id=' + testCategoryId, function (done) {
+        it('must update the category with given id', function (done) {
+            Category.findOne({}, function (err, cat) {
+                if (err) throw err;
 
-            var c = {
-                url: apihost + apiprefix + '/categories/' + testCategoryId,
-                body: JSON.stringify({unspsc: "99999"}),
-                headers: {'content-type': 'application/json'}
-            };
+                const tstCategoryId = cat._id;
+                console.log(testCategoryId);
+                console.log(cat);
 
-            request.put(c, function (error, response, body) {
+                var c = {
+                    url: apihost + apiprefix + '/categories/' + tstCategoryId,
+                    body: JSON.stringify({unspsc: "99999"}),
+                    headers: {'content-type': 'application/json'}
+                };
 
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(200); //  HTTP ok
-                }
-                done();
+                request.put(c, function (error, response) {
+
+                    if (error) throw error;
+                    else {
+                      //  var result = JSON.parse(body);
+                        response.statusCode.should.be.equal(200); //  HTTP ok
+                        done();
+                    }
+
+                });
 
             });
 
@@ -221,7 +221,7 @@ describe('Categories API', function () {
 
     });
 
-    describe('PUT '+apiprefix+'/categories/:id', function () {
+    describe('PUT ' + apiprefix + '/categories/:id', function () {
 
         it('must get error updating the category with id=' + testCategoryId + " (empty body)", function (done) {
 
@@ -245,12 +245,12 @@ describe('Categories API', function () {
         });
 
     });
-    describe('PATCH '+apiprefix+'/categories/:id', function () {
+    describe('PATCH ' + apiprefix + '/categories/:id', function () {
 
         it('must update the category with id=' + testCategoryId, function (done) {
 
             var c = {
-                url: apihost + apiprefix+'/categories/' + testCategoryId,
+                url: apihost + apiprefix + '/categories/' + testCategoryId,
                 body: JSON.stringify({unspsc: "99999"}),
                 headers: {'content-type': 'application/json'}
             };
@@ -270,12 +270,12 @@ describe('Categories API', function () {
 
     });
 
-    describe('PATCH '+apiprefix+'/categories/:id', function () {
+    describe('PATCH ' + apiprefix + '/categories/:id', function () {
 
         it('must return "not found 404" for category with id=' + notExistingId, function (done) {
 
             var c = {
-                url: apihost + apiprefix+'/categories/' + notExistingId,
+                url: apihost + apiprefix + '/categories/' + notExistingId,
                 body: JSON.stringify({unspsc: "99999"}),
                 headers: {'content-type': 'application/json'}
             };
@@ -295,12 +295,12 @@ describe('Categories API', function () {
 
     });
 
-    describe('PATCH '+apiprefix+'/categories/:id', function () {
+    describe('PATCH ' + apiprefix + '/categories/:id', function () {
 
         it('must return "bad data 422" for category with id=' + tooShortId, function (done) {
 
             var c = {
-                url: apihost + apiprefix+'/categories/' + tooShortId,
+                url: apihost + apiprefix + '/categories/' + tooShortId,
                 body: JSON.stringify({unspsc: "99999"}),
                 headers: {'content-type': 'application/json'}
             };
@@ -320,12 +320,12 @@ describe('Categories API', function () {
 
     });
 
-    describe('PATCH '+apiprefix+'/categories/:id', function () {
+    describe('PATCH ' + apiprefix + '/categories/:id', function () {
 
         it('must update the category with id=' + testCategoryId, function (done) {
 
             var c = {
-                url: apihost + apiprefix+'/categories/' + testCategoryId,
+                url: apihost + apiprefix + '/categories/' + testCategoryId,
                 body: JSON.stringify({unspsc: "99999"}),
                 headers: {'content-type': 'application/json'}
             };
@@ -346,11 +346,11 @@ describe('Categories API', function () {
     });
 
 
-    describe('GET '+apiprefix+'/categories/:id', function () {
+    describe('GET ' + apiprefix + '/categories/:id', function () {
 
         it('must return the category with id=' + testCategoryId, function (done) {
 
-            var c = {url: apihost + apiprefix+'/categories/' + testCategoryId};
+            var c = {url: apihost + apiprefix + '/categories/' + testCategoryId};
 
             request.get(c, function (error, response, body) {
 
@@ -367,11 +367,11 @@ describe('Categories API', function () {
 
     });
 
-    describe('GET '+apiprefix+'/categories/:id', function () {
+    describe('GET ' + apiprefix + '/categories/:id', function () {
 
         it('must return "not found 404" for category with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + '/api/categories/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/categories/' + notExistingId};
 
             request.get(c, function (error, response, body) {
 
@@ -387,11 +387,11 @@ describe('Categories API', function () {
 
     });
 
-    describe('GET '+apiprefix+'/categories/:id', function () {
+    describe('GET ' + apiprefix + '/categories/:id', function () {
 
         it('must return "bad data 422" for category with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + '/api/categories/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/categories/' + tooShortId};
 
             request.get(c, function (error, response, body) {
 
@@ -408,11 +408,11 @@ describe('Categories API', function () {
 
     });
 
-    describe('DELETE '+apiprefix+'/categories/:id', function () {
+    describe('DELETE ' + apiprefix + '/categories/:id', function () {
 
         it('must delete and return "204 ok" for category with id=' + testCategoryId, function (done) {
 
-            var c = {url: apihost + '/api/categories/' + testCategoryId};
+            var c = {url: apihost + apiprefix + '/categories/' + testCategoryId};
 
             request.delete(c, function (error, response, body) {
 
@@ -429,4 +429,4 @@ describe('Categories API', function () {
 
     });
 
-});
+}); //end describe

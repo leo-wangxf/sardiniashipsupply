@@ -119,7 +119,8 @@ var putCallback = function (req, res) {
             else
                 return res.boom.badImplementation(err);// Error 500
         }
-
+        //console.log(id)
+        //console.log(entities)
         if (_.isEmpty(entities))
             return res.boom.notFound("No entry with id " + id); // Error 404
         else
