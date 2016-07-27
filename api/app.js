@@ -9,6 +9,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
+var evaluations = require('./routes/evaluations');
 
 var app = express();
 
@@ -27,7 +28,6 @@ var configs = {
     }
 
 };
-
 if (process.env['NODE_ENV'] === 'dev') {
     app.set("conf",configs.dev );
     app.set("env",'development');
