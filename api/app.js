@@ -25,6 +25,8 @@ var configs = {
     }
 };
 
+app.set('port',process.env.PORT || '3000')
+
 if (process.env['NODE_ENV'] === 'dev') {
     app.set("conf", configs.dev);
     app.set("env", 'development');
@@ -61,6 +63,35 @@ app.set("apiprefix", prefix);
 app.use(prefix, categories);
 //app.use(prefix, conversations);
 
+
+
+var audoku = require('audoku');
+
+
+audoku.apidocs({
+    metadata : {
+        "name": "Api Seidue",
+        "version": "1.0.0",
+        "title": "Seidue API",
+        "url": "https://seidue.crs4.it",
+        "header": {
+            "title": "API Overview",
+            "content": "<p>A wonderful set of APIs</p>"
+        },
+        "footer": {
+            "title": "Maintained by CRS4",
+            "content": "<p>Codebase maintained by CRS4</p>\n"
+        }
+    },
+    app: app,
+    routers: [{
+        basepath: "http://localhost:"+app.get('port')+prefix,
+        router: categories
+    }]
+});
+
+
+
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
@@ -92,8 +123,6 @@ app.use(function (err, req, res, next) {
         error: {}
     });
 });
-
-
 
 
 

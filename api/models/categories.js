@@ -15,7 +15,7 @@ var joiCategorySchema = Joi.object({
 });
 
 
-var CategorySchema = new Schema(Joigoose.convert(joiCategorySchema));
+var CategorySchema = new Schema(Joigoose.convert(joiCategorySchema),{'strict':true});
 
 
 CategorySchema.plugin(mongoosePaginate);
