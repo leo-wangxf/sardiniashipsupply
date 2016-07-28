@@ -57,7 +57,7 @@ app.use(boom());
 
 //routes
 app.use('/', routes);
-//app.use('/users', users);
+app.use('/users', users);
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
