@@ -64,32 +64,33 @@ app.use(prefix, categories);
 //app.use(prefix, conversations);
 
 
+if (app.get("env")!== 'development') {
 
-var audoku = require('audoku');
+    var audoku = require('audoku');
 
 
-audoku.apidocs({
-    metadata : {
-        "name": "Api Seidue",
-        "version": "1.0.0",
-        "title": "Seidue API",
-        "url": "https://seidue.crs4.it",
-        "header": {
-            "title": "API Overview",
-            "content": "<p>A wonderful set of APIs</p>"
+    audoku.apidocs({
+        metadata: {
+            "name": "Api Seidue",
+            "version": "1.0.0",
+            "title": "Seidue API",
+            "url": "https://seidue.crs4.it",
+            "header": {
+                "title": "API Overview",
+                "content": "<p>A wonderful set of APIs</p>"
+            },
+            "footer": {
+                "title": "Maintained by CRS4",
+                "content": "<p>Codebase maintained by CRS4</p>\n"
+            }
         },
-        "footer": {
-            "title": "Maintained by CRS4",
-            "content": "<p>Codebase maintained by CRS4</p>\n"
-        }
-    },
-    app: app,
-    routers: [{
-        basepath: "http://localhost:"+app.get('port')+prefix,
-        router: categories
-    }]
-});
-
+        app: app,
+        routers: [{
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: categories
+        }]
+    });
+}
 
 
 // catch 404 and forward to error handler
