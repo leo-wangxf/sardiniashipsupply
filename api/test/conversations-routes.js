@@ -6,7 +6,6 @@ var db = require("../models/db");
 var Conversation = require('../models/conversations').Conversation;
 var app = require('../app');
 var request = require('request');
-var makeid = require('../util/fakeid');
 
 var apihost = 'http://localhost';
 
@@ -44,7 +43,7 @@ describe('Conversations API', function () {
             app.set('port', process.env.PORT || 3000);
 
             server = app.listen(app.get('port'), function () {
-                // console.log('TEST Express server listening on port ' + server.address().port);
+
                 apihost += ":" + server.address().port;
 
                 done();
@@ -72,7 +71,9 @@ describe('Conversations API', function () {
         var createUsers = function (callback) {
             async.each(range, function (e, cb) {
                 user = new User({
-                    name: "Guest " + e
+                    name: "Guest " + e,
+                    address : "Via dei matti 53",
+                    password:"pw"
                 });
 
                 user.save(function (err, message) {
@@ -83,7 +84,6 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
-                //  console.dir(users);
                 callback(null);
             });
 
@@ -101,7 +101,6 @@ describe('Conversations API', function () {
                 });
 
 
-                //console.log(message);
                 message.save(function (err, message) {
                     if (err) throw err;
                     messages.push(message._id);
@@ -110,8 +109,6 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
-                //  console.dir(messages);
-                //  console.log(err);
                 callback(null);
             });
 
@@ -127,7 +124,6 @@ describe('Conversations API', function () {
                 });
 
 
-                // console.log(cat);
                 cat.save(function (err, cat) {
                     if (err) throw err;
                     categories.push(cat._id);
@@ -136,8 +132,6 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
-                // console.dir(categories);
-                //  console.log(err);
                 callback(null);
             });
 
@@ -153,9 +147,7 @@ describe('Conversations API', function () {
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
-                //  console.dir(product);
                 product.save(function (err, product) {
-                    // console.log(err);
                     if (err) throw err;
                     products.push(product._id);
                     cb();
@@ -163,8 +155,6 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
-                // console.log(err);
-                // console.dir(products);
                 callback(null);
             });
 
@@ -190,8 +180,6 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
-                //console.log(err);
-                // console.log(requests);
                 callback(null);
             });
 
@@ -201,7 +189,7 @@ describe('Conversations API', function () {
         var createConversations = function () {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    senderId: users[_.random(0, 99)],
+                    supplierId: users[_.random(0, 99)],
                     customerId: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
@@ -214,7 +202,6 @@ describe('Conversations API', function () {
                 });
 
                 conversation.save(function (err, conversation) {
-                    //    console.log(err);
                     if (err) throw err;
                     conversations.push(conversation._id);
                     cb();
@@ -304,11 +291,9 @@ describe('Conversations API', function () {
         it('must return 2 conversations and pagination metadata, all fields', function (done) {
 
             var c = {url: apihost + apiprefix + '/conversations'};
-          //  console.log(c);
 
             request.get(c, function (error, response, body) {
                 try {
-                  //  console.log(response);
 
                     if (error) throw error;
                     else {
@@ -323,12 +308,10 @@ describe('Conversations API', function () {
 
                     }
                 } catch (error) {
-                  //  console.log(error);
 
                     done();
 
                 }
-                // done();
 
             });
 
@@ -359,14 +342,11 @@ describe('Conversations API', function () {
             };
 
             request.post(c, function (error, response, body) {
-           //     console.log("response");
-            //    console.log(response);
 
                 if (error) throw error;
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                    //console.log(results)
                      results.should.have.property('supplierId');
                     mongoose.Types.ObjectId(results.supplierId).id.should.be.equal(data.supplierId.id);
                      results.should.have.property('customerId');
@@ -451,8 +431,6 @@ describe('Conversations API', function () {
                 if (err) throw err;
 
                 const tstConversationId = cat._id;
-                console.log(testConversationId);
-                console.log(cat);
 
                 var c = {
                     url: apihost + apiprefix + '/conversations/' + tstConversationId,
