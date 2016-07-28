@@ -1,24 +1,32 @@
 var mongoose = require('mongoose');
+var Joigoose = require('joigoose')(mongoose);
+var Joi = require('joi');
+Joi.objectId = require('joi-objectid')(Joi);
+
 var mongoosePaginate = require('mongoose-paginate');
-var User = require('./users').User;
-var Message = require('./message').Message;
-var Request = require('./requests').Request;
+
+
+
+
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 
 
-var ConversationSchema = new Schema({
-    // _id  implicit id
-    supplierId: {type: ObjectId, ref: 'User'},
-    customerId: {type: ObjectId, ref: 'User'},
-    dateIn:  {type: Date, required: true},
-    dateValidity:  {type: Date, required: true},
-    subject: String,
-    completed: {type: Boolean, default: false},
-    messages:[{type: ObjectId, ref: 'Message'}],
-    requests:[{type: ObjectId, ref: 'Request'}],
-    hidden:  {type: Boolean, default: false}
-}, {strict: "throw", versionKey: false });
+var joiConversationSchema = Joi.object({
+    supplierId: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
+    customerId: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
+    dateIn: Joi.date().default(Date.now, 'time of creation'),
+    dateValidity: Joi.date().required(),
+    dateEnd: Joi.date(),
+    subject: Joi.string(),
+    completed: Joi.boolean().default(false),
+    messages:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Message'})),
+    requests:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Request'})),
+    hidden:  Joi.boolean().default(false)
+} );
+
+
+var ConversationSchema = new Schema(Joigoose.convert(joiConversationSchema),{strict:"throw"});
 
 ConversationSchema.plugin(mongoosePaginate);
 

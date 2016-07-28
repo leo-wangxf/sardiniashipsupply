@@ -9,7 +9,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
-
+var conversations = require('./routes/conversations');
 var app = express();
 
 var configs = {
@@ -62,7 +62,7 @@ app.use('/users', users);
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
-//app.use(prefix, conversations);
+app.use(prefix, conversations);
 
 
 if (app.get("env")!== 'development') {
