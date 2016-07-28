@@ -3,7 +3,7 @@ var bluebird = require('bluebird');
 var Joigoose = require('joigoose')(mongoose);
 var Joi = require('joi');
 
-mongoose.Promise = bluebird;
+//mongoose.Promise = bluebird;
 
 var mongoosePaginate = require('mongoose-paginate');
 
