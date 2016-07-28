@@ -25,13 +25,14 @@ var configs = {
     }
 };
 
-app.set('port',process.env.PORT || '3000')
+app.set('port',process.env.PORT || '3000');
 
 if (process.env['NODE_ENV'] === 'dev') {
     app.set("conf", configs.dev);
     app.set("env", 'development');
 }
 else {
+    app.set("env", 'production');
     app.set("conf", configs.production);
 }
 
@@ -85,6 +86,7 @@ if (app.get("env")!== 'development') {
             }
         },
         app: app,
+        docspath : '/docs',
         routers: [{
             basepath: "http://localhost:" + app.get('port') + prefix,
             router: categories

@@ -89,14 +89,13 @@ describe('Category Model', function () {
                         unspsc: '834284032',
                         name: 'dfadfsa',
                         title: true
-                     //    a: 3
                     },
                     function (err, results) {
 
-                        done();
                     });
             }catch(ex){
-                console.log("ex:" + ex);
+                ex.name.should.be.equal('StrictModeError');
+                ex.message.should.be.equal('Field `title` is not in schema and strict mode is set to throw.');
 
                 done();
             }
