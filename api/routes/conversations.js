@@ -70,19 +70,18 @@ router.post('/conversations',
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
 
-        Conversation.create(req.body, function (err, entities) {
-;
-            if (err) {
-                if (err.name === 'ValidationError')
-                    return res.boom.badData(err.message); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
+        Conversation.create(req.body).then( function ( entities) {
 
             if (!entities)
                 return res.boom.badImplementation('Someting strange'); // Error 500
             else
                 return res.status(201).send(entities);  // HTTP 201 created
+        }).catch(function (err) {
+
+            if (err.name === 'ValidationError')
+                return res.boom.badData(err.message); // Error 422
+            else
+                return res.boom.badImplementation(err);// Error 500
         });
 
     });

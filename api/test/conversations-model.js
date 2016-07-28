@@ -49,8 +49,8 @@ describe('Conversation Model', function () {
             async.each(range, function (e, cb) {
                 user = new User({
                     name: "Guest " + e,
-                    address : "Via dei matti 53",
-                    password:"pw"
+                    address: "Via dei matti 53",
+                    password: "pw"
 
                 });
 
@@ -303,28 +303,22 @@ describe('Conversation Model', function () {
     describe('Create with more fields than defined', function () {
 
         it('must not save with more than the fields required', function (done) {
-        try{
             Conversation.create({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
-                    dateIn: Date.now(),
-                    dateValidity: Date.now(),
-                    dateEnd: Date.now(),
-                    subject: "Oggetto",
-                    messages: [messages[_.random(0, 99)], messages[_.random(0, 99)]],
-                    requests: [requests[_.random(0, 99)], requests[_.random(0, 99)]],
-                    vago: "dfsdf"
-                },
-                function (err, results) {
-
-                });
-        }
-            catch(err){
+                supplierId: users[_.random(0, 99)],
+                customerId: users[_.random(0, 99)],
+                dateIn: Date.now(),
+                dateValidity: Date.now(),
+                dateEnd: Date.now(),
+                subject: "Oggetto",
+                messages: [messages[_.random(0, 99)], messages[_.random(0, 99)]],
+                requests: [requests[_.random(0, 99)], requests[_.random(0, 99)]],
+                vago: "dfsdf"
+            }).catch(function (err) {
 
                 should.exist(err); //  err;
                 err.name.should.be.equal('StrictModeError');
                 done();
-            }
+            });
 
 
         });

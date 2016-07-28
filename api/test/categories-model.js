@@ -58,25 +58,25 @@ describe('Category Model', function () {
 
     describe('paginate({page:2, limit:30})', function () {
 
-       it('must include metadata with correct values', function (done) {
+        it('must include metadata with correct values', function (done) {
 
-           Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
+            Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
 
-               if (err) console.log(err);
-               else {
+                if (err) console.log(err);
+                else {
 
-                   results.docs.length.should.be.equal(30);
-                   results.page.should.be.equal(2);
-                   results.limit.should.be.equal(30);
-                   results.should.have.property('total');
-                   results.total.should.be.equal(100);
+                    results.docs.length.should.be.equal(30);
+                    results.page.should.be.equal(2);
+                    results.limit.should.be.equal(30);
+                    results.should.have.property('total');
+                    results.total.should.be.equal(100);
 
-               }
-               done();
+                }
+                done();
 
-           });
+            });
 
-       });
+        });
 
     });
 
@@ -84,21 +84,18 @@ describe('Category Model', function () {
 
         it('must not save with the unknown fields', function (done) {
 
-            try {
-                Category.create({
-                        unspsc: '834284032',
-                        name: 'dfadfsa',
-                        title: true
-                    },
-                    function (err, results) {
+            Category.create({
+                unspsc: '834284032',
+                name: 'dfadfsa',
+                title: true
+            }).catch(function (err) {
 
-                    });
-            }catch(ex){
-                ex.name.should.be.equal('StrictModeError');
-                ex.message.should.be.equal('Field `title` is not in schema and strict mode is set to throw.');
+                err.name.should.be.equal('StrictModeError');
+                err.message.should.be.equal('Field `title` is not in schema and strict mode is set to throw.');
 
                 done();
-            }
+            });
+
         });
     });
 
