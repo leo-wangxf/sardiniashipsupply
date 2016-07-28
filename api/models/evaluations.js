@@ -3,9 +3,7 @@ var mongoosePaginate = require('mongoose-paginate');
 
 var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
-
-
-var EvaluationSchema = new Schema({
+var joiEvaluationSchema = Joi.object({
     // _id  implicit id
     from: {type:ObjectId, ref: 'User', required:true},
     to: {type:ObjectId, ref:'User', required:true},
@@ -17,6 +15,29 @@ var EvaluationSchema = new Schema({
     conversation_end_time:{type: Date},
     evaluation_time:{type: Date, default: Date.now}
 }, {strict: "throw", versionKey: false });
+
+
+var EvaluationSchema = new Schema(Joigoose.convert(joiEvaluationSchema));
+
+EvaluationSchema.plugin(mongoosePaginate);
+
+
+var Evaluation = mongoose.model('Evaluation', EvaluationSchema);
+
+
+exports.EvaluationSchema = EvaluationSchema;
+exports.Evaluation = Evaluation;
+
+
+EvaluationSchema.plugin(mongoosePaginate);
+
+
+var Evaluation = mongoose.model('Evaluation', EvaluationSchema);
+
+
+exports.EvaluationSchema = EvaluationSchema;
+exports.Evaluation = Evaluation;
+
 
 EvaluationSchema.plugin(mongoosePaginate);
 
