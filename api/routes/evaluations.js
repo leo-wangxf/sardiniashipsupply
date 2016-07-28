@@ -1,5 +1,5 @@
 var express = require('express');
-var Evaluation = require('../models/evaluations').Evaluation;
+var Evaluation = require('../models/evaluations.js').Evaluation;
 //var util = require('util');
 var _ = require('underscore')._;
 var router = express.Router();
@@ -21,10 +21,6 @@ router.get('/evaluations',
         }
     }),
     function (req, res) {
-
-        var query = _.extend({}, req.query);
-        if (query.hasOwnProperty('page')) delete query.page;
-        if (query.hasOwnProperty('limit')) delete query.limit;
 
         Evaluation.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, entities) {
             if (err) return res.boom.badImplementation(err); // Error 500
