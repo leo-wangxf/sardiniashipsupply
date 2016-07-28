@@ -5,7 +5,7 @@ var db = require("../models/db");
 var Category = require('../models/categories').Category;
 
 
-describe('Category Model', function() {
+describe('Category Model', function () {
 
     before(function (done) {
         db.connect(function (err) {
@@ -30,7 +30,7 @@ describe('Category Model', function() {
 
         async.each(range, function (e, cb) {
             var cat = new Category({
-                unspsc: "23" + e  ,
+                unspsc: "23" + e,
                 name: "test" + e
             });
 
@@ -58,41 +58,49 @@ describe('Category Model', function() {
 
     describe('paginate({page:2, limit:30})', function () {
 
-        it('must include metadata with correct values', function (done) {
+       it('must include metadata with correct values', function (done) {
 
-            Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
+           Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
 
-                if (err) throw err;
-                else {
+               if (err) console.log(err);
+               else {
 
-                    results.docs.length.should.be.equal(30);
-                    results.page.should.be.equal(2);
-                    results.limit.should.be.equal(30);
-                    results.should.have.property('total');
-                    results.total.should.be.equal(100);
+                   results.docs.length.should.be.equal(30);
+                   results.page.should.be.equal(2);
+                   results.limit.should.be.equal(30);
+                   results.should.have.property('total');
+                   results.total.should.be.equal(100);
 
-                }
-                done();
+               }
+               done();
 
-            });
+           });
 
-        });
+       });
 
     });
+
     describe('Create with more fields than defined', function () {
 
-        it('must not save with more than the fields required', function (done) {
+        it('must not save with the unknown fields', function (done) {
 
-            Category.create({unspsc: '834284032', name : 'dfadfsa', title :'not defined'}, {page: 2, limit: 30}, function (err, results) {
+            try {
+                Category.create({
+                        unspsc: '834284032',
+                        name: 'dfadfsa',
+                        title: true
+                     //    a: 3
+                    },
+                    function (err, results) {
 
-                should.exist(err); //  err;
-                err.name.should.be.equal('ValidationError');
+                        done();
+                    });
+            }catch(ex){
+                console.log("ex:" + ex);
 
                 done();
-
-            });
-
+            }
         });
-
     });
+
 });
