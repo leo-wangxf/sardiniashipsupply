@@ -3,6 +3,11 @@ var mongoose = require('mongoose');
 var _ = require('underscore')._;
 var async = require('async');
 var db = require("../models/db");
+var User = require('../models/users').User;
+var Message = require('../models/messages').Message;
+var Product = require('../models/products').Product;
+var Request = require('../models/requests').Request;
+var Category = require('../models/categories').Category;
 var Conversation = require('../models/conversations').Conversation;
 var app = require('../app');
 var request = require('request');
@@ -11,20 +16,11 @@ var apihost = 'http://localhost';
 
 var apiprefix = app.get('apiprefix');
 
-var testConversationId = '';
+var testmessage = '';
+var testconv = '';
+
 var tooShortId = '008f4fdc09de51d364';
 var notExistingId = '008f4fdc09dd8c1c3e51d364';
-
-
-var User = require('../models/users').User;
-var Message = require('../models/messages').Message;
-var Product = require('../models/products').Product;
-var Request = require('../models/requests').Request;
-var Category = require('../models/categories').Category;
-
-
-var Schema = mongoose.Schema,
-    ObjectId = Schema.ObjectId;
 
 var users = [];
 var messages = [];
@@ -34,7 +30,7 @@ var categories = [];
 var conversations = [];
 
 
-describe('Conversations API', function () {
+describe('Message Model', function () {
 
     before(function (done) {
         this.timeout(4000);
@@ -68,12 +64,14 @@ describe('Conversations API', function () {
 
         var range = _.range(100);
 
+
         var createUsers = function (callback) {
             async.each(range, function (e, cb) {
                 user = new User({
                     name: "Guest " + e,
-                    address : "Via dei matti 53",
-                    password:"pw"
+                    address: "Via dei matti 53",
+                    password: "pw"
+
                 });
 
                 user.save(function (err, message) {
@@ -84,6 +82,7 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
+                //  console.dir(users);
                 callback(null);
             });
 
@@ -101,14 +100,19 @@ describe('Conversations API', function () {
                 });
 
 
+                //console.log(message);
                 message.save(function (err, message) {
                     if (err) throw err;
                     messages.push(message._id);
+
                     cb();
 
                 });
 
             }, function (err) {
+                //  console.dir(messages);
+                //  console.log(err);
+                testmessage = messages[_.random(0, 99)];
                 callback(null);
             });
 
@@ -124,6 +128,7 @@ describe('Conversations API', function () {
                 });
 
 
+                // console.log(cat);
                 cat.save(function (err, cat) {
                     if (err) throw err;
                     categories.push(cat._id);
@@ -132,6 +137,8 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
+                // console.dir(categories);
+                //  console.log(err);
                 callback(null);
             });
 
@@ -148,6 +155,7 @@ describe('Conversations API', function () {
                     images: ["http://ret"]
                 });
                 product.save(function (err, product) {
+                    // console.log(err);
                     if (err) throw err;
                     products.push(product._id);
                     cb();
@@ -180,6 +188,8 @@ describe('Conversations API', function () {
                 });
 
             }, function (err) {
+                //console.log(err);
+                // console.log(requests);
                 callback(null);
             });
 
@@ -196,25 +206,25 @@ describe('Conversations API', function () {
                     dateEnd: Date.now(),
                     subject: "Subject " + e + " ",
                     completed: true,
-                    messages: [messages[_.random(0, 99)]],
-                    requests: [requests[_.random(0, 99)]],
+                    messages: [messages[_.random(0, 99)],messages[_.random(0, 99)],messages[_.random(0, 99)],messages[_.random(0, 99)]],
+                    requests: [requests[_.random(0, 99)],requests[_.random(0, 99)],requests[_.random(0, 99)],requests[_.random(0, 99)]],
                     hidden: false
                 });
 
                 conversation.save(function (err, conversation) {
                     if (err) throw err;
+
                     conversations.push(conversation._id);
+
                     cb();
 
                 });
 
 
             }, function (err) {
-                Conversation.findOne({}, function (err, cat) {
-                    if (err) throw err;
-                    testConversationId = cat._id;
-                    done();
-                });
+                testconv = conversations[_.random(0, 99)];
+                console.log(testconv);
+                done();
             });
 
         }
@@ -228,9 +238,12 @@ describe('Conversations API', function () {
             createRequests
         ], createConversations);
 
+
     });
 
     afterEach(function (done) {
+
+
         var removeUsers = function (callback) {
             User.remove(function (err, con) {
                 if (err) throw err;
@@ -283,35 +296,31 @@ describe('Conversations API', function () {
         products = [];
         categories = [];
         conversations = [];
-
+//done();
     });
 
-    describe('GET ' + apiprefix + '/conversations', function () {
+    describe('GET '+ apiprefix + '/conversations/:id/messages', function () {
 
-        it('must return 2 conversations and pagination metadata, all fields', function (done) {
+        it('must return 2 messages and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations'};
+            var c = {url: apihost + apiprefix + '/conversations/'+ testconv+'/messages?page=1&limit=2'};
 
             request.get(c, function (error, response, body) {
-                try {
 
-                    if (error) throw error;
-                    else {
-                        response.statusCode.should.be.equal(200);
-                        var results = JSON.parse(body);
-                        results.should.have.property('total');
-                        results.should.have.property('docs');
-                        results.docs.length.should.be.equal(2);
-                        results.page.should.be.equal(1);
-                        results.limit.should.be.equal(2);
-                        results.total.should.be.equal(100);
-
-                    }
-                } catch (error) {
-
-                    done();
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+                    var results = JSON.parse(body);
+                    results.should.have.property('total');
+                    results.should.have.property('docs');
+                    results.docs.length.should.be.equal(2);
+                    results.page.should.be.equal(1);
+                    results.limit.should.be.equal(2);
+                    results.total.should.be.equal(4);
 
                 }
+
+                done();
 
             });
 
@@ -319,52 +328,42 @@ describe('Conversations API', function () {
 
     });
 
-    describe('POST ' + apiprefix + '/conversations', function () {
 
-        it('must create one conversation with given fields', function (done) {
-            console.log(apihost);
+    describe('POST ' + apiprefix + '/conversations/:id/messages', function () {
+
+        it('must create one message in a conversation with given fields', function (done) {
+
             var data = {
-                supplierId: users[_.random(0, 99)],
-                customerId: users[_.random(0, 99)],
+                senderId: users[_.random(0, 99)],
                 dateIn: Date.now(),
-                dateValidity: Date.now(),
-                dateEnd: Date.now(),
-                subject: "Subject " + _.random(0, 99) + " ",
-                completed: true,
-                messages: [messages[_.random(0, 99)]],
-                requests: [requests[_.random(0, 99)]],
-                hidden: false
+                draft: false,
+                text: "Message for quote CA",
+                attachments: ["http//:url"]
             };
             var c = {
-                url: apihost + apiprefix + '/conversations',
+                url: apihost + apiprefix +'/conversations/'+ testconv+'/messages',
                 body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
+            console.log(c);
 
             request.post(c, function (error, response, body) {
+                //  console.log(response);
 
                 if (error) throw error;
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                     results.should.have.property('supplierId');
-                    mongoose.Types.ObjectId(results.supplierId).id.should.be.equal(data.supplierId.id);
-                     results.should.have.property('customerId');
-                    mongoose.Types.ObjectId(results.customerId).id.should.be.equal(data.customerId.id);
+                    results.should.have.property('senderId');
+                    mongoose.Types.ObjectId(results.senderId).id.should.be.equal(data.senderId.id);
                     results.should.have.property('dateIn');
                     new Date(results.dateIn).toString().should.be.equal(new Date(data.dateIn).toString());
-                    results.should.have.property('dateValidity');
-                    new Date(results.dateValidity).toString().should.be.equal(new Date(data.dateValidity).toString());
-                    results.should.have.property('dateEnd');
-                    new Date(results.dateEnd).toString().should.be.equal(new Date(data.dateEnd).toString());
-                    results.should.have.property('completed');
-                    results.completed.should.be.equal(data.completed);
-                    results.should.have.property('messages');
-                    results.messages.length.should.be.equal(data.messages.length);
-                    results.should.have.property('requests');
-                    results.requests.length.should.be.equal(data.requests.length);
-                    results.should.have.property('hidden');
-                    results.hidden.should.be.equal(data.hidden);
+                    results.should.have.property('draft');
+                    results.draft.should.be.equal(data.draft);
+                    results.should.have.property('text');
+                    results.text.should.be.equal(data.text);
+                    results.should.have.property('attachments');
+                    results.attachments.length.should.be.equal(data.attachments.length);
                     results.should.have.property('_id');
 
                 }
@@ -377,15 +376,11 @@ describe('Conversations API', function () {
     });
 
 
-    describe('POST ' + apiprefix + '/conversations', function () {
+    describe('POST ' + apiprefix +'/conversations/:id/messages', function () {
 
         it('must get bad data error (empty request body)', function (done) {
 
-            var c = {
-                url: apihost + apiprefix + '/conversations',
-                body: "",
-                headers: {'content-type': 'application/json'}
-            };
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/messages', body: "", headers: {'content-type': 'application/json'}};
 
             request.post(c, function (error, response, body) {
 
@@ -398,20 +393,20 @@ describe('Conversations API', function () {
         });
     });
 
-    describe('POST ' + apiprefix + '/conversations', function () {
+    describe('POST ' + apiprefix +'/conversations/:id/messages', function () {
 
         it('must get bad data error (missing data in body req)', function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations',
-                body: JSON.stringify({supplierId: users[_.random(0, 99)]}),
+                url: apihost + apiprefix +'/conversations/'+ testconv+'/messages',
+                body: JSON.stringify({draft:true}),
                 headers: {'content-type': 'application/json'}
             };
 
             request.post(c, function (error, response, body) {
                 if (error) throw error;
                 else {
-                   var result = JSON.parse(body);
+                    var result = JSON.parse(body);
                     result.statusCode.should.be.equal(422); //  bad data
                 }
                 done();
@@ -423,17 +418,18 @@ describe('Conversations API', function () {
     });
 
 
-    describe('PUT ' + apiprefix + '/conversations/:id', function () {
+    describe('PUT ' + apiprefix + '/messages/:id', function () {
 
-        it('must update the conversation with given id', function (done) {
-            Conversation.findOne({}, function (err, cat) {
+        it('must update the message with given id', function (done) {
+            Message.findOne({}, function (err, msg) {
                 if (err) throw err;
 
-                const tstConversationId = cat._id;
+                const tstMessageId = msg._id;
+
 
                 var c = {
-                    url: apihost + apiprefix + '/conversations/' + tstConversationId,
-                    body: JSON.stringify({completed: true}),
+                    url: apihost + apiprefix + '/messages/' + tstMessageId,
+                    body: JSON.stringify({draft:true}),
                     headers: {'content-type': 'application/json'}
                 };
 
@@ -454,12 +450,12 @@ describe('Conversations API', function () {
 
     });
 
-    describe('PUT ' + apiprefix + '/conversations/:id', function () {
+    describe('PUT ' + apiprefix + '/messages/:id', function () {
 
-        it('must get error updating the conversation with id=' + testConversationId + " (empty body)", function (done) {
+        it('must get error updating the message with id=' + testmessage + " (empty body)", function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
+                url: apihost + apiprefix + '/messages/' + testmessage,
                 body: "",
                 headers: {'content-type': 'application/json'}
             };
@@ -478,13 +474,13 @@ describe('Conversations API', function () {
         });
 
     });
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
+    describe('PATCH ' + apiprefix + '/messages/:id', function () {
 
-        it('must update the conversation with id=' + testConversationId, function (done) {
+        it('must update the message with id=' + testmessage, function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
-                body: JSON.stringify({completed: true}),
+                url: apihost + apiprefix + '/messages/' + testmessage,
+                body: JSON.stringify({draft:true}),
                 headers: {'content-type': 'application/json'}
             };
 
@@ -503,13 +499,13 @@ describe('Conversations API', function () {
 
     });
 
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
+    describe('PATCH ' + apiprefix + '/messages/:id', function () {
 
-        it('must return "not found 404" for conversation with id=' + notExistingId, function (done) {
+        it('must return "not found 404" for message with id=' + notExistingId, function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + notExistingId,
-                body: JSON.stringify({subject: "Water emergency"}),
+                url: apihost + apiprefix + '/messages/' + notExistingId,
+                body: JSON.stringify({draft:true}),
                 headers: {'content-type': 'application/json'}
             };
 
@@ -528,13 +524,13 @@ describe('Conversations API', function () {
 
     });
 
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
+    describe('PATCH ' + apiprefix + '/messages/:id', function () {
 
-        it('must return "bad data 422" for conversation with id=' + tooShortId, function (done) {
+        it('must return "bad data 422" for message with id=' + tooShortId, function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + tooShortId,
-                body: JSON.stringify({subject: "Water emergency"}),
+                url: apihost + apiprefix + '/messages/' + tooShortId,
+                body: JSON.stringify({draft:true}),
                 headers: {'content-type': 'application/json'}
             };
 
@@ -553,13 +549,13 @@ describe('Conversations API', function () {
 
     });
 
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
+    describe('PATCH ' + apiprefix + '/messages/:id', function () {
 
-        it('must update the conversation with id=' + testConversationId, function (done) {
+        it('must update the message with id=' + testmessage, function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
-                body: JSON.stringify({subject: "Water emergency"}),
+                url: apihost + apiprefix + '/messages/' + testmessage,
+                body: JSON.stringify({draft:true}),
                 headers: {'content-type': 'application/json'}
             };
 
@@ -579,11 +575,31 @@ describe('Conversations API', function () {
     });
 
 
-    describe('GET ' + apiprefix + '/conversations/:id', function () {
+    describe('GET ' + apihost + apiprefix +'/conversations/:id/messages', function () {
 
-        it('must return the conversation with id=' + testConversationId, function (done) {
+        it('must return the messages for the conversation with id='+testconv, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/messages'};
+
+            request.get(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                  //  var result = JSON.parse(body);
+                    response.statusCode.should.be.equal(200); //  HTTP ok
+                }
+                done();
+
+            });
+
+        });
+
+    });
+    describe('GET ' + apihost + apiprefix +'/messages:id', function () {
+
+        it('must return the message with id='+testmessage, function (done) {
+
+            var c = {url: apihost + apiprefix + '/messages/' + testmessage};
 
             request.get(c, function (error, response, body) {
 
@@ -600,11 +616,11 @@ describe('Conversations API', function () {
 
     });
 
-    describe('GET ' + apiprefix + '/conversations/:id', function () {
+    describe('GET ' + apiprefix + '/messages/:id', function () {
 
-        it('must return "not found 404" for conversation with id=' + notExistingId, function (done) {
+        it('must return "not found 404" for message with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/messages/' + notExistingId};
 
             request.get(c, function (error, response, body) {
 
@@ -620,11 +636,11 @@ describe('Conversations API', function () {
 
     });
 
-    describe('GET ' + apiprefix + '/conversations/:id', function () {
+    describe('GET ' + apiprefix + '/messages/:id', function () {
 
-        it('must return "bad data 422" for conversation with id=' + tooShortId + ' (id too short)', function (done) {
+        it('must return "bad data 422" for message with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/messages/' + tooShortId};
 
             request.get(c, function (error, response, body) {
 
@@ -641,11 +657,11 @@ describe('Conversations API', function () {
 
     });
 
-    describe('DELETE ' + apiprefix + '/conversations/:id', function () {
+    describe('DELETE ' + apiprefix + '/messages/:id', function () {
 
-        it('must delete and return "204 ok" for conversation with id=' + testConversationId, function (done) {
+        it('must delete and return "204 ok" for message with id=' + testmessage, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId};
+            var c = {url: apihost + apiprefix + '/messages/' + testmessage};
 
             request.delete(c, function (error, response, body) {
 
@@ -662,4 +678,5 @@ describe('Conversations API', function () {
 
     });
 
-}); //end describe
+}); //end describe*!/
+

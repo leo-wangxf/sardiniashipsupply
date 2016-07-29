@@ -10,10 +10,10 @@ var Schema = mongoose.Schema,
 
 
 var joiMessageSchema = Joi.object({
-    senderId: Joi.string().meta({type: 'ObjectId', ref: 'User'}),
+    senderId: Joi.string().required().meta({type: 'ObjectId', ref: 'User'}),
     dateIn:  Joi.date().default(Date.now, 'time of creation'),
     draft: Joi.boolean().default(false),
-    text: Joi.string(),
+    text: Joi.string().required(),
     attachments: Joi.array().items(Joi.string())
 });
 
@@ -27,3 +27,5 @@ var Message = mongoose.model('Message', MessageSchema);
 
 exports.MessageSchema = MessageSchema;
 exports.Message = Message;
+
+

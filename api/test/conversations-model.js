@@ -132,7 +132,6 @@ describe('Conversation Model', function () {
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
-                //  console.dir(product);
                 product.save(function (err, product) {
                     // console.log(err);
                     if (err) throw err;
@@ -142,8 +141,6 @@ describe('Conversation Model', function () {
                 });
 
             }, function (err) {
-                // console.log(err);
-                // console.dir(products);
                 callback(null);
             });
 
@@ -273,7 +270,7 @@ describe('Conversation Model', function () {
         products = [];
         categories = [];
         conversations = [];
-
+//done();
     });
 
 

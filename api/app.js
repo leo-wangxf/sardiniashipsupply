@@ -10,6 +10,7 @@ var users = require('./routes/users');
 
 var categories = require('./routes/categories');
 var conversations = require('./routes/conversations');
+var messages = require('./routes/messages');
 var app = express();
 
 var configs = {
@@ -63,6 +64,7 @@ var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
 app.use(prefix, conversations);
+app.use(prefix, messages);
 
 
 if (app.get("env")!== 'development') {
