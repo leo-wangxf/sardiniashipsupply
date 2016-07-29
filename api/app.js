@@ -9,6 +9,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
+var conversations = require('./routes/conversations');
 var evaluations = require('./routes/evaluations');
 
 var app = express();
@@ -94,29 +95,6 @@ if (app.get("env")!== 'development') {
         }]
     });
 }
-audoku.apidocs({
-    metadata : {
-        "name": "Api Seidue",
-        "version": "1.0.0",
-        "title": "Seidue API",
-        "url": "https://seidue.crs4.it",
-        "header": {
-            "title": "API Overview",
-            "content": "<p>A wonderful set of APIs</p>"
-        },
-        "footer": {
-            "title": "Maintained by CRS4",
-            "content": "<p>Codebase maintained by CRS4</p>\n"
-        }
-    },
-    app: app,
-    routers: [{
-        basepath: "http://localhost:"+app.get('port')+prefix,
-        router: categories
-    }]
-});
-
-
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
