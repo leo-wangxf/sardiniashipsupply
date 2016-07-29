@@ -41,7 +41,9 @@ describe('Evaluation Model',  function () {
         var createUsers = function (callback) {
             async.each(range, function (e, cb) {
                 user = new User({
-                    name: "Guest " + e
+                    name: "Guest " + e,
+                    address: "Maple street " + e,
+		    password: "pw" + e
                 });
 
                 user.save(function (err, message) {
@@ -59,10 +61,10 @@ describe('Evaluation Model',  function () {
         };
 
 
-	var createConversations = function() {
+	var createConversations = function(callback) {
 	    async.each(range, function (e, cb) {
 		    conversation = new Conversation({
-			    senderId: users[_.random(0,99)],
+			    supplierId: users[_.random(0,99)],
 			    customerId: users[_.random(0,99)],
 			    dateIn: Date.now(),
 			    dateValidity: Date.now(),
@@ -72,7 +74,7 @@ describe('Evaluation Model',  function () {
 		    });
 		    conversation.save(function( err, conversation) { 
 			    if (err) throw err;
-			    conversation.push(conversation._id);
+			    conversations.push(conversation._id);
 			    cb();
 		    });
 
@@ -85,13 +87,13 @@ describe('Evaluation Model',  function () {
 			evaluation = new Evaluation({
 				from: users[_.random(0,99)],
 				to: users[_.random(0,99)],
-				conversation: conversations[_random(0,99)],
+				conversationId: conversations[_.random(0,99)],
 				overall_rate: 5.0,
-			        deliveray_rate: 5.0,
+			        delivery_rate: 5.0,
 				product_rate: 5.0,
 				overall_review: "wonderful product!",
-				conversation_end_time:date.now,
-				evaluation_time:date.now
+				conversation_end_time:Date.now(),
+				evaluation_time:Date.now()
 			});
 			evaluation.save(function (err, evaluation) {
 				if (err) throw err;
