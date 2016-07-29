@@ -195,8 +195,8 @@ describe('Categories API', function () {
                 if (err) throw err;
 
                 const tstCategoryId = cat._id;
-                console.log(testCategoryId);
-                console.log(cat);
+
+
 
                 var c = {
                     url: apihost + apiprefix + '/categories/' + tstCategoryId,

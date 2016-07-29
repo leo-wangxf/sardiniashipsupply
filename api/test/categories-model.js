@@ -5,7 +5,7 @@ var db = require("../models/db");
 var Category = require('../models/categories').Category;
 
 
-describe('Category Model', function() {
+describe('Category Model', function () {
 
     before(function (done) {
         db.connect(function (err) {
@@ -30,7 +30,7 @@ describe('Category Model', function() {
 
         async.each(range, function (e, cb) {
             var cat = new Category({
-                unspsc: "23" + e  ,
+                unspsc: "23" + e,
                 name: "test" + e
             });
 
@@ -62,7 +62,7 @@ describe('Category Model', function() {
 
             Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
 
-                if (err) throw err;
+                if (err) console.log(err);
                 else {
 
                     results.docs.length.should.be.equal(30);
@@ -79,20 +79,24 @@ describe('Category Model', function() {
         });
 
     });
+
     describe('Create with more fields than defined', function () {
 
-        it('must not save with more than the fields required', function (done) {
+        it('must not save with the unknown fields', function (done) {
 
-            Category.create({unspsc: '834284032', name : 'dfadfsa', title :'not defined'}, {page: 2, limit: 30}, function (err, results) {
+            Category.create({
+                unspsc: '834284032',
+                name: 'dfadfsa',
+                title: true
+            }).catch(function (err) {
 
-                should.exist(err); //  err;
-                err.name.should.be.equal('ValidationError');
+                err.name.should.be.equal('StrictModeError');
+                err.message.should.be.equal('Field `title` is not in schema and strict mode is set to throw.');
 
                 done();
-
             });
 
         });
-
     });
+
 });

@@ -2,7 +2,7 @@ var express = require('express');
 var Category = require('../models/categories').Category;
 //var util = require('util');
 var _ = require('underscore')._;
-var router = express.Router();
+var router = express();
 var au = require('audoku');
 
 
@@ -51,9 +51,17 @@ router.post('/categories',
         group: 'Categories',
         bodyFields: {
             unspsc: {type: 'String', required: true, description: 'Standard code from unspsc'},
-            name: {type: 'String', required: true, description :'Category name'},
-            description: {type: 'String', required: false, description :'A category textual description'}
+            name: {type: 'String', required: true, description: 'Category name'},
+            description: {type: 'String', required: false, description: 'A category textual description'}
         }
+        /*,
+        bodyFieldsExamples: [
+            {
+                "title": "Request-Example:",
+                "content": "    HTTP/1.1 POST request\nBody:\n   {\n        \"username\" : \"user@name.go\",\n        \"password\" : \"drowssap\"",
+                "type": "json"
+            }
+        ]*/
     }),
     function (req, res) {
 
@@ -140,8 +148,6 @@ var putCallback = function (req, res) {
 };
 
 
-
-
 router.put('/categories/:id',
     au.doku({  // json documentation
         title: 'Update a category by id',
@@ -150,18 +156,19 @@ router.put('/categories/:id',
         group: 'Categories',
         description: 'Update a category by id',
         params: {
-            id: {type: 'String', required: true , description: 'The category identifier'}
+            id: {type: 'String', required: true, description: 'The category identifier'}
         },
         bodyFields: {
             unspsc: {type: 'String', required: true, description: 'Standard code from unspsc'},
-            name: {type: 'String', required: true,  description: 'The category name'},
+            name: {type: 'String', required: true, description: 'The category name'},
             description: {type: 'String', required: false, description: 'A category description'}
         }
     }), putCallback
 );
 
 router.patch('/categories/:id',
-    au.doku({  // json documentation
+    au.doku({
+        // json documentation
         title: 'Update a category by id (patch)',
         version: '1.0.0',
         name: 'UpdateCategory (patch)',
@@ -181,14 +188,14 @@ router.patch('/categories/:id',
 
 router.delete('/categories/:id',
     au.doku({
-    // json documentation
+        // json documentation
         title: 'Delete a category by id ',
         version: '1.0.0',
         name: 'DeleteCategory',
         group: 'Categories',
         description: 'Delete a category by id',
         params: {
-            id: {type: 'String', required: true,  description: 'The category identifier'}
+            id: {type: 'String', required: true, description: 'The category identifier'}
         }
     }),
 

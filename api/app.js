@@ -26,13 +26,14 @@ var configs = {
     }
 };
 
-//app.set('port',process.env.PORT || '3000')
+app.set('port',process.env.PORT || '3000');
 
 if (process.env['NODE_ENV'] === 'dev') {
     app.set("conf", configs.dev);
     app.set("env", 'development');
 }
 else {
+    app.set("env", 'production');
     app.set("conf", configs.production);
 }
 
@@ -58,17 +59,41 @@ app.use(boom());
 
 //routes
 app.use('/', routes);
-//app.use('/users', users);
+app.use('/users', users);
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
-//app.use(prefix, conversations);
+app.use(prefix, conversations);
 
 
+if (app.get("env")!== 'development') {
 
-var audoku = require('audoku');
+    var audoku = require('audoku');
 
 
+    audoku.apidocs({
+        metadata: {
+            "name": "Api Seidue",
+            "version": "1.0.0",
+            "title": "Seidue API",
+            "url": "https://seidue.crs4.it",
+            "header": {
+                "title": "API Overview",
+                "content": "<p>A wonderful set of APIs</p>"
+            },
+            "footer": {
+                "title": "Maintained by CRS4",
+                "content": "<p>Codebase maintained by CRS4</p>\n"
+            }
+        },
+        app: app,
+        docspath : '/docs',
+        routers: [{
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: categories
+        }]
+    });
+}
 audoku.apidocs({
     metadata : {
         "name": "Api Seidue",

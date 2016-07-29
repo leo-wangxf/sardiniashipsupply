@@ -17,7 +17,7 @@ var options = {
 };
 
 exports.connect = function connect(callback) {
-    mongoose.Promise = global.Promise;
+    mongoose.Promise = require('bluebird').Promise;
     mongoose.connect(dbUrl, options, function (err, res) {
 
         if (err) {
