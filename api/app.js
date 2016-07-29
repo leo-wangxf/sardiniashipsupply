@@ -11,6 +11,8 @@ var users = require('./routes/users');
 var categories = require('./routes/categories');
 var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
+var evaluations = require('./routes/evaluations');
+
 var app = express();
 
 var configs = {
@@ -95,7 +97,6 @@ if (app.get("env")!== 'development') {
         }]
     });
 }
-
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
