@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Joigoose = require('joigoose')(mongoose);
 var Joi = require('joi');
+Joi.objectId = require('joi-objectid')(Joi);
 
 var mongoosePaginate = require('mongoose-paginate');
 
@@ -8,19 +9,19 @@ var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 var joiEvaluationSchema = Joi.object({
     // _id  implicit id
-    from: {type:ObjectId, ref: 'User', required:true},
-    to: {type:ObjectId, ref:'User', required:true},
-    conversationId:{type:ObjectId, ref:'Conversation', required: true},
-    overall_rate:{type:Number, min:0, max:5, default:0},//zero means not evaluated
-    delivery_rate:{type:Number, min:0, max:5, default:0},
-    product_rate:{type:Number, min:0,max:5,default:0},
-    overall_review:{type:String},
-    conversation_end_time:{type: Date},
-    evaluation_time:{type: Date, default: Date.now}
+    from:Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
+    to:Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
+    conversationId:Joi.objectId().meta({type: 'ObjectId', ref: 'Conversation'}),
+    overall_rate:Joi.number().default(0).min(0).max(5),
+    delivery_rate:Joi.number().default(0).min(0).max(5),
+    product_rate:Joi.number().default(0).min(0).max(5),
+    overall_review:Joi.string(){type:String},
+    conversation_end_time:Joi.date(),
+    evaluation_time:Joi.date().default(Date.now, 'time of evaluation'),
 }, {strict: "throw", versionKey: false });
 
 
-var EvaluationSchema = new Schema(Joigoose.convert(joiEvaluationSchema));
+var EvaluationSchema = new Schema(Joigoose.convert(joiEvaluationSchema), {strict:"throw"});
 
 EvaluationSchema.plugin(mongoosePaginate);
 
