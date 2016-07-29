@@ -30,13 +30,15 @@ router.get('/categories',
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
 
-        Category.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, entities) {
-            if (err) return res.boom.badImplementation(err); // Error 500
+        Category.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
 
             if (entities.total === 0)
-                res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
+                return res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
             else
-                res.send(entities); // HTTP 200 ok
+                return res.send(entities); // HTTP 200 ok
+        }).catch(function (err) {
+            if (err) return res.boom.badImplementation(err); // Error 500
+            else return res.boom.badImplementation() // Error 500
         });
 
     });
@@ -55,32 +57,33 @@ router.post('/categories',
             description: {type: 'String', required: false, description: 'A category textual description'}
         }
         /*,
-        bodyFieldsExamples: [
-            {
-                "title": "Request-Example:",
-                "content": "    HTTP/1.1 POST request\nBody:\n   {\n        \"username\" : \"user@name.go\",\n        \"password\" : \"drowssap\"",
-                "type": "json"
-            }
-        ]*/
+         bodyFieldsExamples: [
+         {
+         "title": "Request-Example:",
+         "content": "    HTTP/1.1 POST request\nBody:\n   {\n        \"username\" : \"user@name.go\",\n        \"password\" : \"drowssap\"",
+         "type": "json"
+         }
+         ]*/
     }),
     function (req, res) {
 
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty boby'); // Error 422
 
-        Category.create(req.body, function (err, entities) {
-
+        Category.create(req.body).then(function (entities) {
+            if (!entities)
+                return res.boom.badImplementation('Someting strange'); // Error 500
+            else
+                return res.status(201).send(entities);  // HTTP 201 created
+        }).catch(function (err) {
             if (err) {
                 if (err.name === 'ValidationError')
                     return res.boom.badData(err.message); // Error 422
                 else
                     return res.boom.badImplementation(err);// Error 500
-            }
+            } else
+                return res.boom.badImplementation(err);// Error 500
 
-            if (!entities)
-                return res.boom.badImplementation('Someting strange'); // Error 500
-            else
-                return res.status(201).send(entities);  // HTTP 201 created
         });
 
     });
@@ -102,19 +105,20 @@ router.get('/categories/:id',
 
         var newVals = req.body; // body already parsed
 
-        Category.findById(id, newVals, function (err, entities) {
-
+        Category.findById(id, newVals).then(function (entities) {
+            if (_.isEmpty(entities))
+                return res.boom.notFound('No entry with id ' + id); // Error 404
+            else
+                return res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
             if (err) {
                 if (err.name === 'CastError')
                     return res.boom.badData('Id malformed'); // Error 422
                 else
                     return res.boom.badImplementation(err);// Error 500
             }
-
-            if (_.isEmpty(entities))
-                return res.boom.notFound('No entry with id ' + id); // Error 404
             else
-                return res.send(entities);  // HTTP 200 ok
+                return res.boom.badImplementation(err);// Error 500
         });
     }
 );
@@ -129,7 +133,12 @@ var putCallback = function (req, res) {
 
     var newVals = req.body; // body already parsed
 
-    Category.findByIdAndUpdate(id, newVals, function (err, entities) {
+    Category.findByIdAndUpdate(id, newVals).then(function (entities) {
+        if (_.isEmpty(entities))
+            return res.boom.notFound('No entry with id ' + id); // Error 404
+        else
+            return res.send(entities);  // HTTP 200 ok
+    }).catch(function (err) {
 
         if (err) {
             if (err.name === 'ValidationError')
@@ -139,10 +148,8 @@ var putCallback = function (req, res) {
             else
                 return res.boom.badImplementation(err);// Error 500
         }
-        if (_.isEmpty(entities))
-            return res.boom.notFound('No entry with id ' + id); // Error 404
         else
-            return res.send(entities);  // HTTP 200 ok
+            return res.boom.badImplementation(err);// Error 500
     });
 
 };
@@ -203,7 +210,9 @@ router.delete('/categories/:id',
 
         var id = req.params['id'].toString();
 
-        Category.findByIdAndRemove(id, function (err, entities) {
+        Category.findByIdAndRemove(id).then(function (entities) {
+            return res.status(204).send();  // HTTP 204 ok, no body
+        }).catch(function (err) {
 
             if (err) {
                 if (err.name === 'CastError')
@@ -211,7 +220,7 @@ router.delete('/categories/:id',
                 else
                     return res.boom.badImplementation(err);// Error 500
             } else
-                return res.status(204).send();  // HTTP 204 ok, no body
+                return res.boom.badImplementation(err);// Error 500
         });
 
     });

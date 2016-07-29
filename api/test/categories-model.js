@@ -60,19 +60,16 @@ describe('Category Model', function () {
 
         it('must include metadata with correct values', function (done) {
 
-            Category.paginate({}, {page: 2, limit: 30}, function (err, results) {
-
-                if (err) console.log(err);
-                else {
-
-                    results.docs.length.should.be.equal(30);
-                    results.page.should.be.equal(2);
-                    results.limit.should.be.equal(30);
-                    results.should.have.property('total');
-                    results.total.should.be.equal(100);
-
-                }
+            Category.paginate({}, {page: 2, limit: 30}).then(function ( results) {
+                results.docs.length.should.be.equal(30);
+                results.page.should.be.equal(2);
+                results.limit.should.be.equal(30);
+                results.should.have.property('total');
+                results.total.should.be.equal(100);
                 done();
+            }).catch( function (err) {
+
+                 console.log(err);
 
             });
 
