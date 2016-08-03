@@ -16,6 +16,7 @@
     "express": "~4.13.4",
     "express-boom": "^1.0.0",
     "express-paginate": "^0.2.1",
+    "express-bearer-token": "^2.1.0",
     "jade": "~1.11.0",
     "joi-objectid": "^2.0.0",
     "joigoose": "^1.5.6",

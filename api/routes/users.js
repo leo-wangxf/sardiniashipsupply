@@ -30,27 +30,6 @@ router.get('/',
     }
   }),
   function (req, res) {
-    /*
-    var token = req.token;        
-    tu.decodeToken(token).then(function(result)
-    {
-      if(result.response.statusCode == 200 && result.body.valid == true)
-      {
-        // Continua
-        var userId = 
-            
-        return res.send(result.body);
-      }
-      else
-      {
-        return res.status(result.respone.statusCode).send(result.body);
-      }
-
-    }).catch(function(error)
-    {
-      return res.boom.badImplementation(error);// Error 500
-    });
-    */
     //if (query.hasOwnProperty('page')) delete query.page;
     //if (query.hasOwnProperty('limit')) delete query.limit;
         
@@ -137,6 +116,7 @@ router.put('/',
     var userVals;
     var userId;
 
+    console.log(userToken);
     if(userToken == undefined)
     {
       return res.boom.forbidden("Missing token");
