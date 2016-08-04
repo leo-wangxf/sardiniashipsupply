@@ -25,18 +25,17 @@ router.get('/conversations',
         }
     }),
     function (req, res) {
-        console.log("GET Conversation");
+        //    console.log("GET Conversation");
         var query = _.extend({}, req.query);
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
-        console.log(query);
+        //   console.log(query);
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit}).then( function (entities) {
-            
-              return  res.send(entities); // HTTP 200 ok
-        }).catch(function(err)
-        {
-            return res.boom.badImplementation(err); // Error 500
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
+
+            res.send(entities); // HTTP 200 ok
+        }).catch(function (err) {
+            res.boom.badImplementation(err); // Error 500
         });
 
 
@@ -59,9 +58,9 @@ router.post('/conversations',
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
             completed: {type: 'Boolean', description: 'Conversation completion '},
-            messages:{type: 'Array', description: 'List conversation messages '},
-            requests:{type: 'Array', description: 'List conversation requests '},
-            hidden:  {type: 'Boolean', description: 'Conversation visibility '}
+            messages: {type: 'Array', description: 'List conversation messages '},
+            requests: {type: 'Array', description: 'List conversation requests '},
+            hidden: {type: 'Boolean', description: 'Conversation visibility '}
         }
     }),
     function (req, res) {
@@ -69,17 +68,17 @@ router.post('/conversations',
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
 
-        Conversation.create(req.body).then( function ( entities) {
+        Conversation.create(req.body).then(function (entities) {
 
             if (!entities)
                 res.boom.badImplementation('Someting strange'); // Error 500
             else
-                return res.status(201).send(entities);  // HTTP 201 created
+                res.status(201).send(entities);  // HTTP 201 created
         }).catch(function (err) {
             if (err.name === 'ValidationError')
-                return res.boom.badData(err.message); // Error 422
+                res.boom.badData(err.message); // Error 422
             else
-                return res.boom.badImplementation(err);// Error 500
+                res.boom.badImplementation(err);// Error 500
         });
 
     });
@@ -104,14 +103,14 @@ router.get('/conversations/:id',
         Conversation.findById(id, newVals).then(function (entities) {
 
             if (_.isEmpty(entities))
-                return res.boom.notFound('No entry with id ' + id); // Error 404
+                res.boom.notFound('No entry with id ' + id); // Error 404
             else
-                return res.send(entities);  // HTTP 200 ok
-        }).catch(function(err){
+                res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
             if (err.name === 'CastError')
-                return res.boom.badData('Id malformed'); // Error 422
+                res.boom.badData('Id malformed'); // Error 422
             else
-                return res.boom.badImplementation(err);// Error 500
+                res.boom.badImplementation(err);// Error 500
         });
     }
 );
@@ -126,25 +125,22 @@ var putCallback = function (req, res) {
 
     var newVals = req.body; // body already parsed
 
-    Conversation.findByIdAndUpdate(id, newVals, function (err, entities) {
+    Conversation.findByIdAndUpdate(id, newVals).then(function (entities) {
 
-        if (err) {
-            if (err.name === 'ValidationError')
-                return res.boom.badData(err.message); // Error 422
-            else if (err.name === 'CastError')
-                return res.boom.badData('Id malformed'); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
-        }
         if (_.isEmpty(entities))
-            return res.boom.notFound('No entry with id ' + id); // Error 404
+            res.boom.notFound('No entry with id ' + id); // Error 404
         else
-            return res.send(entities);  // HTTP 200 ok
+            res.send(entities);  // HTTP 200 ok
+    }).catch(function (err) {
+        if (err.name === 'ValidationError')
+            res.boom.badData(err.message); // Error 422
+        else if (err.name === 'CastError')
+            res.boom.badData('Id malformed'); // Error 422
+        else
+            res.boom.badImplementation(err);// Error 500
     });
 
 };
-
-
 
 
 router.put('/conversations/:id',
@@ -155,7 +151,7 @@ router.put('/conversations/:id',
         group: 'Conversations',
         description: 'Update a conversation by id',
         params: {
-            id: {type: 'String', required: true , description: 'The conversation identifier'}
+            id: {type: 'String', required: true, description: 'The conversation identifier'}
         },
         bodyFields: {
             supplierId: {type: 'String', required: true, description: 'Supplier user'},
@@ -165,9 +161,9 @@ router.put('/conversations/:id',
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
             completed: {type: 'Boolean', description: 'Conversation completion '},
-            messages:{type: 'Array', description: 'List conversation messages '},
-            requests:{type: 'Array', description: 'List conversation requests '},
-            hidden:  {type: 'Boolean', description: 'Conversation visibility '}
+            messages: {type: 'Array', description: 'List conversation messages '},
+            requests: {type: 'Array', description: 'List conversation requests '},
+            hidden: {type: 'Boolean', description: 'Conversation visibility '}
         }
     }), putCallback
 );
@@ -190,9 +186,9 @@ router.patch('/conversations/:id',
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
             completed: {type: 'Boolean', description: 'Conversation completion '},
-            messages:{type: 'Array', description: 'List conversation messages '},
-            requests:{type: 'Array', description: 'List conversation requests '},
-            hidden:  {type: 'Boolean', description: 'Conversation visibility '}
+            messages: {type: 'Array', description: 'List conversation messages '},
+            requests: {type: 'Array', description: 'List conversation requests '},
+            hidden: {type: 'Boolean', description: 'Conversation visibility '}
         }
     }), putCallback
 );
@@ -207,7 +203,7 @@ router.delete('/conversations/:id',
         group: 'Conversations',
         description: 'Delete a conversation by id',
         params: {
-            id: {type: 'String', required: true,  description: 'The conversation identifier'}
+            id: {type: 'String', required: true, description: 'The conversation identifier'}
         }
     }),
 
@@ -215,15 +211,13 @@ router.delete('/conversations/:id',
 
         var id = req.params.id.toString();
 
-        Conversation.findByIdAndRemove(id, function (err, entities) {
-
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
-                return res.status(204).send();  // HTTP 204 ok, no body
+        Conversation.findByIdAndRemove(id).then(function (entities) {
+            res.status(204).send();  // HTTP 204 ok, no body
+        }).catch(function (err) {
+            if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
         });
 
     });

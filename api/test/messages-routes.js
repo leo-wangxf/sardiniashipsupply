@@ -223,7 +223,7 @@ describe('Message Model', function () {
 
             }, function (err) {
                 testconv = conversations[_.random(0, 99)];
-                console.log(testconv);
+            //    console.log(testconv);
                 done();
             });
 
@@ -345,7 +345,7 @@ describe('Message Model', function () {
                 body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
-            console.log(c);
+       //     console.log(c);
 
             request.post(c, function (error, response, body) {
                 //  console.log(response);

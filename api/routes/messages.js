@@ -27,11 +27,11 @@ router.get('/conversations/:id/messages',
         }
     }),
     function (req, res) {
-        console.log("GET Messages");
+        // console.log("GET Messages");
         var query = _.extend({}, req.query);
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
-        console.log(query);
+        // console.log(query);
 
 
         var id = req.params.id.toString();

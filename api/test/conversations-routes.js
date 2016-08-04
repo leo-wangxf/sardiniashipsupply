@@ -322,7 +322,7 @@ describe('Conversations API', function () {
     describe('POST ' + apiprefix + '/conversations', function () {
 
         it('must create one conversation with given fields', function (done) {
-            console.log(apihost);
+          //  console.log(apihost);
             var data = {
                 supplierId: users[_.random(0, 99)],
                 customerId: users[_.random(0, 99)],
