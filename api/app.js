@@ -4,12 +4,14 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var bearerToken = require('express-bearer-token');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
 var conversations = require('./routes/conversations');
+var messages = require('./routes/messages');
 var evaluations = require('./routes/evaluations');
 
 var app = express();
@@ -48,6 +50,7 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
+app.use(bearerToken());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //pagination
@@ -66,6 +69,7 @@ app.set("apiprefix", prefix);
 app.use(prefix, categories);
 app.use(prefix, conversations);
 app.use(prefix, evaluations);
+app.use(prefix, messages);
 
 
 if (app.get("env")!== 'development') {

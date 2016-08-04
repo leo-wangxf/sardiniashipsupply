@@ -31,15 +31,14 @@ router.get('/conversations',
         if (query.hasOwnProperty('limit')) delete query.limit;
         console.log(query);
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, entities) {
-            console.log(err);
-            if (err) return res.boom.badImplementation(err); // Error 500
-
-            if (entities.total === 0)
-                res.boom.notFound('No Conversations found for query ' + JSON.stringify(query)); // Error 404
-            else
-                res.send(entities); // HTTP 200 ok
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit}).then( function (entities) {
+            
+              return  res.send(entities); // HTTP 200 ok
+        }).catch(function(err)
+        {
+            return res.boom.badImplementation(err); // Error 500
         });
+
 
     });
 
@@ -73,11 +72,10 @@ router.post('/conversations',
         Conversation.create(req.body).then( function ( entities) {
 
             if (!entities)
-                return res.boom.badImplementation('Someting strange'); // Error 500
+                res.boom.badImplementation('Someting strange'); // Error 500
             else
                 return res.status(201).send(entities);  // HTTP 201 created
         }).catch(function (err) {
-
             if (err.name === 'ValidationError')
                 return res.boom.badData(err.message); // Error 422
             else
@@ -103,19 +101,17 @@ router.get('/conversations/:id',
 
         var newVals = req.body; // body already parsed
 
-        Conversation.findById(id, newVals, function (err, entities) {
-
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
+        Conversation.findById(id, newVals).then(function (entities) {
 
             if (_.isEmpty(entities))
                 return res.boom.notFound('No entry with id ' + id); // Error 404
             else
                 return res.send(entities);  // HTTP 200 ok
+        }).catch(function(err){
+            if (err.name === 'CastError')
+                return res.boom.badData('Id malformed'); // Error 422
+            else
+                return res.boom.badImplementation(err);// Error 500
         });
     }
 );
