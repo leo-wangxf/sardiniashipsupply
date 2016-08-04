@@ -80,7 +80,7 @@ describe('Categories API', function () {
         });
     });
 
-    describe('GET ' + apiprefix + '/categories', function () {
+    describe('GET ' + apiprefix + '/categories?page=1&limit=2', function () {
 
         it('must return 2 categories and pagination metadata, all fields', function (done) {
 

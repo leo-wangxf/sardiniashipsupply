@@ -21,15 +21,19 @@ router.get('/evaluations',
         }
     }),
     function (req, res) {
+        var query = _.extend({}, req.query);
+        if (query.hasOwnProperty('page')) delete query.page;
+        if (query.hasOwnProperty('limit')) delete query.limit;
 
-        Evaluation.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, entities) {
-            if (err) return res.boom.badImplementation(err); // Error 500
+        Evaluation.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
 
             if (entities.total === 0)
                 res.boom.notFound("No Evaluations found for query " + JSON.stringify(query)); // Error 404
             else
                 res.send(entities); // HTTP 200 ok
 
+        }).catch(function (err) {
+            res.boom.badImplementation(err); // Error 500
         });
 
     });
@@ -49,19 +53,18 @@ router.post('/evaluations',
         if (_.isEmpty(req.body))
             return res.boom.badData("Empty boby"); // Error 422
 
-        Evaluation.create(req.body, function (err, entities) {
+        Evaluation.create(req.body).then(function (entities) {
 
-            if (err) {
-                if (err.name === "ValidationError")
-                    return res.boom.badData(err.message); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
 
             if (!entities)
                 return res.boom.badImplementation("Someting strange"); // Error 500
             else
                 return res.status(201).send(entities);  // HTTP 201 created
+        }).catch(function (err) {
+            if (err.name === "ValidationError")
+                return res.boom.badData(err.message); // Error 422
+            else
+                return res.boom.badImplementation(err);// Error 500
         });
 
     });
@@ -74,23 +77,21 @@ router.get('/evaluations/:id',
             id: {type: "String", required: true}
         }
     }), function (req, res) {
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed
 
-        Evaluation.findById(id, newVals, function (err, entities) {
-
-            if (err) {
-                if (err.name === "CastError")
-                    return res.boom.badData("Id malformed"); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
+        Evaluation.findById(id, newVals).then(function (entities) {
 
             if (_.isEmpty(entities))
-                return res.boom.notFound("No entry with id " + id); // Error 404
+                res.boom.notFound("No entry with id " + id); // Error 404
             else
-                return res.send(entities);  // HTTP 200 ok
+                res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
+            if (err.name === "CastError")
+                res.boom.badData("Id malformed"); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
         });
     }
 );
@@ -101,25 +102,23 @@ var putCallback = function (req, res) {
     if (_.isEmpty(req.body))
         return res.boom.badData("Empty boby"); // Error 422
 
-    var id = req.params['id'].toString();
+    var id = req.params.id.toString();
 
     var newVals = req.body; // body already parsed
 
-    Evaluation.findByIdAndUpdate(id, newVals, function (err, entities) {
-
-        if (err) {
-            if (err.name === "ValidationError")
-                return res.boom.badData(err.message); // Error 422
-            else if (err.name === "CastError")
-                return res.boom.badData("Id malformed"); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
-        }
+    Evaluation.findByIdAndUpdate(id, newVals).then(function (entities) {
 
         if (_.isEmpty(entities))
-            return res.boom.notFound("No entry with id " + id); // Error 404
+            res.boom.notFound("No entry with id " + id); // Error 404
         else
-            return res.send(entities);  // HTTP 200 ok
+            res.send(entities);  // HTTP 200 ok
+    }).catch(function (err) {
+        if (err.name === "ValidationError")
+            res.boom.badData(err.message); // Error 422
+        else if (err.name === "CastError")
+            res.boom.badData("Id malformed"); // Error 422
+        else
+            res.boom.badImplementation(err);// Error 500
     });
 
 };
@@ -163,18 +162,18 @@ router.delete('/evaluations/:id',
     }),
     function (req, res) {
 
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
-        Evaluation.findByIdAndRemove(id, function (err, entities) {
+        Evaluation.findByIdAndRemove(id).then(function (entities) {
 
-            if (err) {
+            res.status(204).send();  // HTTP 204 ok, no body
+        }).catch(function (err) {
                 if (err.name === "CastError")
-                    return res.boom.badData("Id malformed"); // Error 422
+                    res.boom.badData("Id malformed"); // Error 422
                 else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
-                return res.status(204).send();  // HTTP 204 ok, no body
-        });
+                    res.boom.badImplementation(err);// Error 500
+            }
+        );
 
     });
 

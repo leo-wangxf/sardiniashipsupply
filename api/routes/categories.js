@@ -25,20 +25,18 @@ router.get('/categories',
         }
     }),
     function (req, res) {
-
         var query = _.extend({}, req.query);
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
 
         Category.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
-
             if (entities.total === 0)
                 return res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
             else
                 return res.send(entities); // HTTP 200 ok
         }).catch(function (err) {
             if (err) return res.boom.badImplementation(err); // Error 500
-            else return res.boom.badImplementation() // Error 500
+            else return res.boom.badImplementation(); // Error 500
         });
 
     });
@@ -71,19 +69,15 @@ router.post('/categories',
             return res.boom.badData('Empty boby'); // Error 422
 
         Category.create(req.body).then(function (entities) {
-            if (!entities)
+            if (_.isEmpty(entities))
                 return res.boom.badImplementation('Someting strange'); // Error 500
             else
                 return res.status(201).send(entities);  // HTTP 201 created
         }).catch(function (err) {
-            if (err) {
-                if (err.name === 'ValidationError')
-                    return res.boom.badData(err.message); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
+            if (err.name === 'ValidationError')
+                return res.boom.badData(err.message); // Error 422
+            else
                 return res.boom.badImplementation(err);// Error 500
-
         });
 
     });
@@ -101,7 +95,7 @@ router.get('/categories/:id',
         }
 
     }), function (req, res) {
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed
 
@@ -111,12 +105,8 @@ router.get('/categories/:id',
             else
                 return res.send(entities);  // HTTP 200 ok
         }).catch(function (err) {
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
+            if (err.name === 'CastError')
+                return res.boom.badData('Id malformed'); // Error 422
             else
                 return res.boom.badImplementation(err);// Error 500
         });
@@ -129,7 +119,7 @@ var putCallback = function (req, res) {
     if (_.isEmpty(req.body))
         return res.boom.badData('Empty boby'); // Error 422
 
-    var id = req.params['id'].toString();
+    var id = req.params.id.toString();
 
     var newVals = req.body; // body already parsed
 
@@ -139,15 +129,10 @@ var putCallback = function (req, res) {
         else
             return res.send(entities);  // HTTP 200 ok
     }).catch(function (err) {
-
-        if (err) {
-            if (err.name === 'ValidationError')
-                return res.boom.badData(err.message); // Error 422
-            else if (err.name === 'CastError')
-                return res.boom.badData('Id malformed'); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
-        }
+        if (err.name === 'ValidationError')
+            return res.boom.badData(err.message); // Error 422
+        else if (err.name === 'CastError')
+            return res.boom.badData('Id malformed'); // Error 422
         else
             return res.boom.badImplementation(err);// Error 500
     });
@@ -208,18 +193,14 @@ router.delete('/categories/:id',
 
     function (req, res) {
 
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         Category.findByIdAndRemove(id).then(function (entities) {
             return res.status(204).send();  // HTTP 204 ok, no body
         }).catch(function (err) {
-
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
+            if (err.name === 'CastError')
+                return res.boom.badData('Id malformed'); // Error 422
+            else
                 return res.boom.badImplementation(err);// Error 500
         });
 

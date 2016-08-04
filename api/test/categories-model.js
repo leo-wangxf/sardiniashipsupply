@@ -10,7 +10,7 @@ describe('Category Model', function () {
     before(function (done) {
         db.connect(function (err) {
             if (err)
-                console.log("error connecting to db")
+                console.log("error connecting to db");
             done();
         });
     });

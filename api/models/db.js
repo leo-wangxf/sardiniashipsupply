@@ -21,7 +21,7 @@ exports.connect = function connect(callback) {
     mongoose.connect(dbUrl, options, function (err, res) {
 
         if (err) {
-            debug('Unable to connect to database ' + dbUrl)
+            debug('Unable to connect to database ' + dbUrl);
             callback(err);
         } else {
             var msg = 'Connected to database ' + dbUrl;

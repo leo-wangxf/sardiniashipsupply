@@ -21,7 +21,7 @@ var joiProductSchema = Joi.object({
     images:[Joi.string()]
 });
 
-var ProductSchema = new Schema(Joigoose.convert(joiProductSchema))
+var ProductSchema = new Schema(Joigoose.convert(joiProductSchema));
 
 ProductSchema.plugin(mongoosePaginate);
 

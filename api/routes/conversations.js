@@ -99,7 +99,7 @@ router.get('/conversations/:id',
         }
 
     }), function (req, res) {
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed
 
@@ -126,7 +126,7 @@ var putCallback = function (req, res) {
     if (_.isEmpty(req.body))
         return res.boom.badData('Empty boby'); // Error 422
 
-    var id = req.params['id'].toString();
+    var id = req.params.id.toString();
 
     var newVals = req.body; // body already parsed
 
@@ -217,7 +217,7 @@ router.delete('/conversations/:id',
 
     function (req, res) {
 
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         Conversation.findByIdAndRemove(id, function (err, entities) {
 

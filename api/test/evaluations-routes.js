@@ -15,21 +15,39 @@ var users = [];
 var conversations = [];
 var evaluations = [];
 
-describe('Evaluation Model', function () {
+var app = require('../app');
+var request = require('request');
+
+var apihost = 'http://localhost';
+
+var apiprefix = app.get('apiprefix');
+
+describe('Evaluation Routes', function () {
 
     before(function (done) {
-        db.connect(function (err) {
-            if (err)
-                console.log("error connecting to db");
-            done();
+        this.timeout(4000);
+        db.connect(function () {
+
+            app.set('port', process.env.PORT || 3000);
+
+            server = app.listen(app.get('port'), function () {
+                // console.log('TEST Express server listening on port ' + server.address().port);
+                apihost += ":" + server.address().port;
+
+                done();
+            });
+
         });
+
     });
 
     after(function (done) {
 
         db.disconnect(function () {
+            server.close();
             done();
         });
+
     });
 
     beforeEach(function (done) {
@@ -139,18 +157,22 @@ describe('Evaluation Model', function () {
         ], removeEvaluations);
 
     });
-    describe('paginate({page:2, limit:30})', function () {
+    describe('GET ' + apiprefix + '/evaluations?page=2&limit=30', function () {
 
         it('Pagination test: must include metadata with correct values', function (done) {
 
-            Evaluation.paginate({}, {page: 2, limit: 30}).then(function (results) {
+            request.get(apihost + apiprefix + '/evaluations?page=2&limit=30', function (err,response, body) {
+                if (err) throw err;
+                else {
+                    var results = JSON.parse(body);
+                    should.exist(results.docs);
+                    results.docs.length.should.be.equal(30);
+                    results.page.should.be.equal(2);
+                    results.limit.should.be.equal(30);
+                    results.should.have.property('total');
+                    results.total.should.be.equal(100);
 
-                results.docs.length.should.be.equal(30);
-                results.page.should.be.equal(2);
-                results.limit.should.be.equal(30);
-                results.should.have.property('total');
-                results.total.should.be.equal(100);
-
+                }
                 done();
 
             });

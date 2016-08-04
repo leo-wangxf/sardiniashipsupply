@@ -29,7 +29,7 @@ var configs = {
 
 app.set('port',process.env.PORT || '3000');
 
-if (process.env['NODE_ENV'] === 'dev') {
+if (process.env.hasOwnProperty('NODE_ENV') && process.env.NODE_ENV === 'dev') {
     app.set("conf", configs.dev);
     app.set("env", 'development');
 }
@@ -65,6 +65,7 @@ var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
 app.use(prefix, conversations);
+app.use(prefix, evaluations);
 
 
 if (app.get("env")!== 'development') {
