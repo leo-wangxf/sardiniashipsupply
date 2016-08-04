@@ -4,12 +4,12 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var bearerToken = require('express-bearer-token');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
+var products = require('./routes/products');
 var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
 var evaluations = require('./routes/evaluations');
@@ -31,7 +31,7 @@ var configs = {
 
 app.set('port',process.env.PORT || '3000');
 
-if (process.env.hasOwnProperty('NODE_ENV') && process.env.NODE_ENV === 'dev') {
+if (process.env['NODE_ENV'] === 'dev') {
     app.set("conf", configs.dev);
     app.set("env", 'development');
 }
@@ -50,7 +50,6 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
-app.use(bearerToken());
 app.use(express.static(path.join(__dirname, 'public')));
 
 //pagination
@@ -67,8 +66,8 @@ app.use('/users', users);
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
+app.use(prefix, products);
 app.use(prefix, conversations);
-app.use(prefix, evaluations);
 app.use(prefix, messages);
 
 
