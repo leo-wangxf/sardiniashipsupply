@@ -10,6 +10,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 
 var categories = require('./routes/categories');
+var products = require('./routes/products');
 var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
 var evaluations = require('./routes/evaluations');
@@ -67,9 +68,10 @@ app.use('/users', users);
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, categories);
+app.use(prefix, products);
 app.use(prefix, conversations);
-app.use(prefix, evaluations);
 app.use(prefix, messages);
+app.use(prefix, evaluations);
 
 
 if (app.get("env")!== 'development') {

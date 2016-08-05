@@ -42,7 +42,7 @@ router.get('/',
 
     User.paginate(query, options).then(function(result)
     {
-      res.send(result.docs)
+      res.send(result.docs);
     }).catch(function(err)
     {
       return res.boom.badImplementation(err); // Error 500
@@ -142,7 +142,7 @@ router.put('/',
         {
           schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
         }
-        else if(userType == "supplier")
+        else if(userType === "supplier")
         {
           schemaOpt.logo = Joi.string().uri();
           schemaOpt.description = Joi.string();
