@@ -117,7 +117,7 @@ router.put('/',
     var userId;
 
     console.log(userToken);
-    if(userToken == undefined)
+    if(userToken === undefined)
     {
       return res.boom.forbidden("Missing token");
     }
@@ -138,7 +138,7 @@ router.put('/',
           phone: Joi.number()
         };
 
-        if(userType == "customer")
+        if(userType === "customer")
         {
           schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
         }
@@ -170,7 +170,14 @@ router.put('/',
       return res.status(result.response.statusCode).send(result.body);
     }).catch(function(err)
     {
-      console.log(err);
+      try
+      {
+        if(err.cause.details[0].type == 'object.allowUnknown')
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
       if(err.statusCode)
       {
         return res.status(err.statusCode).send(result.body);
@@ -184,8 +191,207 @@ router.put('/',
 );
 
 
+router.get('/actions/favorites',
+  au.doku({  // json documentation
+    description: "Get the customer's favorites suppliers list",
+    fields: 
+    {
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
 
+    console.log(userToken);
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
 
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid == true)
+      {
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        if(userType != "customer")
+        {
+          return res.boom.forbidden("Only customers can use this function");
+        }
+
+        var query = {
+          'id' : userId
+        };
+
+        return User.paginate(query, {page: req.query.page, limit: req.query.limit, fields: "favoriteSupplier"});
+        //var q = User.find(query, "favoriteSupplier").lean();
+        //return q.exec();
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        return err;
+      }
+    }).then(function(result)
+    {
+      return res.send(result);
+    }).catch(function(err)
+    {
+      console.log(err);
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.post('/actions/favorites',
+  au.doku({  // json documentation
+    description: "Add a supplier to the customer's favorites list",
+    fields: 
+    {
+      supplier: 
+      {
+        description: 'The supplier to add to list',
+        type: 'string', required: true
+      },
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var supList;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "customer")
+      {
+        return res.boom.forbidden("Only customers can use this function");
+      }
+
+      var supData = req.body.supplier;
+      if(_.isArray(supData))
+      {
+        supList = supData;
+      }
+      else
+      {
+        supList = [supData];
+      }
+
+      // Guardo se tutti i supplier passati esistono
+      return Promise.reduce(supList, function(searchResult, supplier)
+      {
+        // Cerco il singolo supplier dell'iterazione
+        return User.count({id: supplier, type: "supplier"}).exec().then(function(count)
+        {
+          if(count > 0)
+          {
+            searchResult.status = (searchResult.status && true);              
+          }
+          else
+          {
+            searchResult.status = false;
+            searchResult.missing.push(supplier);
+          }
+          return searchResult;
+        });
+      }, {"status" : true, "missing" : []});
+    }).then(function(result)
+    {
+      if(result.status == false)
+      {
+        var e = new Error;
+        e.message = "Some suppliers are unknown (" + result.missing.toString() + ")";
+        //err.statusCode = 404;
+        throw e;
+      };
+
+      var query = 
+      {
+        id: userId,
+        type: "customer",
+      };
+
+      var fields = "favoriteSupplier";
+
+      return User.find(query, fields).limit(1).lean().exec();
+    }).then(function(result)
+    {
+
+      // Guardo se qualche supplier e' gia' presente nella lista dei preferiti
+      for(var i in supList)
+      {        
+        if(result[0].favoriteSupplier.indexOf(supList[i]) > -1)
+        {
+          // Errore o elimino il supplier da aggiungere nella lista?
+          var er = new Error;
+          er.message = "Supplier " + supList[i] + " is already present";
+          er.statusCode = 400;
+          throw er;
+        }
+      }
+
+      var query = {id: userId};
+      var update = {$push: {favoriteSupplier : {$each: supList}}};
+
+      // Aggiungi i supplier alla lista
+      return User.findOneAndUpdate(query, update, {safe:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 
 /* GET users listing. */
 /*
