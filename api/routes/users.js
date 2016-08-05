@@ -42,7 +42,7 @@ router.get('/',
 
     User.paginate(query, options).then(function(result)
     {
-      res.send(result.docs)
+      res.send(result.docs);
     }).catch(function(err)
     {
       return res.boom.badImplementation(err); // Error 500
@@ -117,7 +117,7 @@ router.put('/',
     var userId;
 
     console.log(userToken);
-    if(userToken == undefined)
+    if(userToken === undefined)
     {
       return res.boom.forbidden("Missing token");
     }
@@ -138,11 +138,11 @@ router.put('/',
           phone: Joi.number()
         };
 
-        if(userType == "customer")
+        if(userType === "customer")
         {
           schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
         }
-        else if(userType == "supplier")
+        else if(userType === "supplier")
         {
           schemaOpt.logo = Joi.string().uri();
           schemaOpt.description = Joi.string();

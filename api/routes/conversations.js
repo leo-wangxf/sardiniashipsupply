@@ -31,10 +31,11 @@ router.get('/conversations',
         if (query.hasOwnProperty('limit')) delete query.limit;
         //   console.log(query);
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit})
+            .then(function (entities) {
 
-            res.send(entities); // HTTP 200 ok
-        }).catch(function (err) {
+                res.send(entities); // HTTP 200 ok
+            }).catch(function (err) {
             res.boom.badImplementation(err); // Error 500
         });
 

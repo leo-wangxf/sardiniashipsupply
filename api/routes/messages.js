@@ -35,7 +35,7 @@ router.get('/conversations/:id/messages',
 
 
         var id = req.params.id.toString();
-        Conversation.findById(id, "messages", function (err, entities) {
+        Conversation.findById(id, "messages", function (err, entities) {  //FIXME: convert to Promises
             if (!err) {
                 if (entities) {
                     //console.log(entities);
@@ -152,7 +152,7 @@ router.get('/messages/:id',
 
         var newVals = req.body; // body already parsed
 
-        Message.findById(id, newVals, function (err, entities) {
+        Message.findById(id, newVals, function (err, entities) {   //FIXME: convert to Promises
 
             if (err) {
                 if (err.name === 'CastError')
@@ -179,7 +179,7 @@ var putCallback = function (req, res) {
 
     var newVals = req.body; // body already parsed
 
-    Message.findByIdAndUpdate(id, newVals, function (err, entities) {
+    Message.findByIdAndUpdate(id, newVals, function (err, entities) { //FIXME: convert to Promises
 
         if (err) {
             if (err.name === 'ValidationError')
@@ -266,7 +266,7 @@ router.delete('/messages/:id',
 
         var id = req.params['id'].toString();
 
-        Message.findByIdAndRemove(id, function (err, entities) {
+        Message.findByIdAndRemove(id, function (err, entities) {  //FIXME: convert to Promises
 
             if (err) {
                 if (err.name === 'CastError')

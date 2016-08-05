@@ -31,7 +31,7 @@ router.post('/products',
 
         Product.create(req.body).then( function ( entities) {
 
-            if (!entities)
+            if (_.isEmpty(entities))
                 res.boom.badImplementation('Someting strange'); // Error 500
             else
                 return res.status(201).send(entities);  // HTTP 201 created
