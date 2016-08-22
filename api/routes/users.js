@@ -310,20 +310,30 @@ router.post('/actions/favorites',
       // Guardo se tutti i supplier passati esistono
       return Promise.reduce(supList, function(searchResult, supplier)
       {
-        // Cerco il singolo supplier dell'iterazione
-        return User.count({id: supplier, type: "supplier"}).exec().then(function(count)
+        if(!require("mongoose").Types.ObjectId.isValid(supplier))
         {
-          if(count > 0)
-          {
-            searchResult.status = (searchResult.status && true);              
-          }
-          else
-          {
             searchResult.status = false;
+            // ha senso creare una llista apposita?
             searchResult.missing.push(supplier);
-          }
-          return searchResult;
-        });
+            return searchResult;
+        }
+        else
+        {  
+          // Cerco il singolo supplier dell'iterazione
+          return User.count({_id: supplier, type: "supplier"}).exec().then(function(count)
+          {
+            if(count > 0)
+            {
+              searchResult.status = (searchResult.status && true);              
+            }
+            else
+            {
+              searchResult.status = false;
+              searchResult.missing.push(supplier);
+            }
+            return searchResult;
+          });
+        }
       }, {"status" : true, "missing" : []});
     }).then(function(result)
     {
@@ -331,7 +341,7 @@ router.post('/actions/favorites',
       {
         var e = new Error;
         e.message = "Some suppliers are unknown (" + result.missing.toString() + ")";
-        //err.statusCode = 404;
+        e.statusCode = 400;
         throw e;
       };
 
@@ -392,6 +402,88 @@ router.post('/actions/favorites',
     });
   }
 );
+
+
+
+router.delete('/actions/favorites/:supId',
+  au.doku({  // json documentation
+    description: "Remove a supplier from the customer's favorites list",
+    fields: 
+    {
+      supplier: 
+      {
+        description: 'The supplier to remove from the list',
+        type: 'string', required: true
+      },
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var supList;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "customer")
+      {
+        return res.boom.forbidden("Only customers can use this function");
+      }
+
+      supId = req.params.supId
+
+      var query = {id: userId};
+      var update = {$pull: {favoriteSupplier : supId}};
+
+      // Rimuovi il supplier dalla lista
+      return User.findOneAndUpdate(query, update, {safe:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+
+
 
 /* GET users listing. */
 /*
