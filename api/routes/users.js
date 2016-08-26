@@ -7,25 +7,119 @@ var Promise = require('bluebird');
 var User = require('../models/users').User;
 var tu = require('../util/token');
 
+var multer = require('multer');
+var fs = require('fs');
+var path = require('path');
+
+var conf = {
+  uploadDir: __dirname + "/../upload",
+  uploadQuota: 100 * 1024 * 1024,
+  uploadFileSizeLimit: 10 * 1024 * 1024
+};
+
+
+fs.mkdirParentSync = function(dirPath, mode) {
+  //Call the standard fs.mkdir
+  try
+  {
+    fs.mkdirSync(dirPath, mode)
+  }
+  catch(error)
+  {
+    //When it fail in this way, do the custom steps
+    if (error && error.code === 'ENOENT') 
+    {
+      //Create all the parents recursively
+      fs.mkdirParentSync(path.dirname(dirPath), mode);
+      //And then the directory
+      fs.mkdirParentSync(dirPath, mode);
+    }
+  };
+};
+
+
+
+
 // creo una copia di joi in modo da poterla promisificare 
 // senza intaccare quella usata negli altri file
 var Joi = _.extend({}, require('joi'));
 Joi.validate = Promise.promisify(Joi.validate, Joi);
 
+// Private
+function du(dir)
+{
+  var total = 0;
+  try
+  {
+    var files;
+    try
+    {
+      files = fs.readdirSync(dir);
+    }
+    catch(err2)
+    {
+      fs.mkdirParentSync(dir);
+      files = fs.readdirSync(dir);
+    }
+
+    for(var i in files)
+    {
+      total += fs.statSync(path.join(dir, files[i])).size
+    }
+  }
+  catch(err)
+  {
+    console.log(err);
+  }
+  return total;
+}
+
+var storage = multer.diskStorage(
+{
+  destination: function(req, file, cb)
+  {
+    // TODO Recuperare l'id automaticamente dal token
+    var userId = req.p_userId;
+
+    var dir = path.join(conf.uploadDir, userId)
+
+    try
+    {
+      var stats = fs.statSync(dir);
+    }
+    catch(e)
+    {
+      fs.mkdirParentSync(dir);
+    }
+
+    cb(null, dir);
+  },
+  filename: function(req, file, cb)
+  {
+    //cb(null, file.fieldname);
+    cb(null, file.originalname.replace(/[^a-z0-9.-]/gi, "_"));
+  }
+});
+
+
+
+
 router.get('/',
   au.doku({  // json documentation
-    description: 'Get the list of all suppliers',
-    fields: 
+    "description": 'Get the list of all suppliers',
+    "fields": 
     {
-      page: 
+      "page": 
       {
-        description: 'The current page for pagination',
-        type: 'integer', required: false
+        "description": 'The current page for pagination',
+        "type": 'integer', 
+        "required": false
       },
-      limit: 
+      "limit": 
       {
-        description: 'The current limit for pagination',
-        type: 'integer', required: false
+        "description": 'The current limit for pagination',
+        "type": 'integer', 
+        "required": false
       }
     }
   }),
@@ -52,61 +146,80 @@ router.get('/',
 
 router.put('/',
   au.doku({  // json documentation
-    description: 'Update the user profile',
-    fields: 
+    "description": 'Update the user profile',
+    "bodyFields": 
     {
-      name: 
+      "name": 
       {
-        description: 'The user name',
-        type: 'string', required: false
+        "description": 'The user name',
+        "type": 'string', 
+        "required": false
       },
-      address: 
+      "address": 
       {
-        description: 'The user\'s address (only for suppliers)',
-        type: 'string', required: false
+        "description": 'The user\'s address (only for suppliers)',
+        "type": 'string', 
+        "required": false
       },
-      logo: 
+      "logo": 
       {
-        description: 'The url of the user\'s logo (only for suppliers)',
-        type: 'string', required: false
+        "description": 'The url of the user\'s logo (only for suppliers)',
+        "type": 'string', 
+        "required": false
       },
-      phone: 
+      "phone": 
       {
-        description: 'The user\' phone number',
-        type: 'integer', required: false
+        "description": 'The user\' phone number',
+        "type": 'integer', 
+        "required": false
       },
-      description: 
+      "description": 
       {
-        description: 'The business description (only for suppliers)',
-        type: 'string', required: false
+        "description": 'The business description (only for suppliers)',
+        "type": 'string', 
+        "required": false
       },
-      web: 
+      "web": 
       {
-        description: 'URL of user\'s website (only for suppliers)',
-        type: 'string', required: false
+        "description": 'URL of user\'s website (only for suppliers)',
+        "type": 'string', 
+        "required": false
       },
-      favoriteSupplier:
+      "favoriteSupplier":
       {
-        description: 'The list of the user\'s favorite supplier (only for customers)',
+        "description": 'The list of the user\'s favorite supplier (only for customers)',
         // TODO tipo list al posto di string
-        type: 'string', required: false
+        "type": 'string', 
+        "required": false
       },
-      certifications:
+      "certifications":
       {
-        description: 'The list of the user\'s certifications (only for suppliers)',
+        "description": 'The list of the user\'s certifications (only for suppliers)',
         // TODO tipo object al posto di string
-        type: 'string', required: false
+        "type": 'string', 
+        "required": false
       },
-      categories:
+      "categories":
       {
-        description: 'categories provided by the user (only for suppliers)',
+        "description": 'categories provided by the user (only for suppliers)',
         // TODO tipo list al posto di string
-        type: 'string', required: false
+        "type": 'string', 
+        "required": false
       },
-      pIva:
+      "pIva":
       {
-        description: 'The user\'s VAT identification number (only for suppliers)',
-        type: 'string', required: false
+        "description": 'The user\'s VAT identification number (only for suppliers)',
+        "type": 'string', 
+        "required": false
+      }
+    },
+    "headers" :
+    {
+      "Authorization" :
+      {
+        "description" : "The user token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
       }
     }
   }),
@@ -193,9 +306,15 @@ router.put('/',
 
 router.get('/actions/favorites',
   au.doku({  // json documentation
-    description: "Get the customer's favorites suppliers list",
-    fields: 
+    "description" : "Get the customer's favorites suppliers list",
+    "headers" :
     {
+      "Authorization" :
+      {
+        "description" : "The customer token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
     }
   }),
   function (req, res) {
@@ -257,13 +376,23 @@ router.get('/actions/favorites',
 
 router.post('/actions/favorites',
   au.doku({  // json documentation
-    description: "Add a supplier to the customer's favorites list",
-    fields: 
+    "description": "Add a supplier to the customer's favorites list",
+    "headers":
     {
-      supplier: 
+      "Authorization":
       {
-        description: 'The supplier to add to list',
-        type: 'string', required: true
+        "description" : "The customer token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "bodyFields": 
+    {
+      "supplier": 
+      {
+        "description" : 'The supplier to add to list',
+        "type": 'string', 
+        "required": true
       },
     }
   }),
@@ -404,17 +533,26 @@ router.post('/actions/favorites',
 );
 
 
-
 router.delete('/actions/favorites/:supId',
   au.doku({  // json documentation
-    description: "Remove a supplier from the customer's favorites list",
-    fields: 
+    "description" : "Remove a supplier from the customer's favorites list",
+    "params": 
     {
-      supplier: 
+      "supId":
       {
-        description: 'The supplier to remove from the list',
-        type: 'string', required: true
-      },
+        "description" : "The id of the supplier you want to remove to your favorites",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The customer token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
     }
   }),
   function (req, res) {
@@ -482,6 +620,319 @@ router.delete('/actions/favorites/:supId',
   }
 );
 
+
+router.post('/actions/attachment',
+  au.doku({  // json documentation
+    "description": "Allow supplier to upload a pdf document in his own profile",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      },
+      "Content-Type" :
+      {
+        "description" : "Must be \"multipart/form-data\"",
+        "type" : "string",
+        "required" : "true"
+      }
+    }
+  }),
+  function (req, res) {
+    var uploader = multer({
+      storage: storage,
+      limits: {fileSize: conf.uploadFileSizeLimit},
+      fileFilter: function(req, file, cb)
+      {
+        userId = req.p_userId;
+        var dir = path.join(conf.uploadDir, userId)
+
+        //console.log(file.mimetype);
+
+        if(du(dir) > conf.uploadQuota)
+        {
+          req.diskQuotaExceeded = true;
+          return cb(null, false, new Error("Disk quota exceeded"));
+        }    
+        else if(file.mimetype != "application/pdf")
+        {
+          req.wrongFileType = true;
+          return cb(null, false, new Error("You can upload only pdf files"));
+        }
+        else
+        {
+          return cb(null, true);
+        }
+      }
+    }).array('document', 5);
+
+    var userToken = req.token;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only suppliers can use this function");
+      }
+
+      
+      req.p_userId = userId;
+
+      uploader(req, res, function(err)
+      {
+        var r = {} 
+        if(err)
+        {
+          r.success = false;
+          r.message = err.message;
+          return res.send(JSON.stringify(r));
+        }
+
+        if(req.diskQuotaExceeded)
+        {
+          r.success = false;
+          r.message = "Disk quota exceeded";
+          return res.send(JSON.stringify(r));
+        }
+        else if(req.wrongFileType)
+        {
+          r.success = false;
+          r.message = "You can upload only pdf files";
+          return res.send(JSON.stringify(r));
+        }
+
+        r.success = true;
+        res.send(JSON.stringify(r));
+      });
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+
+  }
+);
+
+router.get('/actions/attachment/:supId',
+  au.doku({  // json documentation
+    "description": "Get the supplier's attached document list",
+    "params": 
+    {
+      "supId":
+      {
+        "description" : "The id of the supplier you want to show documents",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var supId = req.params.supId;
+
+    var dir = path.join(conf.uploadDir, supId)
+    var r = {}
+
+    var fList = [];
+    fs.readdir(dir, function(err, items)
+    {
+      if(err)
+      {
+        if(err.code === "ENOENT")
+        {
+          r.success = true;
+          r.files = [];
+          return res.send(JSON.stringify(r));
+        }
+        else
+        {
+          r.success = false;
+          r .message = err;
+          return res.send(JSON.stringify(r));        
+        }
+      }
+
+      for (var i=0; i<items.length; i++)
+      {
+        fList.push(items[i]);
+      }
+      r.success = true;
+      r.files = fList;
+
+      res.send(JSON.stringify(r));
+    });
+  }
+);
+
+
+router.get('/actions/attachment/:supId/:file',
+  au.doku({  // json documentation
+    "description": "Download a document attached by a supplier",
+    "params": 
+    {
+      "supId":
+      {
+        "description" : "The id of the supplier who own the file to download",
+        "type" : "string",
+        "required" : true
+      },
+      "file": 
+      {
+        "description": "The name of the file to download",
+        "type": "string", 
+        "required": true
+      },
+
+    }
+  }),
+  function (req, res) {
+    var supId = req.params.supId;
+    var fileName = req.params.file;
+    var r = {};
+
+    if(fileName == undefined)
+    {
+      r.success = false;
+      r.message = "Missing file name";
+      res.send(JSON.stringify(r));
+      return;
+    }
+
+    fileName = fileName.replace(/[^a-z0-9.-]/gi, "_");
+
+    var filePath = path.join(conf.uploadDir, supId, fileName)
+
+    res.download(filePath, function(err)
+    {
+      if(err)
+      {
+        res.status(404).send(JSON.stringify(r));
+        return res.boom.notFound("File not found");
+      }
+      else
+      {
+      }
+    });
+  }
+);
+
+
+router.delete('/actions/attachment/:file',
+  au.doku({  // json documentation
+    "description": "Delete a file owned by a supplier",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "params": 
+    {
+      "file": 
+      {
+        "description": 'The name of the file to delete.',
+        "type": 'string', 
+        "required": true
+      },
+
+    }
+  }),
+  function (req, res) {
+    var userToken = req.token;
+    var fileName = req.params.file;
+
+    var r ={}
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only suppliers can use this function");
+      }
+
+      fileName = fileName.replace(/[^a-z0-9.-]/gi, "_");
+
+      var filePath = path.join(conf.uploadDir, userId, fileName);
+
+      fs.exists(filePath, function(exists)
+      {
+        if(exists)
+        {
+          fs.unlink(filePath, function(err)
+          {
+            if(err)
+            {
+              res.boom.badImplementation(err.message)
+            }
+            else
+            {
+              r.success = true;
+              res.send(JSON.stringify(r));
+            }
+          });
+        }
+        else
+        {
+          res.boom.notFound("File doesn't exist");
+        }
+      });
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 
 
 
