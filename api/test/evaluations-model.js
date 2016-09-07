@@ -41,12 +41,13 @@ describe('Evaluation Model', function () {
         var createUsers = function (callback) {
             async.each(range, function (e, cb) {
                 user = new User({
+                    id: "008f4fdc09dd8c1c3e51d364",
                     name: "Guest " + e,
                     address: "Maple street " + e,
                     password: "pw" + e
                 });
 
-                user.save(function (err, message) {
+                user.save(function (err, us) {
                     if (err) throw err;
                     users.push(user._id);
                     cb();

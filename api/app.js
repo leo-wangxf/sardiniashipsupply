@@ -13,6 +13,7 @@ var categories = require('./routes/categories');
 var products = require('./routes/products');
 var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
+var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
 
 var app = express();
@@ -71,6 +72,7 @@ app.use(prefix, categories);
 app.use(prefix, products);
 app.use(prefix, conversations);
 app.use(prefix, messages);
+app.use(prefix, requests);
 app.use(prefix, evaluations);
 
 
@@ -98,8 +100,20 @@ if (app.get("env")!== 'development') {
         docspath : '/docs',
         routers: [{
             basepath: "http://localhost:" + app.get('port') + prefix,
-            router: categories
-        }]
+            router:categories
+        },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:conversations
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:messages
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:requests
+            }]
     });
 }
 
