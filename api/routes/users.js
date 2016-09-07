@@ -102,8 +102,6 @@ var storage = multer.diskStorage(
 });
 
 
-
-
 router.get('/',
   au.doku({  // json documentation
     "description": 'Get the list of all suppliers',
@@ -229,7 +227,7 @@ router.put('/',
     var userVals;
     var userId;
 
-    console.log(userToken);
+    //console.log(userToken);
     if(userToken === undefined)
     {
       return res.boom.forbidden("Missing token");
@@ -318,12 +316,11 @@ router.get('/actions/favorites',
     }
   }),
   function (req, res) {
-   
     var userToken = req.token;
     var userVals;
     var userId;
 
-    console.log(userToken);
+    //console.log(userToken);
     if(userToken == undefined)
     {
       return res.boom.forbidden("Missing token");
@@ -345,7 +342,7 @@ router.get('/actions/favorites',
           'id' : userId
         };
 
-        return User.paginate(query, {page: req.query.page, limit: req.query.limit, fields: "favoriteSupplier"});
+        return User.find(query, "favoriteSupplier -_id").exec();
         //var q = User.find(query, "favoriteSupplier").lean();
         //return q.exec();
       }
@@ -503,7 +500,7 @@ router.post('/actions/favorites',
       var update = {$push: {favoriteSupplier : {$each: supList}}};
 
       // Aggiungi i supplier alla lista
-      return User.findOneAndUpdate(query, update, {safe:true}).exec();
+      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
     }).then(function(result)
     {
       if(result == null)
@@ -591,7 +588,7 @@ router.delete('/actions/favorites/:supId',
       var update = {$pull: {favoriteSupplier : supId}};
 
       // Rimuovi il supplier dalla lista
-      return User.findOneAndUpdate(query, update, {safe:true}).exec();
+      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
     }).then(function(result)
     {
       if(result == null)
@@ -771,7 +768,7 @@ router.get('/actions/attachment/:supId',
         else
         {
           r.success = false;
-          r .message = err;
+          r.message = err;
           return res.send(JSON.stringify(r));        
         }
       }
