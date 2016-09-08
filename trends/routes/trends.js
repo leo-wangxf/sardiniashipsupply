@@ -1,6 +1,7 @@
 var Boom = require('boom'); // HTTP Errors
 var Joi = require('joi'); // Validation
 var Trend = require('../models/trends').Trend; // Mongoose ODM
+var _ = require('underscore')._;
 
 // Exports = exports? Huh? Read: http://stackoverflow.com/a/7142924/5210
 module.exports = exports = function (server) {
@@ -57,12 +58,13 @@ exports.index = function (server) {
             Trend.find(query, null, {
                 skip: request.limit * (request.page - 1),
                 limit: request.limit
-            }, function (err, results) {
-                if (!err) {
+            }).then(function (results) {
+                if (_.isEmpty(results))
+                    reply(Boom.notFound("Not found elements for query " + JSON.stringify(query)));
+                else
                     reply(results);  // HTTP 200 ok
-                } else {
-                    reply(Boom.badImplementation(err)); // 500 error
-                }
+            }).catch(function (err) {
+                reply(Boom.badImplementation(err)); // 500 error
             });
         }
     });
@@ -96,12 +98,10 @@ exports.create = function (server) {
             trend.keyword = request.payload.keyword;
             trend.results = request.payload.results;
 
-            trend.save(function (err) {
-                if (!err) {
-                    reply(trend).created('/api/trends/' + trend._id); // HTTP 201 created
-                } else {
-                    reply(Boom.forbidden(getErrorMessageFrom(err))); // HTTP 403
-                }
+            trend.save().then(function () {
+                reply(trend).created('/api/trends/' + trend._id); // HTTP 201 created
+            }).catch(function (err) {
+                reply(Boom.forbidden(getErrorMessageFrom(err))); // HTTP 403
             });
         }
     });
@@ -131,17 +131,12 @@ exports.show = function (server) {
         },
 
         handler: function (request, reply) {
-            Trend.findById(request.params.id, function (err, trend) {
-                if (!err && trend) {
-                    reply(trend);  // HTTP 200 ok
-                } else if (err) {
-                    // Log it, but don't show the user, don't want to expose ourselves (think security)
-                    console.log(err);
+            Trend.findById(request.params.id).then(function (trend) {
+                if (_.isNull(trend))
                     reply(Boom.notFound());  // Error 404
-                } else {
-
-                    reply(Boom.notFound());  // Error 404
-                }
+                reply(trend);  // HTTP 200 ok
+            }).catch(function (err) {
+                reply(Boom.notFound());  // Error 404
             });
         }
     })
@@ -168,19 +163,12 @@ exports.remove = function (server) {
             tags: ['api', 'CRUD', 'delete', 'byId', 'trends']
         },
         handler: function (request, reply) {
-            Trend.findById(request.params.id, function (err, trend) {
-                if (!err && trend) {
-                    trend.remove();
-                    reply({
-                        message: "Trend deleted successfully"
-                    });  // HTTP 200 ok
-                } else if (!err) {
-                    // Couldn't find the object.
-                    reply(Boom.notFound());   // Error 404
-                } else {
-                    console.log(err);
-                    reply(Boom.badRequest("Could not delete Trend"));   // Error 400
-                }
+            Trend.findByIdAndRemove(request.params.id).then(function (trend) {
+                reply({
+                    message: "Trend deleted successfully"
+                });  // HTTP 200 ok
+            }).catch(function (err) {
+                reply(Boom.notFound());   // Error 404
             });
         }
     })
@@ -200,7 +188,7 @@ exports.mostWanted = function (server) {
         config: {
             description: 'Get a list of the most frequent search keywords',
             notes: 'Endpoint for getting the "most wanted" "products", in fact the most searched keywords',
-            tags: ['api', 'keywords','trends','statistics']
+            tags: ['api', 'keywords', 'trends', 'statistics']
         },
         handler: function (request, reply) {
 
@@ -212,15 +200,11 @@ exports.mostWanted = function (server) {
                     fromDate: {$min: "$createdAt"},
                     toDate: {$max: "$createdAt"}
                 }
-            }, {$sort: {count: -1}}, {$limit: request.limit}], function (err, result) {
-                if (err) {
-                    console.log(err);
-                    return reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(result);
+            }, {$sort: {count: -1}}, {$limit: request.limit}]).then(function (result) {
                 reply(result);      // HTTP 200 ok
+            }).catch(function (err) {
+                reply(Boom.badImplementation(err)); // 500 error;
             });
-
         }
     });
 };
@@ -233,7 +217,7 @@ exports.mostFound = function (server) {
         config: {
             description: 'Most found searches by keyword',
             notes: 'Endpoint to get the searches giving more results; it allows to know what kind of searches are better satisfied, which keywords/phrase have more supplier/products then others.',
-            tags: ['api', 'results', 'found','trends','statistics']
+            tags: ['api', 'results', 'found', 'trends', 'statistics']
         },
         handler: function (request, reply) {
 
@@ -245,13 +229,11 @@ exports.mostFound = function (server) {
                     fromDate: {$min: "$createdAt"},
                     toDate: {$max: "$createdAt"}
                 }
-            }, {$sort: {results: -1}}, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
+            }, {$sort: {results: -1}}, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}]).then(function (result) {
                 reply(results);      // HTTP 200 ok
+            }).catch(function (err, results) {
+                reply(Boom.badImplementation(err)); // 500 error;
+
             });
 
         }
@@ -266,7 +248,7 @@ exports.rare = function (server) {
         config: {
             description: 'Most rare products/suppliers',
             notes: 'Endpoint that collect the searches with minor number of results, but not zero; allows to know which are the keywords/phrases giving at least one result, ordered asc.',
-            tags: ['api', 'rare','trends','statistics']
+            tags: ['api', 'rare', 'trends', 'statistics']
         },
         handler: function (request, reply) {
 
@@ -282,13 +264,10 @@ exports.rare = function (server) {
                     count: 1,
                     results: 1
                 }
-            }, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
+            }, {$skip: (request.page - 1) * request.limit}, {$limit: request.limit}]).then(function (results) {
                 reply(results);   // HTTP 200 ok
+            }).catch(function (err) {
+                return reply(Boom.badImplementation(err)); // 500 error;
             });
 
         }
@@ -303,7 +282,7 @@ exports.notfound = function (server) {
         config: {
             description: 'Not found keywords/products/suppliers',
             notes: 'Endpoint that collects the searches with zero results.',
-            tags: ['api', 'notfound','trends','statistics']
+            tags: ['api', 'notfound', 'trends', 'statistics']
         },
         handler: function (request, reply) {
 
@@ -315,13 +294,10 @@ exports.notfound = function (server) {
                     fromDate: {$min: "$createdAt"},
                     toDate: {$max: "$createdAt"}
                 }
-            }, {$sort: {count: -1}}, {$limit: request.limit}, {$skip: (request.page - 1) * request.limit}], function (err, results) {
-                if (err) {
-                    console.log(err);
-                    return reply(Boom.badImplementation(err)); // 500 error;
-                }
-                console.log(results);
+            }, {$sort: {count: -1}}, {$limit: request.limit}, {$skip: (request.page - 1) * request.limit}]).then(function (results) {
                 reply(results);  // HTTP 200 ok
+            }).catch(function (err) {
+                return reply(Boom.badImplementation(err)); // 500 error;
             });
 
         }

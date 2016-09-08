@@ -30,7 +30,7 @@ var configs = {
     }
 };
 
-app.set('port',process.env.PORT || '3000');
+app.set('port', process.env.PORT || '3000');
 
 if (process.env.hasOwnProperty('NODE_ENV') && process.env.NODE_ENV === 'dev') {
     app.set("conf", configs.dev);
@@ -74,7 +74,7 @@ app.use(prefix, messages);
 app.use(prefix, evaluations);
 
 
-if (app.get("env")!== 'development') {
+if (app.get("env") !== 'development') {
 
     var audoku = require('audoku');
 
@@ -84,7 +84,7 @@ if (app.get("env")!== 'development') {
             "name": "Api Seidue",
             "version": "1.0.0",
             "title": "Seidue API",
-            "url": "https://seidue.crs4.it",
+            "url": "http://seidue.crs4.it",
             "header": {
                 "title": "API Overview",
                 "content": "<p>A wonderful set of APIs</p>"
@@ -95,10 +95,22 @@ if (app.get("env")!== 'development') {
             }
         },
         app: app,
-        docspath : '/docs',
+        docspath: '/docs',
         routers: [{
             basepath: "http://localhost:" + app.get('port') + prefix,
             router: categories
+        }, {
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: conversations
+        }, {
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: products
+        }, {
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: users
+        }, {
+            basepath: "http://localhost:" + app.get('port') + prefix,
+            router: evaluations
         }]
     });
 }
@@ -134,7 +146,6 @@ app.use(function (err, req, res, next) {
         error: {}
     });
 });
-
 
 
 module.exports = app;
