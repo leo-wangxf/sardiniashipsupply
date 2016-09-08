@@ -20,7 +20,7 @@ var joiUserSchema = Joi.object({
     web: Joi.string().uri(),
     email : Joi.string().email(),
     password : Joi.string().required(),
-    id: Joi.string().required().meta({ type: 'ObjectId'}),
+   // id: Joi.string().required().meta({ type: 'ObjectId'}),
     status : Joi.string().min(1).max(1),
     favoriteSupplier : Joi.array().items(Joi.string()),
     pIva : Joi.string()

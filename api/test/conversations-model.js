@@ -48,13 +48,14 @@ describe('Conversation Model', function () {
         var createUsers = function (callback) {
             async.each(range, function (e, cb) {
                 user = new User({
+                    id: "008f4fdc09dd8c1c3e51d364",
                     name: "Guest " + e,
                     address: "Via dei matti 53",
                     password: "pw"
 
                 });
 
-                user.save(function (err, message) {
+                user.save(function (err, us) {
                     if (err) throw err;
                     users.push(user._id);
                     cb();
@@ -73,6 +74,7 @@ describe('Conversation Model', function () {
             async.each(range, function (e, cb) {
                 message = new Message({
                     senderId: users[_.random(0, 99)],
+                    type:"customer",
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",

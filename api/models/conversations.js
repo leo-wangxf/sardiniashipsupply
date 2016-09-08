@@ -16,11 +16,11 @@ var Schema = mongoose.Schema,
 var joiConversationSchema = Joi.object({
     supplierId: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
     customerId: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
-    dateIn: Joi.date().default(Date.now, 'time of creation'),
+    dateIn: Joi.date().default(Date.now, 'time of creation').required(),
     dateValidity: Joi.date().required(),
     dateEnd: Joi.date(),
     subject: Joi.string(),
-    completed: Joi.boolean().default(false),
+    completed: Joi.boolean().required().default(false),
     messages:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Message'})),
     requests:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Request'})),
     hidden:  Joi.boolean().default(false)
@@ -36,8 +36,12 @@ var Conversation = mongoose.model('Conversation', ConversationSchema);
 
 
 Conversation.prototype.getMessagesByQuery = function (query) { //Maybe already in mongoose? NO, it's not.
-
     return _.filter(this.messages, query);
+};
+
+Conversation.prototype.getRequestsByQuery = function (query) { //Maybe already in mongoose? NO, it's not.
+
+    return _.filter(this.requests, query);
 };
 
 exports.ConversationSchema = ConversationSchema;
