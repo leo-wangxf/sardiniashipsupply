@@ -113,7 +113,12 @@ if (app.get("env")!== 'development') {
             {
                 basepath: "http://localhost:" + app.get('port') + prefix,
                 router:requests
-            }]
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:products
+            }
+            ]
     });
 }
 

@@ -6,6 +6,7 @@ var router = express.Router();
 var au = require('audoku');
 
 
+// INSERT PRODUCT
 
 router.post('/products',
     au.doku({  // json documentation
@@ -14,7 +15,7 @@ router.post('/products',
         title: 'Insert a new product',
         version: '1.0.0',
         name: 'products',
-        group: 'products',
+        group: 'Products',
         bodyFields: {
             name: {type: 'String', required: true, description: 'Name of product'},
             description: {type: 'String', required: true, description: 'Description of product'},
@@ -51,9 +52,14 @@ router.post('/products',
 
 
 
-
+// GET ALL PRODUCT
+/*
 router.get('/products',
     au.doku({  // json documentation
+        title: 'Get all product',
+        version: '1.0.0',
+        name: 'GetAllProducts',
+        group: 'Products',
         description: 'Get all the products defined in db',
         fields: {
             page: {
@@ -83,14 +89,16 @@ router.get('/products',
         });
 
     });
+*/
 
+// GET PRODUCT
 
 router.get('/products/:id',
     au.doku({  // json documentation
         title: 'Get a product by id',
         version: '1.0.0',
         name: 'GetProduct',
-        group: 'Product',
+        group: 'Products',
         description: 'Get a product by id',
         params: {
             id: {type: 'String', required: true, description: 'The product identifier'}
@@ -117,14 +125,14 @@ router.get('/products/:id',
 );
 
 
-
+// UPDATE
 
 router.put('/products/:id',
     au.doku({  // json documentation
         title: 'Update a product by id',
         version: '1.0.0',
         name: 'UpdateProduct',
-        group: 'products',
+        group: 'Products',
         description: 'Update a product by id',
         params: {
             id: {type: 'String', required: true, description: 'The product identifier'}
@@ -171,5 +179,71 @@ router.put('/products/:id',
 
 
 
+// SEARCH
+
+router.get('/products',
+    au.doku({  // json documentation
+        title: 'Search products defined in db by name or only category',
+        version: '1.0.0',
+        name: 'SearchProduct',
+        group: 'Products',
+        description: 'Search products defined in db by name, category, supplierId and tags',
+        fields: {
+            name: {
+                description: 'name of the product',
+                type: 'string', required: false
+            },
+            category: {
+                description: 'id of the category',
+                type: 'string', required: false
+            },
+            supplierId: {
+                description: 'id of the supplier',
+                type: 'string', required: false
+            },
+            tags: {
+                description: 'tags associated',
+                type: 'string', required: false
+            },
+            page: {
+                description: 'The current page for pagination',
+                type: 'integer', required: false
+            },
+            limit: {
+                description: 'The current limit for pagination',
+                type: 'integer', required: false
+            }
+        }
+    }),
+    function (req, res) {
+
+        var query = _.extend({}, req.query);
+        if (query.hasOwnProperty('page')) delete query.page;
+        if (query.hasOwnProperty('limit')) delete query.limit;
+        
+        query.name = new RegExp(req.query.name, "i");
+            
+
+        Product.paginate(query
+                    , {populate: 'categories'
+                    , page: req.query.page
+                    , limit: req.query.limit}
+            ).then(function (entities) {
+            if (entities.total === 0)
+                return res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
+            else
+                return res.send(entities); // HTTP 200 ok
+        }).catch(function (err) {
+            if (err) return res.boom.badImplementation(err); // Error 500
+            else return res.boom.badImplementation(); // Error 500
+        });
+
+    });
+
+
 
 module.exports = router;
+
+
+
+
