@@ -102,7 +102,7 @@ var storage = multer.diskStorage(
 });
 
 
-router.get('/',
+router.get('/users',
   au.doku({  // json documentation
     "description": 'Get the list of all suppliers',
     "fields": 
@@ -142,7 +142,7 @@ router.get('/',
 });
 
 
-router.put('/',
+router.put('/users',
   au.doku({  // json documentation
     "description": 'Update the user profile',
     "bodyFields": 
@@ -302,7 +302,7 @@ router.put('/',
 );
 
 
-router.get('/actions/favorites',
+router.get('/users/actions/favorites',
   au.doku({  // json documentation
     "description" : "Get the customer's favorites suppliers list",
     "headers" :
@@ -371,7 +371,7 @@ router.get('/actions/favorites',
   }
 );
 
-router.post('/actions/favorites',
+router.post('/users/actions/favorites',
   au.doku({  // json documentation
     "description": "Add a supplier to the customer's favorites list",
     "headers":
@@ -530,7 +530,7 @@ router.post('/actions/favorites',
 );
 
 
-router.delete('/actions/favorites/:supId',
+router.delete('/users/actions/favorites/:supId',
   au.doku({  // json documentation
     "description" : "Remove a supplier from the customer's favorites list",
     "params": 
@@ -618,7 +618,7 @@ router.delete('/actions/favorites/:supId',
 );
 
 
-router.post('/actions/attachment',
+router.post('/users/actions/attachment',
   au.doku({  // json documentation
     "description": "Allow supplier to upload a pdf document in his own profile",
     "headers":
@@ -735,7 +735,7 @@ router.post('/actions/attachment',
   }
 );
 
-router.get('/actions/attachment/:supId',
+router.get('/users/actions/attachment/:supId',
   au.doku({  // json documentation
     "description": "Get the supplier's attached document list",
     "params": 
@@ -786,7 +786,7 @@ router.get('/actions/attachment/:supId',
 );
 
 
-router.get('/actions/attachment/:supId/:file',
+router.get('/users/actions/attachment/:supId/:file',
   au.doku({  // json documentation
     "description": "Download a document attached by a supplier",
     "params": 
@@ -838,7 +838,7 @@ router.get('/actions/attachment/:supId/:file',
 );
 
 
-router.delete('/actions/attachment/:file',
+router.delete('/users/actions/attachment/:file',
   au.doku({  // json documentation
     "description": "Delete a file owned by a supplier",
     "headers":
