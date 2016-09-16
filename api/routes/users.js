@@ -105,6 +105,10 @@ var storage = multer.diskStorage(
 router.get('/users',
   au.doku({  // json documentation
     "description": 'Get the list of all suppliers',
+    "title": 'Get the list of all suppliers',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetSuppliers",
     "fields": 
     {
       "page": 
@@ -145,6 +149,10 @@ router.get('/users',
 router.put('/users',
   au.doku({  // json documentation
     "description": 'Update the user profile',
+    "title": 'Update the user profile',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "UpdateProfile",
     "bodyFields": 
     {
       "name": 
@@ -305,6 +313,10 @@ router.put('/users',
 router.get('/users/actions/favorites',
   au.doku({  // json documentation
     "description" : "Get the customer's favorites suppliers list",
+    "title": "Get the customer's favorites suppliers list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetFavorites",
     "headers" :
     {
       "Authorization" :
@@ -374,6 +386,10 @@ router.get('/users/actions/favorites',
 router.post('/users/actions/favorites',
   au.doku({  // json documentation
     "description": "Add a supplier to the customer's favorites list",
+    "title": "Add a supplier to the customer's favorites list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostFavorites",
     "headers":
     {
       "Authorization":
@@ -533,6 +549,10 @@ router.post('/users/actions/favorites',
 router.delete('/users/actions/favorites/:supId',
   au.doku({  // json documentation
     "description" : "Remove a supplier from the customer's favorites list",
+    "title": "Remove a supplier from the customer's favorite's list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteFavorite",
     "params": 
     {
       "supId":
@@ -621,6 +641,10 @@ router.delete('/users/actions/favorites/:supId',
 router.post('/users/actions/attachment',
   au.doku({  // json documentation
     "description": "Allow supplier to upload a pdf document in his own profile",
+    "title": 'Allow supplier to upload a pdf document in his own profile',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostAttachment",
     "headers":
     {
       "Authorization":
@@ -738,6 +762,10 @@ router.post('/users/actions/attachment',
 router.get('/users/actions/attachment/:supId',
   au.doku({  // json documentation
     "description": "Get the supplier's attached document list",
+    "title": "Get the supplier's attached document list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetAttachments",
     "params": 
     {
       "supId":
@@ -789,6 +817,10 @@ router.get('/users/actions/attachment/:supId',
 router.get('/users/actions/attachment/:supId/:file',
   au.doku({  // json documentation
     "description": "Download a document attached by a supplier",
+    "title": 'Download a document attached by a supplier',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DownloadAttachment",
     "params": 
     {
       "supId":
@@ -841,6 +873,10 @@ router.get('/users/actions/attachment/:supId/:file',
 router.delete('/users/actions/attachment/:file',
   au.doku({  // json documentation
     "description": "Delete a file owned by a supplier",
+    "title": 'Delete a file owned by a supplier',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteAttachment",
     "headers":
     {
       "Authorization":
