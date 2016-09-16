@@ -4,6 +4,7 @@ var Conversation = require('../models/conversations').Conversation;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
+var ObjectId = require('mongoose').Types.ObjectId;
 
 
 router.get('/conversations',
@@ -31,12 +32,47 @@ router.get('/conversations',
         if (query.hasOwnProperty('limit')) delete query.limit;
         //   console.log(query);
 
+         var allowedFields = ["completed", "date_in","by_uid"];
+        for (var v in req.query)
+            if (_.contains(allowedFields, v)) {
+                if (v === "date_in") {
+                    var timeQuery = {};
+                    timeQuery["$gte"] = new Date(req.query[v]);
+                    timeQuery["$lt"] = new Date(req.query[v]);
+                    timeQuery["$lt"].setDate(timeQuery["$lt"].getDate() +1);
+                    delete query[v];
+                    query['dateIn'] = timeQuery ;
+                    continue;
+                }
+                else if (v === "by_uid") {
+                    query['supplierId'] = new ObjectId(query[v]);
+                    query['customerId'] = new ObjectId(query[v]);
+                    delete query[v];
+                    continue;
+                }
+                query[v] = req.query[v];
+            }
+
+
+
         Conversation.paginate(query, {page: req.query.page, limit: req.query.limit})
             .then(function (entities) {
-
+              //  console.log(entities);
+                if (entities.total === 0)
+                    return Promise.reject({
+                        name:'ItemNotFound',
+                        message: 'no conversation found',
+                        errorCode: 404
+                    });
+                else
                 res.send(entities); // HTTP 200 ok
             }).catch(function (err) {
-            res.boom.badImplementation(err); // Error 500
+            console.log(err);
+            if(err.name==="ItemNotFound") res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'ValidationError')
+                res.boom.badData(err.message); // Error 422
+            else
+            res.boom.badImplementation(err.message); // Error 500
         });
 
 
@@ -54,14 +90,14 @@ router.post('/conversations',
         bodyFields: {
             supplierId: {type: 'String', required: true, description: 'Supplier user'},
             customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', description: 'Start conversation date '},
-            dateValidity: {type: 'Date', description: 'Validity conversation date '},
+            dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
+            dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
-            completed: {type: 'Boolean', description: 'Conversation completion '},
+            completed: {type: 'Boolean', required: true, description: 'Conversation completion ', default:false},
             messages: {type: 'Array', description: 'List conversation messages '},
             requests: {type: 'Array', description: 'List conversation requests '},
-            hidden: {type: 'Boolean', description: 'Conversation visibility '}
+            hidden: {type: 'Boolean', description: 'Conversation visibility ', default:false}
         }
     }),
     function (req, res) {
@@ -157,14 +193,14 @@ router.put('/conversations/:id',
         bodyFields: {
             supplierId: {type: 'String', required: true, description: 'Supplier user'},
             customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', description: 'Start conversation date '},
-            dateValidity: {type: 'Date', description: 'Validity conversation date '},
+            dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
+            dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
-            completed: {type: 'Boolean', description: 'Conversation completion '},
+            completed: {type: 'Boolean', required: true, description: 'Conversation completion ', default:false},
             messages: {type: 'Array', description: 'List conversation messages '},
             requests: {type: 'Array', description: 'List conversation requests '},
-            hidden: {type: 'Boolean', description: 'Conversation visibility '}
+            hidden: {type: 'Boolean', description: 'Conversation visibility ', default:false}
         }
     }), putCallback
 );
@@ -182,14 +218,14 @@ router.patch('/conversations/:id',
         bodyFields: {
             supplierId: {type: 'String', required: true, description: 'Supplier user'},
             customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', description: 'Start conversation date '},
-            dateValidity: {type: 'Date', description: 'Validity conversation date '},
+            dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
+            dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
             dateEnd: {type: 'Date', description: 'End conversation date '},
             subject: {type: 'String', description: 'Conversation subject '},
-            completed: {type: 'Boolean', description: 'Conversation completion '},
+            completed: {type: 'Boolean', required: true, description: 'Conversation completion ', default:false},
             messages: {type: 'Array', description: 'List conversation messages '},
             requests: {type: 'Array', description: 'List conversation requests '},
-            hidden: {type: 'Boolean', description: 'Conversation visibility '}
+            hidden: {type: 'Boolean', description: 'Conversation visibility ', default:false}
         }
     }), putCallback
 );

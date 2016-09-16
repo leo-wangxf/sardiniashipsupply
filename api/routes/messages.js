@@ -5,7 +5,7 @@ var Conversation = require('../models/conversations').Conversation;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
-
+var ObjectId = require('mongoose').Types.ObjectId;
 /* GET all messages  */
 
 router.get('/conversations/:id/messages',
@@ -34,36 +34,54 @@ router.get('/conversations/:id/messages',
         // console.log(query);
 
 
+       // var allowedFields = ["type"];
+
+
         var id = req.params.id.toString();
-        Conversation.findById(id, "messages", function (err, entities) {  //FIXME: convert to Promises
-            if (!err) {
-                if (entities) {
-                    //console.log(entities);
-
-                    var filtEntity = entities.getMessagesByQuery(query);
-
-                    query = {"_id": {$in: filtEntity}};
-                    Message.paginate(query, {page: req.query.page, limit: req.query.limit}, function (err, results) {
-
-                        if (err) return res.boom.badImplementation(err); // Error 500
-
-                        if (results.total === 0)
-                            res.boom.notFound('No Messages found for query ' + JSON.stringify(query)); // Error 404
-                        else
-                            res.send(results); // HTTP 200 ok
-                    });
+console.log(query);
+        Conversation.findById(id, "messages").then(function (entities) {
+            if (_.isEmpty(entities))
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'no conversation found for getting messages, having id ' + id,
+                    errorCode: 404
+                });
+            else
+                return entities.getMessagesByQuery();
 
 
-                } else
-                    res.boom.notFound('no conversation found for message creation, having id ' + id);
+        }).then(function (filtEntity) {
+             if (_.isEmpty(filtEntity))
+                return Promise.reject("something strange");
+             else {
+                query = {"_id": {$in: filtEntity}};
+                return Message.paginate(query, {page: req.query.page, limit: req.query.limit});
 
-            } else {
-                res.boom.notFound('something blew up, ERROR:' + err);
+             }
 
+
+        }).then(function (results){
+            if (results.total === 0){
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No Messages found for query ' + JSON.stringify(query),
+                    errorCode: 404
+                });
+            }
+            else{
+                res.status(200).send(results); // HTTP 200 ok
             }
 
 
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'ValidationError')
+                res.boom.badData(err.message); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
         });
+
 
     });
 
@@ -77,10 +95,11 @@ router.post('/conversations/:id/messages',
         name: 'PostMessage',
         group: 'Messages',
         bodyFields: {
-            senderId: {type: 'String', required: true, description: 'Sender user'},
-            dateIn: {type: 'Date', description: 'Start message date '},
-            text: {type: 'String', description: 'Message text '},
-            draft: {type: 'Boolean', description: 'Message as draft '},
+           senderId: {type: 'String', required: true, description: 'Sender user'},
+            type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
+            dateIn: {type: 'Date', description: 'Start message date ', required: true},
+            text: {type: 'String', description: 'Message text ', required: true},
+            draft: {type: 'Boolean', description: 'Message as draft ', required: true},
             attachments: {type: 'Array', description: 'List of attachments '},
         }
     }),
@@ -98,6 +117,7 @@ router.post('/conversations/:id/messages',
             saveResults = results;
             if (_.isEmpty(results))
                 return Promise.reject({
+                    name:'ItemNotFound',
                     message: 'no conversation found for message creation, having id ' + id,
                     errorCode: 404
                 });
@@ -127,7 +147,8 @@ router.post('/conversations/:id/messages',
 
         }).catch(function (err) {
 
-            if (err.name === 'ValidationError')
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'ValidationError')
                 res.boom.badData(err.message); // Error 422
             else
                 res.boom.badImplementation('something blew up, ERROR:' + err);
@@ -148,24 +169,32 @@ router.get('/messages/:id',
         }
 
     }), function (req, res) {
-        var id = req.params['id'].toString();
+        var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed
 
-        Message.findById(id, newVals, function (err, entities) {   //FIXME: convert to Promises
 
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
+        Message.findById(id, newVals).then(function(entity){
+            if (_.isEmpty(entity)){
+               // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id, // Error 404
+                    errorCode: 404
+                });
             }
-
-            if (_.isEmpty(entities))
-                return res.boom.notFound('No entry with id ' + id); // Error 404
             else
-                return res.send(entities);  // HTTP 200 ok
-        });
+                res.send(entity);
+
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if(err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
+        })
+
     }
 );
 
@@ -175,25 +204,37 @@ var putCallback = function (req, res) {
     if (_.isEmpty(req.body))
         return res.boom.badData('Empty boby'); // Error 422
 
-    var id = req.params['id'].toString();
+    var id = req.params.id.toString();
 
     var newVals = req.body; // body already parsed
 
-    Message.findByIdAndUpdate(id, newVals, function (err, entities) { //FIXME: convert to Promises
-
-        if (err) {
-            if (err.name === 'ValidationError')
-                return res.boom.badData(err.message); // Error 422
-            else if (err.name === 'CastError')
-                return res.boom.badData('Id malformed'); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
+    Message.findByIdAndUpdate(id, newVals).then(function(entity){
+        if (_.isEmpty(entity)){
+            // console.log("empty");
+            return Promise.reject({
+                name:'ItemNotFound',
+                message: 'No entry with id '+ id, // Error 404
+                errorCode: 404
+            });
         }
-        if (_.isEmpty(entities))
-            return res.boom.notFound('No entry with id ' + id); // Error 404
         else
-            return res.send(entities);  // HTTP 200 ok
-    });
+            res.send(entity);
+
+    }).catch(function (err) {
+        if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+        else if(err.name === 'ValidationError')
+             res.boom.badData(err.message); // Error 422
+        else if (err.name === 'CastError')
+             res.boom.badData('Id malformed'); // Error 422
+        else
+             res.boom.badImplementation(err);// Error 500
+
+    })
+
+
+
+
+
 
 };
 
@@ -209,16 +250,12 @@ router.put('/messages/:id',
             id: {type: 'String', required: true, description: 'The message identifier'}
         },
         bodyFields: {
-            supplierId: {type: 'String', required: true, description: 'Supplier user'},
-            customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', description: 'Start message date '},
-            dateValidity: {type: 'Date', description: 'Validity message date '},
-            dateEnd: {type: 'Date', description: 'End message date '},
-            subject: {type: 'String', description: 'Message subject '},
-            completed: {type: 'Boolean', description: 'Message completion '},
-            messages: {type: 'Array', description: 'List message messages '},
-            requests: {type: 'Array', description: 'List message requests '},
-            hidden: {type: 'Boolean', description: 'Message visibility '}
+            senderId: {type: 'String', required: true, description: 'Sender user'},
+            type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
+            dateIn: {type: 'Date', description: 'Start message date ', required: true},
+            text: {type: 'String', description: 'Message text ', required: true},
+            draft: {type: 'Boolean', description: 'Message as draft ', required: true},
+            attachments: {type: 'Array', description: 'List of attachments '},
         }
     }), putCallback
 );
@@ -234,22 +271,19 @@ router.patch('/messages/:id',
             id: {type: 'String', required: true}
         },
         bodyFields: {
-            supplierId: {type: 'String', required: true, description: 'Supplier user'},
-            customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', description: 'Start message date '},
-            dateValidity: {type: 'Date', description: 'Validity message date '},
-            dateEnd: {type: 'Date', description: 'End message date '},
-            subject: {type: 'String', description: 'Message subject '},
-            completed: {type: 'Boolean', description: 'Message completion '},
-            messages: {type: 'Array', description: 'List message messages '},
-            requests: {type: 'Array', description: 'List message requests '},
-            hidden: {type: 'Boolean', description: 'Message visibility '}
+            senderId: {type: 'String', required: true, description: 'Sender user'},
+            type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
+            dateIn: {type: 'Date', description: 'Start message date ', required: true},
+            text: {type: 'String', description: 'Message text ', required: true},
+            draft: {type: 'Boolean', description: 'Message as draft ', required: true},
+            attachments: {type: 'Array', description: 'List of attachments '},
         }
     }), putCallback
 );
 
 
-router.delete('/messages/:id',
+/* DELETE a message in a conversation */
+router.delete('/conversations/:id_c/messages/:id_m',
     au.doku({
         // json documentation
         title: 'Delete a message by id ',
@@ -264,17 +298,59 @@ router.delete('/messages/:id',
 
     function (req, res) {
 
-        var id = req.params['id'].toString();
+        var idC = req.params.id_c.toString();
+        var idM = req.params.id_m.toString();
 
-        Message.findByIdAndRemove(id, function (err, entities) {  //FIXME: convert to Promises
+      /*  if (_.isEmpty(req.body))
+            return res.boom.badData('Empty body'); // Error 422
+*/
+      // var id = req.params.id.toString();
 
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
-                return res.status(204).send();  // HTTP 204 ok, no body
+        var saveResults;
+        var msg;
+        Conversation.findById(idC, "messages").then(function (results) {
+            saveResults = results;
+            if (_.isEmpty(results)){
+
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'no conversation found for message deletion, having id ' + idC,
+                    errorCode: 404
+                });
+            }
+
+            else
+               return Message.findByIdAndRemove(idM);
+        }).
+        then( function (entity) {
+                   if (_.isEmpty(entity)){
+                        return Promise.reject({
+                            name:'ItemNotFound',
+                            message: 'No entry with id '+ idM, // Error 404
+                            errorCode: 404
+                        });
+                    }
+                    else
+                        saveResults.messages.pull(idM);
+                        msg = entity;
+                        return saveResults.save();
+
+                }).
+                then(function (results) {
+
+            // var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+
+            //  res.set('Location', fullUrl + "/" + id + '/messages/' + newmessage._id);
+            //res.status(201).send(newmessage);
+            res.status(204).send(msg);  // HTTP 201 deleted
+
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else  if (err.name === 'ValidationError')
+                res.boom.badData(err.message); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
         });
 
     });
