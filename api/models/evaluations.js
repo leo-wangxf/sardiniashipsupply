@@ -31,23 +31,3 @@ var Evaluation = mongoose.model('Evaluation', EvaluationSchema);
 
 exports.EvaluationSchema = EvaluationSchema;
 exports.Evaluation = Evaluation;
-
-
-EvaluationSchema.plugin(mongoosePaginate);
-
-
-var Evaluation = mongoose.model('Evaluation', EvaluationSchema);
-
-
-exports.EvaluationSchema = EvaluationSchema;
-exports.Evaluation = Evaluation;
-
-
-EvaluationSchema.plugin(mongoosePaginate);
-
-
-var Evaluation = mongoose.model('Evaluation', EvaluationSchema);
-
-
-exports.EvaluationSchema = EvaluationSchema;
-exports.Evaluation = Evaluation;
