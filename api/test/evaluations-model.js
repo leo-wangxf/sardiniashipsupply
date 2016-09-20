@@ -159,6 +159,64 @@ describe('Evaluation Model', function () {
         });
 
     });
+    describe('Create an evaluation with more fields than defined', function () {
+
+        it('must not save with more than the fields required', function (done) {
+            Evaluation.create({
+                from: users[_.random(0, 99)],
+                to: users[_.random(0, 99)],
+		conversationId: conversations[_.random(0, 99)],
+                conversation_end_time:conversations[_.random(0,99)].dateEnd,
+		overall_rate:5.0,
+		delivery_rate:4.5,
+		product_rate:3.8,
+		overall_review:"The product was as expected.",
+                evaluation_time: Date.now(),
+                dummy_field: "Not expected field: a StrictModeError is expected from mongoose"
+            }).catch(function (err) {
+                should.exist(err); //  err;
+		// when mongoose strict mode is enabled, 
+		// (defining the mongoose schema with argument
+		// strict:"throw"),
+		// it throws a StrictModeError whenever a field 
+		// is provided that does not exist in the module
+		// The problem is that the same error is mistakenly
+		// fired also when the field exists in the model,
+		// but it has the wrong type. This was an issue of early
+		// 2016, remember to check if it has been fixed.
+                err.name.should.be.equal('StrictModeError');
+                done();
+            });
+
+
+        });
+
+    });
+    describe('Create an evaluation with an off limit value', function () {
+
+        it('must not save with an off limit value', function (done) {
+            Evaluation.create({
+                from: users[_.random(0, 99)],
+                to: users[_.random(0, 99)],
+		conversationId: conversations[_.random(0, 99)],
+                conversation_end_time:conversations[_.random(0,99)].dateEnd,
+		overall_rate:8.0,
+		delivery_rate:4.5,
+		product_rate:3.8,
+		overall_review:"The product was as expected.",
+                evaluation_time: Date.now(),
+            }).catch(function (err) {
+                should.exist(err); //  err;
+                err.name.should.be.equal('ValidationError');
+                done();
+            });
+
+
+        });
+
+    });
+
+
 
 });
 	    
