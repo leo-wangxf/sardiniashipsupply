@@ -65,9 +65,10 @@ app.use(boom());
 
 //routes
 app.use('/', routes);
-app.use('/users', users);
+
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
+app.use(prefix, users);
 app.use(prefix, categories);
 app.use(prefix, products);
 app.use(prefix, conversations);
@@ -113,7 +114,16 @@ if (app.get("env")!== 'development') {
             {
                 basepath: "http://localhost:" + app.get('port') + prefix,
                 router:requests
-            }]
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:products
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router:users
+            }
+            ]
     });
 }
 

@@ -9,6 +9,9 @@ var au = require('audoku');
 router.get('/evaluations',
     au.doku({  // json documentation
         description: 'Get all the evaluations defined in db',
+	title: 'Get evaluations',
+	name: 'GetEvaluations',
+	group: 'Evaluations',
         fields: {
             page: {
                 description: 'The current page for pagination',
@@ -43,9 +46,17 @@ router.post('/evaluations',
     au.doku({  // json documentation
         description: 'Create an evaluation in db',
         fields: {
-            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
-            name: {type: "String", required: true},
+            from: {type: "String", required: true, description: "evaluator user (a customer)"},
+            to: {type: "String", required: true, description: "evaluated user (a supplier)"},
+            conversationId:{type:"String", required: true, description:"Id of related conversation"},
+            overall_rate:{type:"Float", required:true, description:"overall user rate"},
+            delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
+            product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
+            overall_review:{type:"String", required:false, description:"overall user textual review"},
+            conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
+            evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
+
         }
     }),
     function (req, res) {
@@ -131,7 +142,7 @@ router.put('/evaluations/:id',
             id: {type: "String", required: true}
         },
         fields: {
-            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
+           from: {type: "String", required: true, description: "Supplier user"},
             name: {type: "String", required: true},
             description: {type: "String", required: false}
         }
@@ -145,7 +156,7 @@ router.patch('/evaluations/:id',
             id: {type: "String", required: true}
         },
         fields: {
-            unspsc: {type: "String", required: true, description: "Standard code from unspsc"},
+           from: {type: "String", required: true, description: "Supplier user"},
             name: {type: "String", required: true},
             description: {type: "String", required: false}
         }

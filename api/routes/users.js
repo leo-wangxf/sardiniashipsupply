@@ -102,9 +102,13 @@ var storage = multer.diskStorage(
 });
 
 
-router.get('/',
+router.get('/users',
   au.doku({  // json documentation
     "description": 'Get the list of all suppliers',
+    "title": 'Get the list of all suppliers',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetSuppliers",
     "fields": 
     {
       "page": 
@@ -142,69 +146,79 @@ router.get('/',
 });
 
 
-router.put('/',
+router.put('/users',
   au.doku({  // json documentation
     "description": 'Update the user profile',
+    "title": 'Update the user profile',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "UpdateProfile",
     "bodyFields": 
     {
-      "name": 
+      "user": 
+      {
+        "description": 'The object that contains the user information',
+        "type": 'object', 
+        "required": true
+      },
+      "user.name": 
       {
         "description": 'The user name',
         "type": 'string', 
         "required": false
       },
-      "address": 
+      "user.address": 
       {
         "description": 'The user\'s address (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "logo": 
+      "user.logo": 
       {
         "description": 'The url of the user\'s logo (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "phone": 
+      "user.phone": 
       {
         "description": 'The user\' phone number',
         "type": 'integer', 
         "required": false
       },
-      "description": 
+      "user.description": 
       {
         "description": 'The business description (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "web": 
+      "user.web": 
       {
         "description": 'URL of user\'s website (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "favoriteSupplier":
+      "user.favoriteSupplier":
       {
         "description": 'The list of the user\'s favorite supplier (only for customers)',
         // TODO tipo list al posto di string
         "type": 'string', 
         "required": false
       },
-      "certifications":
+      "user.certifications":
       {
         "description": 'The list of the user\'s certifications (only for suppliers)',
         // TODO tipo object al posto di string
         "type": 'string', 
         "required": false
       },
-      "categories":
+      "user.categories":
       {
         "description": 'categories provided by the user (only for suppliers)',
         // TODO tipo list al posto di string
         "type": 'string', 
         "required": false
       },
-      "pIva":
+      "user.pIva":
       {
         "description": 'The user\'s VAT identification number (only for suppliers)',
         "type": 'string', 
@@ -302,9 +316,13 @@ router.put('/',
 );
 
 
-router.get('/actions/favorites',
+router.get('/users/actions/favorites',
   au.doku({  // json documentation
     "description" : "Get the customer's favorites suppliers list",
+    "title": "Get the customer's favorites suppliers list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetFavorites",
     "headers" :
     {
       "Authorization" :
@@ -371,9 +389,13 @@ router.get('/actions/favorites',
   }
 );
 
-router.post('/actions/favorites',
+router.post('/users/actions/favorites',
   au.doku({  // json documentation
     "description": "Add a supplier to the customer's favorites list",
+    "title": "Add a supplier to the customer's favorites list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostFavorites",
     "headers":
     {
       "Authorization":
@@ -530,9 +552,13 @@ router.post('/actions/favorites',
 );
 
 
-router.delete('/actions/favorites/:supId',
+router.delete('/users/actions/favorites/:supId',
   au.doku({  // json documentation
     "description" : "Remove a supplier from the customer's favorites list",
+    "title": "Remove a supplier from the customer's favorite's list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteFavorite",
     "params": 
     {
       "supId":
@@ -618,9 +644,13 @@ router.delete('/actions/favorites/:supId',
 );
 
 
-router.post('/actions/attachment',
+router.post('/users/actions/attachment',
   au.doku({  // json documentation
     "description": "Allow supplier to upload a pdf document in his own profile",
+    "title": 'Allow supplier to upload a pdf document in his own profile',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostAttachment",
     "headers":
     {
       "Authorization":
@@ -735,9 +765,13 @@ router.post('/actions/attachment',
   }
 );
 
-router.get('/actions/attachment/:supId',
+router.get('/users/actions/attachment/:supId',
   au.doku({  // json documentation
     "description": "Get the supplier's attached document list",
+    "title": "Get the supplier's attached document list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetAttachments",
     "params": 
     {
       "supId":
@@ -786,9 +820,13 @@ router.get('/actions/attachment/:supId',
 );
 
 
-router.get('/actions/attachment/:supId/:file',
+router.get('/users/actions/attachment/:supId/:file',
   au.doku({  // json documentation
     "description": "Download a document attached by a supplier",
+    "title": 'Download a document attached by a supplier',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DownloadAttachment",
     "params": 
     {
       "supId":
@@ -838,9 +876,13 @@ router.get('/actions/attachment/:supId/:file',
 );
 
 
-router.delete('/actions/attachment/:file',
+router.delete('/users/actions/attachment/:file',
   au.doku({  // json documentation
     "description": "Delete a file owned by a supplier",
+    "title": 'Delete a file owned by a supplier',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteAttachment",
     "headers":
     {
       "Authorization":
