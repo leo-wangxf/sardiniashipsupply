@@ -55,9 +55,8 @@ router.get('/conversations',
 
 
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit})
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, populate:'messages requests'})
             .then(function (entities) {
-              //  console.log(entities);
                 if (entities.total === 0)
                     return Promise.reject({
                         name:'ItemNotFound',
@@ -137,8 +136,8 @@ router.get('/conversations/:id',
 
         var newVals = req.body; // body already parsed
 
-        Conversation.findById(id, newVals).then(function (entities) {
-
+        Conversation.findById(id, newVals).populate('messages requests').then(function (entities) {
+           // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404
             else

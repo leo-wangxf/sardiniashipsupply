@@ -299,7 +299,6 @@ describe('Conversations API', function () {
             var c = {url: apihost + apiprefix + '/conversations?page=1&limit=2'};
 
             request.get(c, function (error, response, body) {
-
                     if (error) throw error;
                     else {
                         response.statusCode.should.be.equal(200);

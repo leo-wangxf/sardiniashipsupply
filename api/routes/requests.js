@@ -44,18 +44,11 @@ router.get('/conversations/:id/requests',
                     request: 'no conversation found for getting requests, having id ' + id,
                     errorCode: 404
                 });
-            else
-                return entities.getRequestsByQuery(query);
-
-
-        }).then(function (filtEntity) {
-             if (_.isEmpty(filtEntity))
-                return Promise.reject("something strange");
-             else {
-                query = {"_id": {$in: filtEntity}};
+            else {
+                query = {"_id": {$in: entities.requests}};
                 return Request.paginate(query, {page: req.query.page, limit: req.query.limit});
 
-             }
+            }
 
 
         }).then(function (results){
@@ -94,11 +87,9 @@ router.post('/conversations/:id/requests',
         group: 'Requests',
         bodyFields: {
             productId: {type: 'String', required: true, description: 'Product Id'},
-            status: {type: 'String', description: 'Request Status', options: ['pending', 'accepted', 'rejByC', 'rejByS'], default:'pending', required: true},
-            quantityRequest: {type: 'Integer', description: 'Request quantity'},
-            quantityOffer: {type: 'Integer', description: 'Offer quantity'},
-            quoteRequest: {type: 'Integer', description: 'Request quote'},
-            quoteOffer: {type: 'Integer', description: 'Offer quote'},
+            status: {type: 'String', description: 'Request Status', options: ['pending', 'acceptedByC', 'acceptedByS', 'rejectedByC', 'rejectedByS'], default:'pending', required: true},
+            quantity: {type: 'Integer', description: 'Request quantity'},
+            quote: {type: 'Integer', description: 'Request quote'},
         }
     }),
     function (req, res) {
@@ -170,20 +161,7 @@ router.get('/requests/:id',
 
         var newVals = req.body; // body already parsed
 
-       /* Request.findById(id, newVals, function (err, entities) {
 
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            }
-
-            if (_.isEmpty(entities))
-                return res.boom.notFound('No entry with id ' + id); // Error 404
-            else
-                return res.send(entities);  // HTTP 200 ok
-        });*/
         Request.findById(id, newVals).then(function(entity){
             if (_.isEmpty(entity)){
                // console.log("empty");
@@ -209,107 +187,8 @@ router.get('/requests/:id',
 );
 
 
-var putCallback = function (req, res) {
-
-    if (_.isEmpty(req.body))
-        return res.boom.badData('Empty boby'); // Error 422
-
-    var id = req.params.id.toString();
-
-    var newVals = req.body; // body already parsed
-
-/*    Request.findByIdAndUpdate(id, newVals, function (err, entities) {
-
-        if (err) {
-            if (err.name === 'ValidationError')
-                return res.boom.badData(err.message); // Error 422
-            else if (err.name === 'CastError')
-                return res.boom.badData('Id malformed'); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
-        }
-        if (_.isEmpty(entities))
-            return res.boom.notFound('No entry with id ' + id); // Error 404
-        else
-            return res.send(entities);  // HTTP 200 ok
-    });
-*/
 
 
-
-
-    Request.findByIdAndUpdate(id, newVals).then(function(entity){
-        if (_.isEmpty(entity)){
-            // console.log("empty");
-            return Promise.reject({
-                name:'ItemNotFound',
-                message: 'No entry with id '+ id, // Error 404
-                errorCode: 404
-            });
-        }
-        else
-            res.send(entity);
-
-    }).catch(function (err) {
-        if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
-        else   if(err.name === 'ValidationError')
-             res.boom.badData(err.message); // Error 422
-        else if (err.name === 'CastError')
-             res.boom.badData('Id malformed'); // Error 422
-        else
-             res.boom.badImplementation(err);// Error 500
-
-    })
-
-
-
-
-
-
-};
-
-
-router.put('/requests/:id',
-    au.doku({  // json documentation
-        title: 'Update a request by id',
-        version: '1.0.0',
-        name: 'UpdateRequest',
-        group: 'Requests',
-        description: 'Update a request by id',
-        params: {
-            id: {type: 'String', required: true, description: 'The request identifier'}
-        },
-        bodyFields: {
-            productId: {type: 'String', required: true, description: 'Product Id'},
-            status: {type: 'String', description: 'Request Status', required: true, options: ['pending', 'accepted', 'rejByC', 'rejByS'], default:'pending'},
-            quantityRequest: {type: 'Integer', description: 'Request quantity'},
-            quantityOffer: {type: 'Integer', description: 'Offer quantity'},
-            quoteRequest: {type: 'Integer', description: 'Request quote'},
-            quoteOffer: {type: 'Integer', description: 'Offer quote'},
-        }
-    }), putCallback
-);
-
-router.patch('/requests/:id',
-    au.doku({  // json documentation
-        title: 'Update a request by id (patch)',
-        version: '1.0.0',
-        name: 'UpdateRequest (patch)',
-        group: 'Requests',
-        description: 'Update a request by id',
-        params: {
-            id: {type: 'String', required: true}
-        },
-        bodyFields: {
-            productId: {type: 'String', required: true, description: 'Product Id'},
-            status: {type: 'String', description: 'Request Status', required: true, options: ['pending', 'accepted', 'rejByC', 'rejByS'], default:'pending'},
-            quantityRequest: {type: 'Integer', description: 'Request quantity'},
-            quantityOffer: {type: 'Integer', description: 'Offer quantity'},
-            quoteRequest: {type: 'Integer', description: 'Request quote'},
-            quoteOffer: {type: 'Integer', description: 'Offer quote'},
-        }
-    }), putCallback
-);
 
 
 router.delete('/requests/:id',
@@ -350,19 +229,287 @@ router.delete('/requests/:id',
                 res.boom.badImplementation('something blew up, ERROR:' + err);
 
         })
+        
+
+    });
+
+router.post('/requests/:id/actions/suppaccept',
+    au.doku({
+        // json documentation
+        title: 'Supplier set quantity/quote and/or acceptance for a request',
+        version: '1.0.0',
+        name: 'SetQuantityOrQuoteRequestForSupplier',
+        group: 'Requests',
+        description: 'Supplier set quantity/quote or status in a request',
+        params: {
+            id: {type: 'String', required: true, description: 'The request identifier'}
+        },
+        bodyFields: {
+            quantity: {type: 'Number', required: false, description: 'The request quantity'},
+            quote: {type: 'Number', required: false, description: 'The request quote'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id_r = req.params['id'].toString();
+
+        var fieldsToChange = _.extend({}, req.body);
+        if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
+        if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
+        var allowedFields = ["quantity","quote"];
+        var query = {};
+        for (var v in fieldsToChange) {
+            if (_.contains(allowedFields, v)) {
+                if (v === "quantity") {
+
+                    query["quantity"] = fieldsToChange[v];
+                    continue;
+                } else if (v === "quote") {
+                    query["quote"] = fieldsToChange[v];
+                    continue;
+                }
+            }
+        }
+        query["status"] = "acceptedByS";
+
+        Request.findOneAndUpdate(
+            {_id:id_r,status:{$eq:"pending"}},
+
+            query , {new : true}
+            ).then( function (entity) {
+
+            if (_.isEmpty(entity)){
+                // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id_r, // Error 404
+                    errorCode: 404
+                });
+            }
+            else
+                res.status(200).send(entity);
 
 
 
-            /*
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
 
-            if (err) {
-                if (err.name === 'CastError')
-                    return res.boom.badData('Id malformed'); // Error 422
-                else
-                    return res.boom.badImplementation(err);// Error 500
-            } else
-                return res.status(204).send();  // HTTP 204 ok, no body
-        });*/
+        });
+
+    });
+
+
+router.post('/requests/:id/actions/custmodify',
+    au.doku({
+        // json documentation
+        title: 'Customer set quantity/quote or status in a request',
+        version: '1.0.0',
+        name: 'SetQuantityOrQuoteRequestForCustomer',
+        group: 'Requests',
+        description: 'Customer set quantity/quote or status in a request after a supplier modify ',
+        params: {
+            id: {type: 'String', required: true, description: 'The request identifier'}
+        },
+        bodyFields: {
+            quantity: {type: 'Number', required: false, description: 'The request quantity'},
+            quote: {type: 'Number', required: false, description: 'The request quote'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id_r = req.params['id'].toString();
+
+        var fieldsToChange = _.extend({}, req.body);
+        if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
+        if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
+        var allowedFields = ["quantity","quote"];
+        var query = {};
+        for (var v in fieldsToChange) {
+            if (_.contains(allowedFields, v)) {
+                if (v === "quantity") {
+
+                    query["quantity"] = fieldsToChange[v];
+                    continue;
+                } else if (v === "quote") {
+                    query["quote"] = fieldsToChange[v];
+                    continue;
+                }
+            }
+        }
+        query["status"] = "pending";
+
+        Request.findOneAndUpdate(
+            {_id:id_r,status:{$eq:"acceptedByS"}},
+
+            query , {new : true}
+        ).then( function (entity) {
+
+            if (_.isEmpty(entity)){
+                // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id_r, // Error 404
+                    errorCode: 404
+                });
+            }
+            else
+                res.status(200).send(entity);
+
+
+
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
+        });
+
+    });
+
+
+router.post('/requests/:id/actions/custaccept',
+    au.doku({
+        // json documentation
+        title: 'Customer accept a request',
+        version: '1.0.0',
+        name: 'SetAcceptionRequestForCustomer',
+        group: 'Requests',
+        description: 'Customer accept a request after a supplier acceptance ',
+        params: {
+            id: {type: 'String', required: true, description: 'The request identifier'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id_r = req.params['id'].toString();
+
+        Request.findOneAndUpdate(
+            {_id:id_r,status:{$eq:"acceptedByS"}},
+            {"status": 'acceptedByC'}, {new : true}
+        ).then( function (entity) {
+
+            if (_.isEmpty(entity)){
+                // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id_r, // Error 404
+                    errorCode: 404
+                });
+            }
+            else
+                res.status(200).send(entity);
+
+
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
+        });
+
+    });
+
+
+router.post('/requests/:id/actions/custreject',
+    au.doku({
+        // json documentation
+        title: 'Customer reject a request',
+        version: '1.0.0',
+        name: 'SetRejectionRequestForCustomer',
+        group: 'Requests',
+        description: 'Customer reject a request after a supplier acceptance ',
+        params: {
+            id: {type: 'String', required: true, description: 'The request identifier'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id_r = req.params['id'].toString();
+
+        Request.findOneAndUpdate(
+            {_id:id_r,status:{$eq:"acceptedByS"}},
+            {"status": 'rejectedByC'}, {new : true}
+        ).then( function (entity) {
+
+            if (_.isEmpty(entity)){
+                // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id_r, // Error 404
+                    errorCode: 404
+                });
+            }
+            else res.status(200).send(entity);
+
+
+
+        }).catch(function (err) {
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
+        });
+
+    });
+
+router.post('/requests/:id/actions/suppreject',
+    au.doku({
+        // json documentation
+        title: 'Supplier reject a request',
+        version: '1.0.0',
+        name: 'SetRejectionRequestForSupplier',
+        group: 'Requests',
+        description: 'Supplier reject a request',
+        params: {
+            id: {type: 'String', required: true, description: 'The request identifier'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id_r = req.params['id'].toString();
+
+        Request.findOneAndUpdate(
+            {_id:id_r,status:{$eq:"pending"}},
+            {"status": 'rejectedByS'}, {new : true}
+        ).then( function (entity) {
+
+            if (_.isEmpty(entity)){
+                // console.log("empty");
+                return Promise.reject({
+                    name:'ItemNotFound',
+                    message: 'No entry with id '+ id_r, // Error 404
+                    errorCode: 404
+                });
+            }
+            else
+                res.status(200).send(entity);
+
+
+
+        }).catch(function (err) {
+            console.log(err);
+            if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation('something blew up, ERROR:' + err);
+
+        });
 
     });
 

@@ -16,8 +16,8 @@ var apihost = 'http://localhost';
 
 var apiprefix = app.get('apiprefix');
 
-var testmessage = '';
-var testrequest = '';
+var testmessage, testrequest, testrequest_abs, testrequest_abc= '';
+
 var testconv = '';
 
 var tooShortId = '008f4fdc09de51d364';
@@ -172,17 +172,32 @@ describe('Request Model', function () {
 
 
         }
-
+var count = 0;
         var createRequests = function (callback) {
             async.each(range, function (e, cb) {
+
+                var s = 'pending';
+                switch(count){
+                    case 0: s = 'acceptedByS'; break;
+                    case 1: s = 'acceptedByC'; break;
+                    default: s = 'pending';
+
+                }
+
                 var req = new Request({
                     productId: products[_.random(0, 99)],
-                    status: 'pending',
-                    quantityRequest: e * 100,
-                    quantityOffer: e * 100,
-                    quoteRequest: e * 100,
-                    quoteOffer: e * 100,
+                    status: s,
+                    quantity: e * 100,
+                    quote: e * 100,
                 });
+
+
+                switch(count){
+                    case 0: testrequest_abs = req; break;
+                    case 1: testrequest_abc = req; break;
+                    default: testrequest = req; break;
+                }
+
 
                 req.save(function (err, req) {
                     if (err) throw err;
@@ -190,11 +205,12 @@ describe('Request Model', function () {
                     cb();
 
                 });
-
+            count ++;
             }, function (err) {
                 //console.log(err);
                 // console.log(requests);
-                testrequest = requests[_.random(0, 99)];
+              //  testrequest = requests[_.random(0, 99)];
+               
                 callback(null);
             });
 
@@ -341,10 +357,8 @@ describe('Request Model', function () {
             var data = {
                 productId: products[_.random(0, 99)],
                 status: 'pending',
-                quantityRequest: _.random(0, 99) * 100,
-                quantityOffer: _.random(0, 99) * 100,
-                quoteRequest: _.random(0, 99) * 100,
-                quoteOffer: _.random(0, 99) * 100,
+                quantity: _.random(0, 99) * 100,
+                quote: _.random(0, 99) * 100,
             };
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
@@ -364,14 +378,10 @@ describe('Request Model', function () {
                     mongoose.Types.ObjectId(results.productId).id.should.be.equal(data.productId.id);
                     results.should.have.property('status');
                     results.status.should.be.equal(data.status);
-                    results.should.have.property('quantityRequest');
-                    results.quantityRequest.should.be.equal(data.quantityRequest);
-                    results.should.have.property('quantityOffer');
-                    results.quantityOffer.should.be.equal(data.quantityOffer);
-                    results.should.have.property('quoteRequest');
-                    results.quoteRequest.should.be.equal(data.quoteRequest);
-                    results.should.have.property('quoteOffer');
-                    results.quoteOffer.should.be.equal(data.quoteOffer);
+                    results.should.have.property('quantity');
+                    results.quantity.should.be.equal(data.quantity);
+                    results.should.have.property('quote');
+                    results.quote.should.be.equal(data.quote);
 
                 }
                 done();
@@ -425,162 +435,6 @@ describe('Request Model', function () {
     });
 
 
-    describe('PUT ' + apiprefix + '/requests/:id', function () {
-
-        it('must update the request with given id', function (done) {
-            Request.findOne({}, function (err, msg) {
-                if (err) throw err;
-
-                const tstMessageId = msg._id;
-
-
-                var c = {
-                    url: apihost + apiprefix + '/requests/' + tstMessageId,
-                    body: JSON.stringify({status:'rejByC'}),
-                    headers: {'content-type': 'application/json'}
-                };
-
-                request.put(c, function (error, response) {
-
-                    if (error) throw error;
-                    else {
-                        //  var result = JSON.parse(body);
-                        response.statusCode.should.be.equal(200); //  HTTP ok
-                        done();
-                    }
-
-                });
-
-            });
-
-        });
-
-    });
-
-    describe('PUT ' + apiprefix + '/requests/:id', function () {
-
-        it('must get error updating the request with id=' + testrequest + " (empty body)", function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/requests/' + testrequest,
-                body: "",
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.put(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(422); //  Bad Data
-                }
-                done();
-
-            });
-
-        });
-
-    });
-    describe('PATCH ' + apiprefix + '/requests/:id', function () {
-
-        it('must update the request with id=' + testrequest, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/requests/' + testrequest,
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(200); //  HTTP ok
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/requests/:id', function () {
-
-        it('must return "not found 404" for request with id=' + notExistingId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/requests/' + notExistingId,
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(404); //  NOT FOUND
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/requests/:id', function () {
-
-        it('must return "bad data 422" for request with id=' + tooShortId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/requests/' + tooShortId,
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(422); //  BAD DATA
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/requests/:id', function () {
-
-        it('must update the request with id=' + testrequest, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/requests/' + testrequest,
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(200); //  HTTP ok
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
 
     describe('GET ' + apihost + apiprefix +'/conversations/:id/requests', function () {
 
@@ -606,7 +460,7 @@ describe('Request Model', function () {
 
         it('must return the request with id='+testrequest, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest};
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id};
 
             request.get(c, function (error, response, body) {
 
@@ -668,7 +522,7 @@ describe('Request Model', function () {
 
         it('must delete and return "204 ok" for request with id=' + testrequest, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest};
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id};
 
             request.delete(c, function (error, response, body) {
 
@@ -685,5 +539,177 @@ describe('Request Model', function () {
 
     });
 
+
+
+
+    describe('POST ' + apiprefix + '/requests/:id/actions/suppaccept', function () {
+
+        it('must change one request in a conversation with given fields', function (done) {
+
+            var data = {
+                quantity: _.random(0, 99) * 100,
+                quote: _.random(0, 99) * 100,
+            };
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id+'/actions/suppaccept',
+                body: JSON.stringify(data),
+                headers: {'content-type': 'application/json'}
+            };
+            //     console.log(c);
+
+            request.post(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+
+                     var results = JSON.parse(body);
+                     results.should.have.property('status');
+                     results.status.should.be.equal('acceptedByS');
+                     results.should.have.property('quantity');
+                     results.quantity.should.be.equal(data.quantity);
+                     results.should.have.property('quote');
+                     results.quote.should.be.equal(data.quote);
+
+                }
+                done();
+
+            });
+
+        });
+
+    });
+
+
+    describe('POST ' + apiprefix + '/requests/:id/actions/custmodify', function () {
+
+        it('must change one request in a conversation with given fields', function (done) {
+
+            var data = {
+                quantity: _.random(0, 99) * 100,
+                quote: _.random(0, 99) * 100,
+            };
+
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custmodify',
+                body: JSON.stringify(data),
+                headers: {'content-type': 'application/json'}
+            };
+            //     console.log(c);
+
+            request.post(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+
+                    var results = JSON.parse(body);
+                    results.should.have.property('status');
+                    results.status.should.be.equal('pending');
+                    results.should.have.property('quantity');
+                    results.quantity.should.be.equal(data.quantity);
+                    results.should.have.property('quote');
+                    results.quote.should.be.equal(data.quote);
+
+                }
+                done();
+
+            });
+
+        });
+
+    });
+
+
+
+
+    describe('POST ' + apiprefix + '/requests/:id/actions/custaccept', function () {
+
+        it('must change one request in a conversation with given fields', function (done) {
+
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custaccept',
+                //body: JSON.stringify(data),
+                headers: {'content-type': 'application/json'}
+            };
+            console.log(testrequest_abs.status);
+
+            request.post(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+
+                    var results = JSON.parse(body);
+                    results.should.have.property('status');
+                    results.status.should.be.equal('acceptedByC');
+
+                }
+                done();
+
+            });
+
+        });
+
+    });
+
+
+    describe('POST ' + apiprefix + '/requests/:id/actions/custreject', function () {
+
+        it('must change one request in a conversation with given fields', function (done) {
+
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custreject',
+           //     body: JSON.stringify(data),
+                headers: {'content-type': 'application/json'}
+            };
+
+            request.post(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+
+                    var results = JSON.parse(body);
+                    results.should.have.property('status');
+                    results.status.should.be.equal('rejectedByC');
+
+                }
+                done();
+
+            });
+
+        });
+
+    });
+
+
+    describe('POST ' + apiprefix + '/requests/:id/actions/suppreject', function () {
+
+        it('must change one request in a conversation with given fields', function (done) {
+
+
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id+'/actions/suppreject',
+               // body: JSON.stringify(data),
+                headers: {'content-type': 'application/json'}
+            };
+
+            request.post(c, function (error, response, body) {
+
+                if (error) throw error;
+                else {
+                    response.statusCode.should.be.equal(200);
+
+                    var results = JSON.parse(body);
+                    results.should.have.property('status');
+                    results.status.should.be.equal('rejectedByS');
+
+                }
+                done();
+
+            });
+
+        });
+
+    });
+
+
 }); //end describe*!/
+
 

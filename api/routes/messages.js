@@ -46,18 +46,12 @@ console.log(query);
                     message: 'no conversation found for getting messages, having id ' + id,
                     errorCode: 404
                 });
-            else
-                return entities.getMessagesByQuery();
+            else{
+                query = {"_id": {$in:entities.messages}};
 
+                return  Message.paginate(query, {page: req.query.page, limit: req.query.limit});
+            }
 
-        }).then(function (filtEntity) {
-             if (_.isEmpty(filtEntity))
-                return Promise.reject("something strange");
-             else {
-                query = {"_id": {$in: filtEntity}};
-                return Message.paginate(query, {page: req.query.page, limit: req.query.limit});
-
-             }
 
 
         }).then(function (results){
