@@ -83,6 +83,7 @@ describe('Evaluation Model', function () {
                 callback(null);
             });
         };
+	// example of correct evaluation
         var createEvaluations = function () {
             async.each(range, function (e, cb) {
                 evaluation = new Evaluation({
@@ -159,7 +160,7 @@ describe('Evaluation Model', function () {
         });
 
     });
-    describe('Create an evaluation with more fields than defined', function () {
+    describe('Try to create an evaluation with more fields than defined', function () {
 
         it('must not save with more than the fields required', function (done) {
             Evaluation.create({
@@ -192,9 +193,9 @@ describe('Evaluation Model', function () {
         });
 
     });
-    describe('Create an evaluation with an off limit value', function () {
+    describe('Try to create an evaluation with an off limit value', function () {
 
-        it('must not save with an off limit value', function (done) {
+        it('must not save with an off limit value (greater than the max)', function (done) {
             Evaluation.create({
                 from: users[_.random(0, 99)],
                 to: users[_.random(0, 99)],
@@ -215,6 +216,55 @@ describe('Evaluation Model', function () {
         });
 
     });
+
+    describe('Try to create an evaluation with an off limit value', function () {
+
+        it('must not save with an off limit value (smaller than the min)', function (done) {
+            Evaluation.create({
+                from: users[_.random(0, 99)],
+                to: users[_.random(0, 99)],
+		conversationId: conversations[_.random(0, 99)],
+                conversation_end_time:conversations[_.random(0,99)].dateEnd,
+		overall_rate:5.0,
+		delivery_rate:4.5,
+		product_rate:-3.8,
+		overall_review:"The product was as expected.",
+                evaluation_time: Date.now(),
+            }).catch(function (err) {
+                should.exist(err); //  err;
+                err.name.should.be.equal('ValidationError');
+                done();
+            });
+
+
+        });
+
+    });
+
+    describe('Try to create an evaluation without a required field', function () {
+
+        it('must not save with an off limit value (smaller than the min)', function (done) {
+            Evaluation.create({
+                from: users[_.random(0, 99)],
+                //to: users[_.random(0, 99)], // required field missing!
+		conversationId: conversations[_.random(0, 99)],
+                conversation_end_time:conversations[_.random(0,99)].dateEnd,
+		overall_rate:5.0,
+		delivery_rate:4.5,
+		product_rate:3.8,
+		overall_review:"The product was as expected.",
+                evaluation_time: Date.now(),
+            }).catch(function (err) {
+                should.exist(err); //  err;
+                err.name.should.be.equal('ValidationError');
+                done();
+            });
+
+
+        });
+
+    });
+
 
 
 
