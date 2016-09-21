@@ -9,10 +9,10 @@ var Schema = mongoose.Schema,
     ObjectId = Schema.ObjectId;
 var joiEvaluationSchema = Joi.object({
     // _id  implicit id
-    from:Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
-    to:Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
-    conversationId:Joi.objectId().meta({type: 'ObjectId', ref: 'Conversation'}),
-    overall_rate:Joi.number().default(0).min(0).max(5),
+    from:Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
+    to:Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
+    conversationId:Joi.objectId().required().meta({type: 'ObjectId', ref: 'Conversation'}),
+    overall_rate:Joi.number().required().default(0).min(0).max(5),
     delivery_rate:Joi.number().default(0).min(0).max(5),
     product_rate:Joi.number().default(0).min(0).max(5),
     overall_review:Joi.string(),
