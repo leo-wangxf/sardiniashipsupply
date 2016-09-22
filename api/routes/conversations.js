@@ -23,6 +23,20 @@ router.get('/conversations',
                 description: 'The current limit for pagination',
                 type: 'integer', required: false
             }
+        },
+        bodyFields: {
+            completed:{
+                description: 'The conversation status',
+                type: 'string', required: false
+            },
+            date_in:{
+                description: 'The conversation start date  ',
+                type: 'string', required: false
+            },
+            by_uid:{
+                description: 'The conversation user',
+                type: 'string', required: false
+            }
         }
     }),
     function (req, res) {
@@ -40,20 +54,20 @@ router.get('/conversations',
                     timeQuery["$gte"] = new Date(req.query[v]);
                     timeQuery["$lt"] = new Date(req.query[v]);
                     timeQuery["$lt"].setDate(timeQuery["$lt"].getDate() +1);
+                    console.log(timeQuery);
                     delete query[v];
                     query['dateIn'] = timeQuery ;
                     continue;
                 }
                 else if (v === "by_uid") {
-                    query['supplierId'] = new ObjectId(query[v]);
-                    query['customerId'] = new ObjectId(query[v]);
+                    var s = {'supplierId': new ObjectId(query[v])};
+                    var c = {'customerId': new ObjectId(query[v])};
+                    query['$or'] = [s,c];
                     delete query[v];
                     continue;
                 }
                 query[v] = req.query[v];
             }
-
-
 
         Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, populate:'messages requests'})
             .then(function (entities) {
@@ -103,7 +117,7 @@ router.post('/conversations',
 
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
-
+        // instanceof Date
         Conversation.create(req.body).then(function (entities) {
 
             if (!entities)
