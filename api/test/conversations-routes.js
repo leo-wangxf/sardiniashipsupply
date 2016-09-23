@@ -16,7 +16,7 @@ var testSupplierId = '';
 var testCustomerId = '';
 var tooShortId = '008f4fdc09de51d364';
 var notExistingId = '008f4fdc09dd8c1c3e51d364';
-
+var fakeId = '008f4fdc09dd8c1c3e51d368';
 
 var User = require('../models/users').User;
 var Message = require('../models/messages').Message;
@@ -69,19 +69,29 @@ describe('Conversations API', function () {
 
 
         var range = _.range(100);
-
+        function getRandom(min, max) {
+            return Math.floor(Math.random() * (max - min) + min);
+        }
+        var token = function() {
+            return '008f4fdc09dd8c1c3e'+getRandom(10,99)+'d36'; // to make it longer
+        };
+        var t = token() +''+ getRandom(0,9);
         var createUsers = function (callback) {
+
+
             async.each(range, function (e, cb) {
+
                 user = new User({
-                    id: "008f4fdc09dd8c1c3e51d364",
+                 //   _id: t,
+                    id: t,
                     name: "Guest " + e,
                     address : "Via dei matti 53",
                     password:"pw"
                 });
-
-                user.save(function (err, message) {
+                t = token() +''+ getRandom(0,9);
+                user.save(function (err, us) {
                     if (err) throw err;
-                    users.push(user._id);
+                    users.push(us.id);
                     cb();
 
                 });
@@ -193,8 +203,8 @@ describe('Conversations API', function () {
         var createConversations = function () {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplierId: users[0],
+                    customerId: users[1],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -204,7 +214,6 @@ describe('Conversations API', function () {
                     requests: [requests[_.random(0, 99)]],
                     hidden: false
                 });
-
                 conversation.save(function (err, conversation) {
                     if (err) throw err;
                     conversations.push(conversation._id);
@@ -323,13 +332,14 @@ describe('Conversations API', function () {
 
         it('must return  conversations and pagination metadata  , all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations?completed=true&date_in='+(new Date()).toDateString()+
+            var c = {url: apihost + apiprefix + '/conversations?date_in='+(new Date()).toDateString()+
             '&by_uid='+testSupplierId};
             
             request.get(c, function (error, response, body) {
 
                     if (error) throw error;
                     else {
+
                         response.statusCode.should.be.equal(200);
                         var results = JSON.parse(body);
                         results.should.have.property('total');

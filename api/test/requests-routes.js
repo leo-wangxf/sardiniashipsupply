@@ -228,7 +228,7 @@ var count = 0;
                     subject: "Subject " + e + " ",
                     completed: true,
                     messages: [messages[_.random(0, 99)],messages[_.random(0, 99)],messages[_.random(0, 99)],messages[_.random(0, 99)]],
-                    requests: [requests[_.random(0, 99)],requests[_.random(0, 99)],requests[_.random(0, 99)],requests[_.random(0, 99)]],
+                    requests: [testrequest._id,testrequest_abc._id,testrequest_abs._id,requests[_.random(0, 99)]],
                     hidden: false
                 });
 
@@ -518,18 +518,19 @@ var count = 0;
 
     });
 
-    describe('DELETE ' + apiprefix + '/requests/:id', function () {
 
-        it('must delete and return "204 ok" for request with id=' + testrequest, function (done) {
+    describe('DELETE ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r', function () {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id};
+        it('must delete the requests '+testrequest+' for the conversation with id='+testconv, function (done) {
+
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id};
 
             request.delete(c, function (error, response, body) {
 
                 if (error) throw error;
                 else {
-
-                    response.statusCode.should.be.equal(204); //  HTTP ok no body
+                    //  var result = JSON.parse(body);
+                    response.statusCode.should.be.equal(204); //  HTTP ok
                 }
                 done();
 
@@ -541,8 +542,7 @@ var count = 0;
 
 
 
-
-    describe('POST ' + apiprefix + '/requests/:id/actions/suppaccept', function () {
+    describe('POST ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r/actions/suppaccept', function () {
 
         it('must change one request in a conversation with given fields', function (done) {
 
@@ -550,7 +550,7 @@ var count = 0;
                 quantity: _.random(0, 99) * 100,
                 quote: _.random(0, 99) * 100,
             };
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id+'/actions/suppaccept',
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id+'/actions/suppaccept',
                 body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
@@ -580,7 +580,7 @@ var count = 0;
     });
 
 
-    describe('POST ' + apiprefix + '/requests/:id/actions/custmodify', function () {
+    describe('POST ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r/actions/custmodify', function () {
 
         it('must change one request in a conversation with given fields', function (done) {
 
@@ -589,7 +589,7 @@ var count = 0;
                 quote: _.random(0, 99) * 100,
             };
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custmodify',
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custmodify',
                 body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
@@ -621,15 +621,14 @@ var count = 0;
 
 
 
-    describe('POST ' + apiprefix + '/requests/:id/actions/custaccept', function () {
+    describe('POST ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r/actions/custaccept', function () {
 
         it('must change one request in a conversation with given fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custaccept',
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custaccept',
                 //body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
-            console.log(testrequest_abs.status);
 
             request.post(c, function (error, response, body) {
 
@@ -651,11 +650,11 @@ var count = 0;
     });
 
 
-    describe('POST ' + apiprefix + '/requests/:id/actions/custreject', function () {
+    describe('POST ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r/actions/custreject', function () {
 
         it('must change one request in a conversation with given fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest_abs._id+'/actions/custreject',
+            var c = {url:  apihost + apiprefix +'/conversations/'+ testconv+ '/requests/' + testrequest_abs._id+'/actions/custreject',
            //     body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
@@ -680,12 +679,12 @@ var count = 0;
     });
 
 
-    describe('POST ' + apiprefix + '/requests/:id/actions/suppreject', function () {
+    describe('POST ' + apihost + apiprefix +'/conversations/:id_c/requests/:id_r/actions/suppreject', function () {
 
         it('must change one request in a conversation with given fields', function (done) {
 
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id+'/actions/suppreject',
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest._id+'/actions/suppreject',
                // body: JSON.stringify(data),
                 headers: {'content-type': 'application/json'}
             };
