@@ -259,12 +259,12 @@ describe('Evaluation Routes', function () {
                     conversation_end_time: Date.now(),
                     evaluation_time: Date.now()
 		};
-		var c = {
+		var eval = {
 			url: apihost + apiprefix + '/evaluations',
 			body: JSON.stringify(eval_fields),
 			headers: {'content-type': 'application/json'}
 		};
-		request.post(c, function(error, response, body) {
+		request.post(eval, function(error, response, body) {
 			if(error) throw error;
 			else {
 				response.statusCode.should.be.equal(201);
@@ -296,12 +296,12 @@ describe('Evaluation Routes', function () {
 
     describe('POST' + apiprefix + '/evaluations', function() {
 	    it('must get bad data error because req.body is empty', function(done) {
-		var c = {
+		var eval = {
 			url: apihost + apiprefix + '/evaluations',
 			body: "",
 			headers: {'content-type': 'application/json'}
 		};
-		request.post(c, function(error, response, body) {
+		request.post(eval, function(error, response, body) {
 			if (error) throw error;
 			else {
 				response.statusCode.should.be.equal(422); // bad data error
@@ -313,6 +313,35 @@ describe('Evaluation Routes', function () {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////// PUT TESTS ///////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-});
-	    
+    describe('PUT' + apiprefix + '/evaluations/:id', function() {
+        it('must update the evaluation with the id specified in the URL', function(done) {
+		Evaluation.findOne({}, function(err, eval) {
+			if(err) throw err;
+                        const EVAL_ID = eval._id;
+			var overall_rate = eval.overall_rate;
+			//console.log('eval id = ' + EVAL_ID);
+			//console.log('overall_rate = ' + overall_rate);
+			var eval = {
+				url: apihost + apiprefix + '/evaluations/' + EVAL_ID,
+				body: JSON.stringify({overall_rate:3.2}),
+				headers: {'content-type':'application/json'}
+			};
+			request.put(eval, function(error, response) {
+				if (error) throw error;
+				else {
+					if(response.statusCode != 200) {
+						console.log('Unexpected status code: ' + response.statusCode);
+					} else {
+					//console.log('response statusCode: ' + response.statusCode);
+ 					response.statusCode.should.be.equal(200); //http OK
+			                var responsebody = JSON.parse(response.body);
+			                responsebody.should.have.property('overall_rate');
+                                        responsebody.overall_rate.should.be.equal(3.2);
+					done();
+				}
+				};
+			});
+		});
+	});
+    });
+});	    
