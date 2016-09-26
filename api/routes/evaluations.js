@@ -4,7 +4,7 @@ var Evaluation = require('../models/evaluations.js').Evaluation;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
-
+var ObjectId = require('mongoose').Types.ObjectId;
 
 router.get('/evaluations',
     au.doku({  // json documentation
@@ -27,6 +27,24 @@ router.get('/evaluations',
         var query = _.extend({}, req.query);
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
+
+	// now prepare a proper query for mongoose ...
+	var searchFields = ["from","to", "conversationId", "evaluation_time"]
+	for (var searchBy in req.query)
+	       if(_.contains(searchFields, searchBy)) {
+		       if (searchBy === "evaluation_time") {
+                         var eval_time = {};
+                         eval_time["$gte"] = new Date(req.query[v]);
+                         eval_time["$lt"] = new Date(req.query[v]);
+                         eval_time["$lt"].setDate(eval_time["$lt"].getDate() +1);
+                         delete query[eval_time];
+                         query['evaluation_range_time'] = eval_time ;
+                         continue;
+
+		       }
+               query[searchBy] = req.query[searchBy];
+	       }
+
 
         Evaluation.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
 
@@ -62,7 +80,7 @@ router.post('/evaluations',
     function (req, res) {
 
         if (_.isEmpty(req.body))
-            return res.boom.badData("Empty boby"); // Error 422
+            return res.boom.badData("Empty body"); // Error 422
 
         Evaluation.create(req.body).then(function (entities) {
 
@@ -117,11 +135,12 @@ var putCallback = function (req, res) {
 
     var newVals = req.body; // body already parsed
 
-    Evaluation.findByIdAndUpdate(id, newVals).then(function (entities) {
+    Evaluation.findByIdAndUpdate(id, newVals, {new:true}).then(function (entities) {
 
         if (_.isEmpty(entities))
             res.boom.notFound("No entry with id " + id); // Error 404
         else
+	    //console.log('inside put callback entities are:' + entities);
             res.send(entities);  // HTTP 200 ok
     }).catch(function (err) {
         if (err.name === "ValidationError")
@@ -142,8 +161,15 @@ router.put('/evaluations/:id',
             id: {type: "String", required: true}
         },
         fields: {
-           from: {type: "String", required: true, description: "Supplier user"},
-            name: {type: "String", required: true},
+            from: {type: "String", required: true, description: "evaluator user (a customer)"},
+            to: {type: "String", required: true, description: "evaluated user (a supplier)"},
+            conversationId:{type:"String", required: true, description:"Id of related conversation"},
+            overall_rate:{type:"Float", required:true, description:"overall user rate"},
+            delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
+            product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
+            overall_review:{type:"String", required:false, description:"overall user textual review"},
+            conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
+            evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
         }
     }), putCallback
@@ -151,13 +177,20 @@ router.put('/evaluations/:id',
 
 router.patch('/evaluations/:id',
     au.doku({  // json documentation
-        description: 'Update a evaluation by id',
+        description: 'Update an evaluation by id',
         params: {
             id: {type: "String", required: true}
         },
         fields: {
-           from: {type: "String", required: true, description: "Supplier user"},
-            name: {type: "String", required: true},
+            from: {type: "String", required: true, description: "evaluator user (a customer)"},
+            to: {type: "String", required: true, description: "evaluated user (a supplier)"},
+            conversationId:{type:"String", required: true, description:"Id of related conversation"},
+            overall_rate:{type:"Float", required:true, description:"overall user rate"},
+            delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
+            product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
+            overall_review:{type:"String", required:false, description:"overall user textual review"},
+            conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
+            evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
         }
     }), putCallback
@@ -166,9 +199,11 @@ router.patch('/evaluations/:id',
 
 router.delete('/evaluations/:id',
     au.doku({  // json documentation
+	title: 'Delete an evaluation found by id',
         description: 'Delete an evaluation by id',
+	group: 'Evaluations',
         params: {
-            id: {type: "String", required: true}
+		id: {type: "String", required: true, description: 'Evaluation ID'}
         }
     }),
     function (req, res) {
