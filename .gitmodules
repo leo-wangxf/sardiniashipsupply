@@ -1,0 +1,3 @@
+[submodule "webui6.2"]
+	path = webui6.2
+	url = git@gitlab.com:cp2020/webui6.2.git
