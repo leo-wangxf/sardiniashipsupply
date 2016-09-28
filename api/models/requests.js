@@ -13,10 +13,8 @@ var joiRequestSchema = Joi.object({
     // _id  implicit id
     productId: Joi.string().meta({type: 'ObjectId', ref: 'Product', required:true}),
     status: Joi.string().allow(['pending', 'accepted', 'rejByC', 'rejByS']).default('pending'),
-    quantityRequest:  Joi.number().optional(),
-    quantityOffer:  Joi.number().optional(),
-    quoteRequest:  Joi.number().optional(),
-    quoteOffer:  Joi.number().optional()
+    quantity:  Joi.number().optional(),
+    quote:  Joi.number().optional()
 });
 
 var RequestSchema = new Schema(Joigoose.convert(joiRequestSchema));
@@ -25,6 +23,8 @@ RequestSchema.plugin(mongoosePaginate);
 
 
 var Request = mongoose.model('Request', RequestSchema);
+
+
 
 
 exports.RequestSchema = RequestSchema;

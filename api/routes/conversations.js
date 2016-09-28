@@ -23,6 +23,20 @@ router.get('/conversations',
                 description: 'The current limit for pagination',
                 type: 'integer', required: false
             }
+        },
+        bodyFields: {
+            completed:{
+                description: 'The conversation status',
+                type: 'string', required: false
+            },
+            date_in:{
+                description: 'The conversation start date  ',
+                type: 'string', required: false
+            },
+            by_uid:{
+                description: 'The conversation user',
+                type: 'string', required: false
+            }
         }
     }),
     function (req, res) {
@@ -40,24 +54,23 @@ router.get('/conversations',
                     timeQuery["$gte"] = new Date(req.query[v]);
                     timeQuery["$lt"] = new Date(req.query[v]);
                     timeQuery["$lt"].setDate(timeQuery["$lt"].getDate() +1);
+                    console.log(timeQuery);
                     delete query[v];
                     query['dateIn'] = timeQuery ;
                     continue;
                 }
                 else if (v === "by_uid") {
-                    query['supplierId'] = new ObjectId(query[v]);
-                    query['customerId'] = new ObjectId(query[v]);
+                    var s = {'supplierId': new ObjectId(query[v])};
+                    var c = {'customerId': new ObjectId(query[v])};
+                    query['$or'] = [s,c];
                     delete query[v];
                     continue;
                 }
                 query[v] = req.query[v];
             }
 
-
-
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit})
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, populate:'messages requests'})
             .then(function (entities) {
-              //  console.log(entities);
                 if (entities.total === 0)
                     return Promise.reject({
                         name:'ItemNotFound',
@@ -104,7 +117,7 @@ router.post('/conversations',
 
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
-
+        // instanceof Date
         Conversation.create(req.body).then(function (entities) {
 
             if (!entities)
@@ -137,8 +150,8 @@ router.get('/conversations/:id',
 
         var newVals = req.body; // body already parsed
 
-        Conversation.findById(id, newVals).then(function (entities) {
-
+        Conversation.findById(id, newVals).populate('messages requests').then(function (entities) {
+           // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404
             else
