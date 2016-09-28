@@ -236,7 +236,7 @@ router.get('/products',
 
     });
 
-
+/*
 router.get('/search',
     au.doku({  // json documentation
         title: 'Search products defined in db by name or only category',
@@ -322,6 +322,162 @@ router.get('/search',
         });
 
     });
+*/
+
+
+
+router.get('/search',
+    au.doku({  // json documentation
+        title: 'Search products defined in db by name or only category',
+        version: '1.0.0',
+        name: 'SearchProduct',
+        group: 'Products',
+        description: 'Search products defined in db by name, category, supplierId and tags',
+        fields: {
+            name: {
+                description: 'name of the product',
+                type: 'string', required: false
+            },
+            category: {
+                description: 'id of the category',
+                type: 'string', required: false
+            },
+            supplierId: {
+                description: 'id of the supplier',
+                type: 'string', required: false
+            },
+            tags: {
+                description: 'tags associated',
+                type: 'string', required: false
+            },
+            page: {
+                description: 'The current page for pagination',
+                type: 'integer', required: false
+            },
+            limit: {
+                description: 'The current limit for pagination',
+                type: 'integer', required: false
+            }
+        }
+    }),
+    function (req, res) {
+
+console.log('prova');
+    
+
+    var query = _.extend({}, req.query);
+    if (query.hasOwnProperty('page')) delete query.page;
+    if (query.hasOwnProperty('limit')) delete query.limit;
+
+    query.name = new RegExp(req.query.name, "i");
+
+
+
+    //Product.find(query, 'supplierId').then(function (products) {
+
+/*
+Product.aggregate(                                                                      
+                    { $match: { name: /prod/ } },                                                           
+                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } }                 
+                    
+
+                    ).populate('supplierId')
+.then(function (result){
+    
+    console.log(result);
+    return res.send(result);
+}
+
+    );
+*/
+
+
+
+
+
+Product.aggregate(                                                                      
+                    { $match: { name: /prod/ } },                                                           
+                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } }                 
+                )
+.then(function (result){
+    
+    
+
+    var suppliersIds = _.map(result, function (el) {
+            return el._id.supplierId+'';
+        });
+
+    return User.paginate(
+                {
+                    _id: {$in: suppliersIds}
+                },
+                {
+                    page: req.query.page,
+                    limit: req.query.limit
+                });
+}).then(function(result){
+  console.log(res);
+  res.send(result);
+        }
+
+    );
+        
+/*
+
+        var suppliersIds = _.map(products, function (el) {
+
+            return el._doc.supplierId+'';
+        });
+
+        suppliersIds = _.unique(suppliersIds);
+        //suppliersIds = _.order(suppliersIds,);
+
+
+        if (_.isEmpty(suppliersIds))
+            return Promise.reject({
+                name: 'ItemNotFound',
+                message: 'No Requests found for query ' + JSON.stringify(query),
+                errorCode: 404
+            });
+        else {
+            return User.paginate(
+                {
+                    _id: {$in: suppliersIds}
+                },
+                {
+                    page: req.query.page,
+                    limit: req.query.limit
+                });
+        }
+
+    }).then(function (entities) {
+
+        if (entities.total === 0)
+            return res.boom.notFound('No items found for query ' + JSON.stringify(query)); // Error 404
+        else
+            return res.send(entities); // HTTP 200 ok
+    }).catch(function (err) {
+
+        if (err.errorCode) return res.status(err.errorCode).send(err); // Error 500
+        else return res.boom.badImplementation(); // Error 500
+    });
+
+
+*/
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 module.exports = router;
