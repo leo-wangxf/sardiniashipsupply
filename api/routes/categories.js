@@ -82,19 +82,21 @@ router.post('/categories',
 
     });
 
+var commentCatId =
+{  // json documentation
+    title: 'Get a category by id',
+    version: '1.0.0',
+    name: 'GetCategory',
+    group: 'Categories',
+    description: 'Get a category by id',
+    params: {
+        id: {type: 'String', required: true, description: 'The category identifier'}
+    }
+
+};
 
 router.get('/categories/:id',
-    au.doku({  // json documentation
-        title: 'Get a category by id',
-        version: '1.0.0',
-        name: 'GetCategory',
-        group: 'Categories',
-        description: 'Get a category by id',
-        params: {
-            id: {type: 'String', required: true, description: 'The category identifier'}
-        }
-
-    }), function (req, res) {
+    au.doku(commentCatId), function (req, res) {
         var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed

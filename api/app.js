@@ -23,6 +23,8 @@ var configs = {
         dbHost: "localhost",
         dbPort: "27017",
         dbName: "apiDEV"
+
+
     },
     production: {
         dbHost: "seidue.crs4.it",
@@ -65,9 +67,10 @@ app.use(boom());
 
 //routes
 app.use('/', routes);
-app.use('/users', users);
+
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
+app.use(prefix, users);
 app.use(prefix, categories);
 app.use(prefix, products);
 app.use(prefix, conversations);
@@ -98,32 +101,35 @@ if (app.get("env") !== 'development') {
         },
         app: app,
         docspath: '/docs',
-        routers: [{
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: categories
-        }, {
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: conversations
-        }, {
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: products
-        },
-        //     {
-        //     basepath: "http://localhost:" + app.get('port') + prefix,
-        //     router: users
-        // },
-        {
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: evaluations
-        },
-        {
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: messages
-        },
-        {
-            basepath: "http://localhost:" + app.get('port') + prefix,
-            router: requests
-        }]
+        routers: [
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: categories
+            }, {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: conversations
+            }, {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: products
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: evaluations
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: messages
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: requests
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: users
+            }
+        ]
+
     });
 }
 
