@@ -5,7 +5,6 @@ var _ = require('underscore')._;
 var router = express();
 var au = require('audoku');
 
-
 router.get('/categories',
     au.doku({  // json documentation
         description: 'Get all the categories defined in db',

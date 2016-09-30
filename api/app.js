@@ -68,15 +68,20 @@ app.use(boom());
 //routes
 app.use('/', routes);
 
+var tokenMiddleware = require('./util/middlewares').tokenMiddleware;
+
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, users);
-app.use(prefix, categories);
+
+app.use(prefix,  categories);
 app.use(prefix, products);
-app.use(prefix, conversations);
+app.use(prefix, evaluations);
 app.use(prefix, messages);
 app.use(prefix, requests);
-app.use(prefix, evaluations);
+app.use(prefix, tokenMiddleware, conversations);
+
+
 
 
 if (app.get("env") !== 'development') {

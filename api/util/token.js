@@ -3,12 +3,22 @@ var request = require('request');
 
 var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
 
-var authUrl = "http://localhost:3007";
-var userUrl = "http://localhost:3008";
+var authUrl = "http://seidue.crs4.it:3007";
+var userUrl = "http://seidue.crs4.it:3008";
 
 
 function decodeToken(token)
 {
+  if (!token){
+    const decodeError = new Error();
+    decodeError.message = "missing authorization token";
+    decodeError.statusCode = 401;
+    return new Promise(function(resolve, reject)
+    {
+      return reject(decodeError);
+    });
+  }
+
   var options = 
   {
     url: authUrl + "/decodeToken",

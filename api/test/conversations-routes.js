@@ -6,12 +6,13 @@ var db = require("../models/db");
 var Conversation = require('../models/conversations').Conversation;
 var app = require('../app');
 var request = require('request');
+var Promise = require('bluebird');
 
 var apihost = 'http://localhost';
 
 var apiprefix = app.get('apiprefix');
 
-var testConversationId = '';
+var testConversationId, testConversationOpId = '';
 var testSupplierId = '';
 var testCustomerId = '';
 var tooShortId = '008f4fdc09de51d364';
@@ -35,10 +36,34 @@ var products = [];
 var categories = [];
 var conversations = [];
 
+var token = "";
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var username ="davide85@gmail.com";
+var password ="password";
+var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+var options =
+{
+    url: userUrl,
+    body:JSON.stringify( {
+    "username" : username,
+        "password" : password
+    }),
+    headers: headers
+};
+
+
+
+
 
 describe('Conversations API', function () {
 
     before(function (done) {
+
         this.timeout(4000);
         db.connect(function () {
 
@@ -48,10 +73,28 @@ describe('Conversations API', function () {
 
                 apihost += ":" + server.address().port;
 
-                done();
+                // request.post({url : userUrl, body :
+                //
+                // )
+                request.post(options, function(error, response, body)
+                {
+                    if(error)
+                        console.log(error);
+                    else{
+                        var r = {};
+                        r.body = JSON.parse(body);
+                        token = r.body.access_credentials.apiKey.token;
+                        console.log(token);
+                        r.response = response;
+                    }
+                    done();
+
+                });
+
             });
 
         });
+
 
     });
 
@@ -201,6 +244,25 @@ describe('Conversations API', function () {
         }
 
         var createConversations = function () {
+
+            var conversationOpen = new Conversation({
+                supplierId: users[0],
+                customerId: users[1],
+                dateIn: Date.now(),
+                dateValidity: Date.now(),
+                dateEnd: Date.now(),
+                subject: "Subject ",
+                completed: false,
+                messages: [messages[_.random(0, 99)]],
+                requests: [requests[_.random(0, 99)]],
+                hidden: false
+            });
+            conversationOpen.save(function (err, conversation) {
+                if (err) throw err;
+                conversations.push(conversationOpen._id);
+
+            });
+            testConversationOpId = conversationOpen._id;
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
                     supplierId: users[0],
@@ -305,9 +367,10 @@ describe('Conversations API', function () {
 
         it('must return 2 conversations and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations?page=1&limit=2'};
+            var c = {url: apihost + apiprefix + '/conversations?page=1&limit=2', headers:headers};
 
             request.get(c, function (error, response, body) {
+             //   console.log(response)
                     if (error) throw error;
                     else {
                         response.statusCode.should.be.equal(200);
@@ -317,7 +380,7 @@ describe('Conversations API', function () {
                         results.docs.length.should.be.equal(2);
                         results.page.should.be.equal(1);
                         results.limit.should.be.equal(2);
-                        results.total.should.be.equal(100);
+                        results.total.should.be.equal(101);
                     }
 
                     done();
@@ -330,10 +393,10 @@ describe('Conversations API', function () {
 
     describe('GET ' + apiprefix + '/conversations', function () {
 
-        it('must return  conversations and pagination metadata  , all fields', function (done) {
-
-            var c = {url: apihost + apiprefix + '/conversations?date_in='+(new Date()).toDateString()+
-            '&by_uid='+testSupplierId};
+        it('must return  conversations and pagination metadata with date_in= '+new Date().toDateString()+' and user id= '+ testSupplierId +', all fields', function (done) {
+            var date = (new Date());
+            var c = {url: apihost + apiprefix + '/conversations?date_in='+date.toDateString()+
+            '&by_uid='+testSupplierId,headers:headers};
             
             request.get(c, function (error, response, body) {
 
@@ -344,6 +407,12 @@ describe('Conversations API', function () {
                         var results = JSON.parse(body);
                         results.should.have.property('total');
                         results.should.have.property('docs');
+                        results.docs[0].should.have.property('supplierId');
+                        mongoose.Types.ObjectId(results.docs[0].supplierId).id.should.be.equal(testSupplierId.id);
+                        results.docs[0].should.have.property('dateIn');
+                        new Date(results.docs[0].dateIn).toDateString().should.be.equal(new Date(date).toDateString());
+                        /* results.should.have.property('supplierId');
+                        results.should.have.property('supplierId');
                        /* results.docs.length.should.be.equal(10);
                         results.page.should.be.equal(1);
                         results.limit.should.be.equal(10);
@@ -377,7 +446,7 @@ describe('Conversations API', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers: {'content-type': 'application/json', Authorization : "Bearer "+ token}
             };
 
             request.post(c, function (error, response, body) {
@@ -423,7 +492,7 @@ describe('Conversations API', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations',
                 body: "",
-                headers: {'content-type': 'application/json'}
+                headers: {'content-type': 'application/json',Authorization : "Bearer "+ token}
             };
 
             request.post(c, function (error, response, body) {
@@ -444,7 +513,7 @@ describe('Conversations API', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations',
                 body: JSON.stringify({supplierId: users[_.random(0, 99)]}),
-                headers: {'content-type': 'application/json'}
+                headers: {'content-type': 'application/json',Authorization : "Bearer "+ token}
             };
 
             request.post(c, function (error, response, body) {
@@ -461,153 +530,22 @@ describe('Conversations API', function () {
 
     });
 
+    describe('POST ' + apiprefix + '/conversations/:id/actions/close', function () {
 
-    describe('PUT ' + apiprefix + '/conversations/:id', function () {
-
-        it('must update the conversation with given id', function (done) {
-            Conversation.findOne({}, function (err, cat) {
-                if (err) throw err;
-
-                const tstConversationId = cat._id;
-
-                var c = {
-                    url: apihost + apiprefix + '/conversations/' + tstConversationId,
-                    body: JSON.stringify({completed: true}),
-                    headers: {'content-type': 'application/json'}
-                };
-
-                request.put(c, function (error, response) {
-
-                    if (error) throw error;
-                    else {
-                        //  var result = JSON.parse(body);
-                        response.statusCode.should.be.equal(200); //  HTTP ok
-                        done();
-                    }
-
-                });
-
-            });
-
-        });
-
-    });
-
-    describe('PUT ' + apiprefix + '/conversations/:id', function () {
-
-        it('must get error updating the conversation with id=' + testConversationId + " (empty body)", function (done) {
+        it('must set a conversation with a completed status', function (done) {
 
             var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
-                body: "",
-                headers: {'content-type': 'application/json'}
+                url: apihost + apiprefix + '/conversations/'+testConversationOpId+'/actions/close',
+                body: '',
+                headers: {'content-type': 'application/json',Authorization : "Bearer "+ token}
             };
-
-            request.put(c, function (error, response, body) {
-
+            request.post(c, function (error, response, body) {
                 if (error) throw error;
                 else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(422); //  Bad Data
-                }
-                done();
-
-            });
-
-        });
-
-    });
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
-
-        it('must update the conversation with id=' + testConversationId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
-                body: JSON.stringify({completed: true}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(200); //  HTTP ok
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
-
-        it('must return "not found 404" for conversation with id=' + notExistingId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/conversations/' + notExistingId,
-                body: JSON.stringify({subject: "Water emergency"}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(404); //  NOT FOUND
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
-
-        it('must return "bad data 422" for conversation with id=' + tooShortId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/conversations/' + tooShortId,
-                body: JSON.stringify({subject: "Water emergency"}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(422); //  BAD DATA
-                }
-                done();
-
-            });
-
-        });
-
-    });
-
-    describe('PATCH ' + apiprefix + '/conversations/:id', function () {
-
-        it('must update the conversation with id=' + testConversationId, function (done) {
-
-            var c = {
-                url: apihost + apiprefix + '/conversations/' + testConversationId,
-                body: JSON.stringify({subject: "Water emergency"}),
-                headers: {'content-type': 'application/json'}
-            };
-
-            request.patch(c, function (error, response, body) {
-
-                if (error) throw error;
-                else {
-                    var result = JSON.parse(body);
-                    response.statusCode.should.be.equal(200); //  HTTP ok
+                    var results = JSON.parse(body);
+                    //results.statusCode.should.be.equal(200); // ok data
+                    results.should.have.property('completed');
+                    results.completed.should.be.equal(true);
                 }
                 done();
 
@@ -622,7 +560,7 @@ describe('Conversations API', function () {
 
         it('must return the conversation with id=' + testConversationId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId};
+            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId, headers: headers};
 
             request.get(c, function (error, response, body) {
 
@@ -643,7 +581,7 @@ describe('Conversations API', function () {
 
         it('must return "not found 404" for conversation with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/conversations/' + notExistingId, headers: headers};
 
             request.get(c, function (error, response, body) {
 
@@ -663,7 +601,7 @@ describe('Conversations API', function () {
 
         it('must return "bad data 422" for conversation with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/conversations/' + tooShortId, headers: headers};
 
             request.get(c, function (error, response, body) {
 
@@ -682,9 +620,9 @@ describe('Conversations API', function () {
 
     describe('DELETE ' + apiprefix + '/conversations/:id', function () {
 
-        it('must delete and return "204 ok" for conversation with id=' + testConversationId, function (done) {
+        it('must delete and return "204 ok" for conversation ', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId};
+            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId, headers: headers};
 
             request.delete(c, function (error, response, body) {
 

@@ -54,7 +54,6 @@ router.get('/conversations',
                     timeQuery["$gte"] = new Date(req.query[v]);
                     timeQuery["$lt"] = new Date(req.query[v]);
                     timeQuery["$lt"].setDate(timeQuery["$lt"].getDate() +1);
-                    console.log(timeQuery);
                     delete query[v];
                     query['dateIn'] = timeQuery ;
                     continue;
@@ -67,9 +66,10 @@ router.get('/conversations',
                     continue;
                 }
                 query[v] = req.query[v];
+
             }
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, populate:'messages requests'})
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true, populate:'messages requests'})
             .then(function (entities) {
                 if (entities.total === 0)
                     return Promise.reject({
@@ -166,84 +166,6 @@ router.get('/conversations/:id',
 );
 
 
-var putCallback = function (req, res) {
-
-    if (_.isEmpty(req.body))
-        return res.boom.badData('Empty boby'); // Error 422
-
-    var id = req.params.id.toString();
-
-    var newVals = req.body; // body already parsed
-
-    Conversation.findByIdAndUpdate(id, newVals).then(function (entities) {
-
-        if (_.isEmpty(entities))
-            res.boom.notFound('No entry with id ' + id); // Error 404
-        else
-            res.send(entities);  // HTTP 200 ok
-    }).catch(function (err) {
-        if (err.name === 'ValidationError')
-            res.boom.badData(err.message); // Error 422
-        else if (err.name === 'CastError')
-            res.boom.badData('Id malformed'); // Error 422
-        else
-            res.boom.badImplementation(err);// Error 500
-    });
-
-};
-
-
-router.put('/conversations/:id',
-    au.doku({  // json documentation
-        title: 'Update a conversation by id',
-        version: '1.0.0',
-        name: 'UpdateConversation',
-        group: 'Conversations',
-        description: 'Update a conversation by id',
-        params: {
-            id: {type: 'String', required: true, description: 'The conversation identifier'}
-        },
-        bodyFields: {
-            supplierId: {type: 'String', required: true, description: 'Supplier user'},
-            customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
-            dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
-            dateEnd: {type: 'Date', description: 'End conversation date '},
-            subject: {type: 'String', description: 'Conversation subject '},
-            completed: {type: 'Boolean', required: true, description: 'Conversation completion ', default:false},
-            messages: {type: 'Array', description: 'List conversation messages '},
-            requests: {type: 'Array', description: 'List conversation requests '},
-            hidden: {type: 'Boolean', description: 'Conversation visibility ', default:false}
-        }
-    }), putCallback
-);
-
-router.patch('/conversations/:id',
-    au.doku({  // json documentation
-        title: 'Update a conversation by id (patch)',
-        version: '1.0.0',
-        name: 'UpdateConversation (patch)',
-        group: 'Conversations',
-        description: 'Update a conversation by id',
-        params: {
-            id: {type: 'String', required: true}
-        },
-        bodyFields: {
-            supplierId: {type: 'String', required: true, description: 'Supplier user'},
-            customerId: {type: 'String', required: true, description: 'Customer user'},
-            dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
-            dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
-            dateEnd: {type: 'Date', description: 'End conversation date '},
-            subject: {type: 'String', description: 'Conversation subject '},
-            completed: {type: 'Boolean', required: true, description: 'Conversation completion ', default:false},
-            messages: {type: 'Array', description: 'List conversation messages '},
-            requests: {type: 'Array', description: 'List conversation requests '},
-            hidden: {type: 'Boolean', description: 'Conversation visibility ', default:false}
-        }
-    }), putCallback
-);
-
-
 router.delete('/conversations/:id',
     au.doku({
         // json documentation
@@ -262,7 +184,7 @@ router.delete('/conversations/:id',
         var id = req.params.id.toString();
 
         Conversation.findByIdAndRemove(id).then(function (entities) {
-            res.status(204).send();  // HTTP 204 ok, no body
+            return res.status(204).send();  // HTTP 204 ok, no body
         }).catch(function (err) {
             if (err.name === 'CastError')
                 res.boom.badData('Id malformed'); // Error 422
@@ -272,5 +194,45 @@ router.delete('/conversations/:id',
 
     });
 
+
+router.post('/conversations/:id/actions/close',
+    au.doku({
+        // json documentation
+        title: 'Close a conversation ',
+        version: '1.0.0',
+        name: 'CloseConversation',
+        group: 'Conversations',
+        description: 'Close a conversation ',
+        params: {
+            id: {type: 'String', required: true, description: 'The conversation identifier'}
+        }
+    }),
+
+    function (req, res) {
+
+        var id = req.params.id.toString();
+
+
+        var query = {"completed":true, "dateEnd": new Date()};
+        Conversation.findOneAndUpdate({_id: id, completed: {$eq: false}}, query, {new: true}).
+        then(function (entities) {
+            if (_.isEmpty(entities)) {
+
+                return Promise.reject({
+                    name: 'ItemNotFound',
+                    message: 'No conversation found having id ' + id_c +' with status completed=true',
+                    errorCode: 404
+                });
+            }
+            else
+            return res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
+            if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
+        });
+
+    });
 
 module.exports = router;

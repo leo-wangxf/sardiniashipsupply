@@ -364,7 +364,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 // console.log("empty");
                 return Promise.reject({
                     name: 'ItemNotFound',
-                    message: 'No entry with id ' + id_r, // Error 404
+                    message: 'No entry with id ' + id_r +' and status pendind', // Error 404
                     errorCode: 404
                 });
             }
