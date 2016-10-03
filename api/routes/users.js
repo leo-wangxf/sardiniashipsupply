@@ -297,7 +297,7 @@ router.put('/users',
     {
       try
       {
-        if(err.cause.details[0].type == 'object.allowUnknown')
+        if(err.cause.details[0].type)
         {
           return res.boom.badRequest(err.cause.details[0].message);
         }
