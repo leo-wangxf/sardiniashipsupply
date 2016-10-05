@@ -130,8 +130,15 @@ router.get('/users',
     //if (query.hasOwnProperty('limit')) delete query.limit;
         
     var query = {"type" : "supplier"};
+
+    // TODO Solo per test. Da rimuovere
+    if(req.query.all == "true")
+    {
+      query = {};
+    }
+
     var options = {
-      select: "_id name description address email logo certification pIva",
+      //select: "_id name description address email logo certification pIva",
       page: req.query.page,
       limit: req.query.limit
     };
