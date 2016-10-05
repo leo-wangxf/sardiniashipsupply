@@ -77,8 +77,8 @@ app.use(prefix, users);
 app.use(prefix,  categories);
 app.use(prefix, products);
 app.use(prefix, evaluations);
-app.use(prefix, messages);
-app.use(prefix, requests);
+app.use(prefix, tokenMiddleware, messages);
+app.use(prefix, tokenMiddleware, requests);
 app.use(prefix, tokenMiddleware, conversations);
 
 

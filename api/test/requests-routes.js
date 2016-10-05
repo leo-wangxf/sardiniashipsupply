@@ -32,6 +32,30 @@ var categories = [];
 var conversations = [];
 
 
+var token = "";
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var username ="davide85@gmail.com";
+var password ="password";
+var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+var options =
+{
+    url: userUrl,
+    body:JSON.stringify( {
+        "username" : username,
+        "password" : password
+    }),
+    headers: headers
+};
+
+
+
+
+
 describe('Request Model', function () {
 
     before(function (done) {
@@ -44,7 +68,20 @@ describe('Request Model', function () {
 
                 apihost += ":" + server.address().port;
 
-                done();
+                request.post(options, function(error, response, body)
+                {
+                    if(error)
+                        console.log(error);
+                    else{
+                        var r = {};
+                        r.body = JSON.parse(body);
+                        token = r.body.access_credentials.apiKey.token;
+                        //console.log(token);
+                        r.response = response;
+                    }
+                    done();
+
+                });
             });
 
         });
@@ -324,7 +361,7 @@ var count = 0;
 
         it('must return 2 requests and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/'+ testconv+'/requests?page=1&limit=2'};
+            var c = {url: apihost + apiprefix + '/conversations/'+ testconv+'/requests?page=1&limit=2',headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -363,7 +400,7 @@ var count = 0;
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
        //     console.log(c);
 
@@ -397,7 +434,7 @@ var count = 0;
 
         it('must get bad data error (empty request body)', function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', body: "", headers: {'content-type': 'application/json'}};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', body: "",headers:headers};
 
             request.post(c, function (error, response, body) {
 
@@ -416,8 +453,7 @@ var count = 0;
 
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
+                body: JSON.stringify({status:'pending'}),headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -440,7 +476,7 @@ var count = 0;
 
         it('must return the requests for the conversation with id='+testconv, function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests'};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -460,7 +496,7 @@ var count = 0;
 
         it('must return the request with id='+testrequest, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id};
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -481,7 +517,7 @@ var count = 0;
 
         it('must return "not found 404" for request with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/requests/' + notExistingId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -501,7 +537,7 @@ var count = 0;
 
         it('must return "bad data 422" for request with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/requests/' + tooShortId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -523,7 +559,7 @@ var count = 0;
 
         it('must delete the requests '+testrequest+' for the conversation with id='+testconv, function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id, headers:headers};
 
             request.delete(c, function (error, response, body) {
 
@@ -551,8 +587,7 @@ var count = 0;
                 quote: _.random(0, 99) * 100,
             };
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id+'/actions/suppaccept',
-                body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                body: JSON.stringify(data), headers:headers
             };
             //     console.log(c);
 
@@ -591,7 +626,7 @@ var count = 0;
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custmodify',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
             //     console.log(c);
 
@@ -627,7 +662,7 @@ var count = 0;
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custaccept',
                 //body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+               headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -656,7 +691,7 @@ var count = 0;
 
             var c = {url:  apihost + apiprefix +'/conversations/'+ testconv+ '/requests/' + testrequest_abs._id+'/actions/custreject',
            //     body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -686,7 +721,7 @@ var count = 0;
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest._id+'/actions/suppreject',
                // body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {

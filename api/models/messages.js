@@ -15,6 +15,7 @@ var joiMessageSchema = Joi.object({
     dateIn:  Joi.date().default(Date.now, 'time of creation').required(),
     draft: Joi.boolean().default(false).required(),
     text: Joi.string().required(),
+    automatic: Joi.boolean().default(false).required(),
     attachments: Joi.array().items(Joi.string())
 });
 

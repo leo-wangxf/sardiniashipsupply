@@ -33,6 +33,29 @@ var categories = [];
 var conversations = [];
 
 
+var token = "";
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var username ="davide85@gmail.com";
+var password ="password";
+var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+var options =
+{
+    url: userUrl,
+    body:JSON.stringify( {
+        "username" : username,
+        "password" : password
+    }),
+    headers: headers
+};
+
+
+
+
 describe('Message Model', function () {
 
     before(function (done) {
@@ -45,7 +68,23 @@ describe('Message Model', function () {
 
                 apihost += ":" + server.address().port;
 
-                done();
+
+
+                request.post(options, function(error, response, body)
+                {
+                    if(error)
+                        console.log(error);
+                    else{
+                        var r = {};
+                        r.body = JSON.parse(body);
+                        token = r.body.access_credentials.apiKey.token;
+                        console.log(token);
+                        r.response = response;
+                    }
+                    done();
+
+                });
+
             });
 
         });
@@ -101,6 +140,7 @@ describe('Message Model', function () {
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
+                    automatic:false,
                     attachments: ["http//:url"]
                 });
 
@@ -309,7 +349,7 @@ describe('Message Model', function () {
 
         it('must return 2 messages and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?page=1&limit=2'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?page=1&limit=2', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -340,7 +380,7 @@ describe('Message Model', function () {
 
         it('must return messages and pagination metadata with type customer, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?type=customer'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?type=customer', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -374,13 +414,14 @@ describe('Message Model', function () {
                 type:"customer",
                 dateIn: Date.now(),
                 draft: false,
+                automatic: false,
                 text: "Message for quote CA",
                 attachments: ["http//:url"]
             };
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
             //     console.log(c);
 
@@ -401,6 +442,8 @@ describe('Message Model', function () {
                     results.draft.should.be.equal(data.draft);
                     results.should.have.property('text');
                     results.text.should.be.equal(data.text);
+                    results.should.have.property('automatic');
+                    results.draft.should.be.equal(data.automatic);
                     results.should.have.property('attachments');
                     results.attachments.length.should.be.equal(data.attachments.length);
                     results.should.have.property('_id');
@@ -421,7 +464,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: "",
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -442,7 +485,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -472,7 +515,7 @@ describe('Message Model', function () {
                 var c = {
                     url: apihost + apiprefix + '/messages/' + tstMessageId,
                     body: JSON.stringify({draft: true}),
-                    headers: {'content-type': 'application/json'}
+                    headers:headers
                 };
 
                 request.put(c, function (error, response) {
@@ -499,7 +542,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: "",
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.put(c, function (error, response, body) {
@@ -523,7 +566,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -548,7 +591,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + notExistingId,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -573,7 +616,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + tooShortId,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -598,7 +641,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -621,7 +664,7 @@ describe('Message Model', function () {
 
         it('must return the messages for the conversation with id=' + testconv, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -641,7 +684,7 @@ describe('Message Model', function () {
 
         it('must return the message with id=' + testmessage, function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + testmessage};
+            var c = {url: apihost + apiprefix + '/messages/' + testmessage, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -662,7 +705,7 @@ describe('Message Model', function () {
 
         it('must return "not found 404" for message with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/messages/' + notExistingId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -682,7 +725,7 @@ describe('Message Model', function () {
 
         it('must return "bad data 422" for message with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/messages/' + tooShortId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -703,7 +746,7 @@ describe('Message Model', function () {
 
         it('must delete and return "204 ok" for message with id=' + testmessageId + 'in conversation with id =' + testconv, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages/' + testmessageId};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages/' + testmessageId, headers:headers};
 
             request.delete(c, function (error, response, body) {
 
