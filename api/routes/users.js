@@ -182,7 +182,7 @@ router.put('/users',
       },
       "user.logo": 
       {
-        "description": 'The url of the user\'s logo (only for suppliers)',
+        "description": 'The url of the user\'s logo',
         "type": 'string', 
         "required": false
       },
@@ -267,7 +267,8 @@ router.put('/users',
         {
           name: Joi.string().alphanum().min(3),
           address: Joi.string().min(3),
-          phone: Joi.number()
+          phone: Joi.number(),
+          logo: Joi.string().uri()
         };
 
         if(userType === "customer")
@@ -275,8 +276,7 @@ router.put('/users',
           schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
         }
         else if(userType === "supplier")
-        {
-          schemaOpt.logo = Joi.string().uri();
+        {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
           schemaOpt.categories = Joi.array().items(Joi.number());
