@@ -3,9 +3,11 @@ var request = require('request');
 
 var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
 
-var authUrl = "http://seidue.crs4.it:3007";
-var userUrl = "http://seidue.crs4.it:3008";
+//var authUrl = "http://seidue.crs4.it:3007";
+//var userUrl = "http://seidue.crs4.it:3008";
 
+var authUrl = "http://localhost:3007";
+var userUrl = "http://localhost:3008";
 
 function decodeToken(token)
 {
@@ -56,7 +58,6 @@ function decodeToken(token)
   });
 }
 
-
 function editUser(uid, token, body)
 {
   var options = 
@@ -96,12 +97,93 @@ function editUser(uid, token, body)
 
       r.response = response;
       return resolve(r);
-      /*
-      if(response.statusCode == 200 && body)
+    });
+  });
+}
+
+function loginUser(username, password)
+{
+  var options = 
+  {
+    url: userUrl + "/users/signin",
+    method: 'POST',
+    json: true,
+    body: {"username" : username, "password" : password},
+    headers: 
+    {
+      'Authorization': 'Bearer ' + msToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)    
+    {
+      if(error)
       {
-        return resolve(body);
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
       }
-      */
+
+      var r = {};     
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+function changePassword(uid, token, oldPassword, newPassword)
+{
+  var options = 
+  {
+    url: userUrl + "/users/" + uid + "/actions/setpassword",
+    method: 'POST',
+    json: true,
+    body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
+    headers: 
+    {
+      'Authorization': 'Bearer ' + token,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)    
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};     
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
     });
   });
 }
@@ -110,3 +192,5 @@ function editUser(uid, token, body)
 
 exports.decodeToken  = decodeToken;
 exports.editUser  = editUser;
+exports.loginUser = loginUser;
+exports.changePassword = changePassword;
