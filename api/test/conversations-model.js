@@ -73,7 +73,7 @@ describe('Conversation Model', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
+                    sender: users[_.random(0, 99)],
                     type:"customer",
                     dateIn: Date.now(),
                     draft: false,
@@ -130,7 +130,7 @@ describe('Conversation Model', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
@@ -152,12 +152,11 @@ describe('Conversation Model', function () {
         var createRequests = function (callback) {
             async.each(range, function (e, cb) {
                 var request = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: 'pending',
-                    quantityRequest: e * 100,
-                    quantityOffer: e * 100,
-                    quoteRequest: e * 100,
-                    quoteOffer: e * 100,
+                    quantity: e * 100,
+                    quote: e * 100,
+                    dateIn: new Date()
                 });
 
                 request.save(function (err, request) {
@@ -179,8 +178,8 @@ describe('Conversation Model', function () {
         var createConversations = function () {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -303,8 +302,8 @@ describe('Conversation Model', function () {
 
         it('must not save with more than the fields required', function (done) {
             Conversation.create({
-                supplierId: users[_.random(0, 99)],
-                customerId: users[_.random(0, 99)],
+                supplier: users[_.random(0, 99)],
+                customer: users[_.random(0, 99)],
                 dateIn: Date.now(),
                 dateValidity: Date.now(),
                 dateEnd: Date.now(),

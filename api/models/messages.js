@@ -10,7 +10,7 @@ var Schema = mongoose.Schema,
 
 
 var joiMessageSchema = Joi.object({
-    senderId: Joi.string().required().meta({type: 'ObjectId', ref: 'User'}),
+    sender: Joi.string().required().meta({type: 'ObjectId', ref: 'User'}),
     type:Joi.string().required().allow(['customer', 'supplier']).required(),
     dateIn:  Joi.date().default(Date.now, 'time of creation').required(),
     draft: Joi.boolean().default(false).required(),

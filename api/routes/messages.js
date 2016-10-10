@@ -89,7 +89,7 @@ router.post('/conversations/:id/messages',
         name: 'PostMessage',
         group: 'Messages',
         bodyFields: {
-           senderId: {type: 'String', required: true, description: 'Sender user'},
+           sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},
@@ -99,12 +99,10 @@ router.post('/conversations/:id/messages',
     }),
     function (req, res) {
         console.log("POST Message");
-
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
 
         var id = req.params.id.toString();
-
         var saveResults;
         var newmsg;
         Conversation.findById(id, "messages").then(function (results) {
@@ -133,10 +131,13 @@ router.post('/conversations/:id/messages',
 
         }).then(function (results) {
 
+          // console.log(req.app.get("socketio").emit("messages_id"+newmsg._id));
+
             // var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 
             //  res.set('Location', fullUrl + "/" + id + '/messages/' + newmessage._id);
             //res.status(201).send(newmessage);
+
             res.status(201).send(newmsg);  // HTTP 201 created
 
         }).catch(function (err) {
@@ -244,7 +245,7 @@ router.put('/messages/:id',
             id: {type: 'String', required: true, description: 'The message identifier'}
         },
         bodyFields: {
-            senderId: {type: 'String', required: true, description: 'Sender user'},
+            sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},
@@ -265,7 +266,7 @@ router.patch('/messages/:id',
             id: {type: 'String', required: true}
         },
         bodyFields: {
-            senderId: {type: 'String', required: true, description: 'Sender user'},
+            sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},

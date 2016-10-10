@@ -14,8 +14,8 @@ var Schema = mongoose.Schema,
 
 
 var joiConversationSchema = Joi.object({
-    supplierId: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
-    customerId: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
+    supplier: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
+    customer: Joi.objectId().required().meta({type: 'ObjectId', ref: 'User'}),
     dateIn: Joi.date().default(Date.now, 'time of creation').required(),
     dateValidity: Joi.date().required(),
     dateEnd: Joi.date(),

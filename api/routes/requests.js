@@ -86,7 +86,7 @@ router.post('/conversations/:id/requests',
         name: 'PostRequests',
         group: 'Requests',
         bodyFields: {
-            productId: {type: 'String', required: true, description: 'Product Id'},
+            product: {type: 'String', required: true, description: 'Product Id'},
             status: {
                 type: 'String',
                 description: 'Request Status',
@@ -94,6 +94,7 @@ router.post('/conversations/:id/requests',
                 default: 'pending',
                 required: true
             },
+            dateIn:{type: 'Date', description: 'Date Request'},
             quantity: {type: 'Integer', description: 'Request quantity'},
             quote: {type: 'Integer', description: 'Request quote'},
         }

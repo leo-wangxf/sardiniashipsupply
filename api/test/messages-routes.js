@@ -135,7 +135,7 @@ describe('Message Model', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
+                    sender: users[_.random(0, 99)],
                     type:"customer",
                     dateIn: Date.now(),
                     draft: false,
@@ -149,7 +149,7 @@ describe('Message Model', function () {
                 message.save(function (err, message) {
                     if (err) throw err;
                     messages.push(message._id);
-                    testSenderId =message.senderId;
+                    testSenderId =message.sender;
                         cb();
 
                 });
@@ -196,7 +196,7 @@ describe('Message Model', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
@@ -218,8 +218,9 @@ describe('Message Model', function () {
         var createRequests = function (callback) {
             async.each(range, function (e, cb) {
                 var request = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: 'pending',
+                    dateIn: Date.now(),
                     quantityRequest: e * 100,
                     quantityOffer: e * 100,
                     quoteRequest: e * 100,
@@ -246,8 +247,8 @@ describe('Message Model', function () {
             async.each(range, function (e, cb) {
                 testmessageId = messages[_.random(0, 99)];
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -410,7 +411,7 @@ describe('Message Model', function () {
         it('must create one message in a conversation with given fields', function (done) {
 
             var data = {
-                senderId: users[_.random(0, 99)],
+                sender: users[_.random(0, 99)],
                 type:"customer",
                 dateIn: Date.now(),
                 draft: false,
@@ -432,8 +433,8 @@ describe('Message Model', function () {
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                    results.should.have.property('senderId');
-                    mongoose.Types.ObjectId(results.senderId).id.should.be.equal(data.senderId.id);
+                    results.should.have.property('sender');
+                    mongoose.Types.ObjectId(results.sender).id.should.be.equal(data.sender.id);
                     results.should.have.property('type');
                     results.type.should.be.equal(data.type);
                     results.should.have.property('dateIn');

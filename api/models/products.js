@@ -16,7 +16,7 @@ var joiProductSchema = Joi.object({
     // _id  implicit id
     name: Joi.string().required(),
     description: Joi.string().required(),
-    supplierId: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
+    supplier: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
     categories: Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Category'}).min(1).max(4)),  
     images:Joi.array().items(Joi.string()),
     tags: Joi.array().items(Joi.string())

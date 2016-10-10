@@ -132,7 +132,7 @@ describe('Request Model', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
+                    sender: users[_.random(0, 99)],
                     type: "customer",
                     dateIn: Date.now(),
                     draft: false,
@@ -191,7 +191,7 @@ describe('Request Model', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
@@ -222,10 +222,11 @@ var count = 0;
                 }
 
                 var req = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: s,
                     quantity: e * 100,
                     quote: e * 100,
+                    dateIn: Date.now(),
                 });
 
 
@@ -257,8 +258,8 @@ var count = 0;
         var createConversations = function () {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -392,7 +393,7 @@ var count = 0;
         it('must create one request in a conversation with given fields', function (done) {
 
             var data = {
-                productId: products[_.random(0, 99)],
+                product: products[_.random(0, 99)],
                 status: 'pending',
                 quantity: _.random(0, 99) * 100,
                 quote: _.random(0, 99) * 100,
@@ -411,8 +412,8 @@ var count = 0;
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                    results.should.have.property('productId');
-                    mongoose.Types.ObjectId(results.productId).id.should.be.equal(data.productId.id);
+                    results.should.have.property('product');
+                    mongoose.Types.ObjectId(results.product).id.should.be.equal(data.product.id);
                     results.should.have.property('status');
                     results.status.should.be.equal(data.status);
                     results.should.have.property('quantity');
