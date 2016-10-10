@@ -492,6 +492,19 @@ router.get('/users/favorites',
       }
     }).then(function(result)
     {
+      var arrId = [];
+
+      for(var i in result[0].favoriteSupplier)
+      {
+        if(!isNaN(i))
+        {
+          arrId.push(require("mongoose").Types.ObjectId(result[0].favoriteSupplier[i]));
+        }
+      }
+
+      return User.find({'_id': {$in: arrId}}).exec();
+    }).then(function(result)
+    {
       return res.send(result);
     }).catch(function(err)
     {
