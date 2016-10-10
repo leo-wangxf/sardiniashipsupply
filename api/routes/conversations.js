@@ -40,7 +40,7 @@ router.get('/conversations',
         }
     }),
     function (req, res) {
-          console.log("GET Conversation");
+          console.log("=================GET Conversation =====================");
 
         //console.dir( req.app.locals.settings.socketio.emit("data",{"d":"a"}));
 

@@ -3,14 +3,13 @@ var Promise = require('bluebird');
 
 
 exports.tokenMiddleware = function (req,res,next) {
-    //console.log(req)
     if (req.headers.hasOwnProperty('audoku') && req.headers.audoku === 'help') {
         next();
         return;
     }
     decodeToken(req.token)
         .then(function (result) {
-    //        console.log(result.response.statusCode)
+          //  console.log(result.response.statusCode)
             if(result.response.statusCode == 200 && result.body.valid == true)
             {
                 req.user = {};
@@ -34,7 +33,7 @@ exports.tokenMiddleware = function (req,res,next) {
         })
         .catch(function (err){
 
-           // console.log(err);
+           console.log(err);
             if(err.statusCode)
             {
                 return res.status(err.statusCode).send(err.message);
