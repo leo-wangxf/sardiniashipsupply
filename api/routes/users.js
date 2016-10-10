@@ -152,6 +152,55 @@ router.get('/users',
     });
 });
 
+router.get('/users/:supId',
+  au.doku({  // json documentation
+    "description": 'Get the information of requested supplier',
+    "title": 'Get supplier info',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetSupplier",
+    "params": 
+    {
+      "supId":
+      {
+        "description" : "The id of the supplier you want to retrieve information",
+        "type" : "string",
+        "required" : true
+      }
+    },
+  }),
+  function (req, res) {
+    supId = req.params.supId    
+    if(!require("mongoose").Types.ObjectId.isValid(supId))
+    {
+      res.boom.badRequest("Invalid supplier id")      
+    }
+
+    var query = {
+      "_id" : supId,
+      "type": "supplier"           
+    };
+
+
+    User.find(query).limit(1).exec().then(function(result)
+    {
+      if(result.length == 0)
+      {
+        return res.boom.notFound("Supplier not found");
+      }
+      else
+      {      
+        res.send(result)
+      }
+    }).catch(function(err)
+    {
+      return res.boom.badImplementation(err); // Error 500
+    });
+});
+
+
+
+
 
 router.put('/users',
   au.doku({  // json documentation
@@ -502,9 +551,11 @@ router.get('/users/favorites',
         }
       }
 
+
       return User.find({'_id': {$in: arrId}}).exec();
     }).then(function(result)
     {
+
       return res.send(result);
     }).catch(function(err)
     {
