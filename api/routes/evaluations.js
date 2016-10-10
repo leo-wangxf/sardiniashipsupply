@@ -71,29 +71,47 @@ router.post('/evaluations',
             delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
             product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
             overall_review:{type:"String", required:false, description:"overall user textual review"},
-            conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
-            evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
+            conversation_end_time:{type:"Date", required:false, description:"When the related conversation ended."},
+            evaluation_time:{type:"Date", required:false, description:"Time of evaluation."},
             description: {type: "String", required: false}
 
         }
     }),
     function (req, res) {
+	console.log('\nINSIDE EVALUATION POST\n');
 
         if (_.isEmpty(req.body))
             return res.boom.badData("Empty body"); // Error 422
+     	console.log('If I am here, req.body is not empty: ' + req.body);
+     	console.log('req.body from: ' + req.body["from"]);
+     	console.log('req.body to: ' + req.body["to"]);
+     	console.log('req.body conversationId: ' + req.body["conversationId"]);
+     	console.log('req.body overall_rate: ' + req.body["overall_rate"]);
+     	console.log('req.body product_rate: ' + req.body["product_rate"]);
+     	console.log('req.body delivery_rate: ' + req.body["delivery_rate"]);
+     	console.log('req.body review: ' + req.body["overall_review"]);
 
+        // create the new Evaluation object
         Evaluation.create(req.body).then(function (entities) {
 
 
-            if (!entities)
-                return res.boom.badImplementation("Someting strange"); // Error 500
-            else
-                return res.status(201).send(entities);  // HTTP 201 created
+            if (!entities) {
+                console.log('inside server post, in case of no entities err 500 ');
+                return res.boom.badImplementation("boom message for 500 error: Bad implementation"); // Error 500
+	    } else {
+                console.log('else entities exist: ' + entities);
+                return res.status(201).send(entities);  // HTTP 201, evaluation successfully created
+	    }
         }).catch(function (err) {
-            if (err.name === "ValidationError")
+	    console.log('server side error name is ' + err.name);
+	    console.log('server side error message is ' + err.message); // Remember to check whether in err a message is always present or not
+            if (err.name === "ValidationError") {
+		console.log('server side error name is ' + err.name);
                 return res.boom.badData(err.message); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
+	    } else {
+		console.log('server side error is different from 422');
+                return res.boom.badImplementation(err);
+	    }
         });
 
     });

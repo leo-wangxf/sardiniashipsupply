@@ -130,8 +130,15 @@ router.get('/users',
     //if (query.hasOwnProperty('limit')) delete query.limit;
         
     var query = {"type" : "supplier"};
+
+    // TODO Solo per test. Da rimuovere
+    if(req.query.all == "true")
+    {
+      query = {};
+    }
+
     var options = {
-      select: "_id name description address email logo certification pIva",
+      //select: "_id name description address email logo certification pIva",
       page: req.query.page,
       limit: req.query.limit
     };
@@ -175,7 +182,7 @@ router.put('/users',
       },
       "user.logo": 
       {
-        "description": 'The url of the user\'s logo (only for suppliers)',
+        "description": 'The url of the user\'s logo',
         "type": 'string', 
         "required": false
       },
@@ -260,7 +267,8 @@ router.put('/users',
         {
           name: Joi.string().alphanum().min(3),
           address: Joi.string().min(3),
-          phone: Joi.number()
+          phone: Joi.number(),
+          logo: Joi.string().uri()
         };
 
         if(userType === "customer")
@@ -268,8 +276,7 @@ router.put('/users',
           schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
         }
         else if(userType === "supplier")
-        {
-          schemaOpt.logo = Joi.string().uri();
+        {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
           schemaOpt.categories = Joi.array().items(Joi.number());
@@ -297,7 +304,7 @@ router.put('/users',
     {
       try
       {
-        if(err.cause.details[0].type == 'object.allowUnknown')
+        if(err.cause.details[0].type)
         {
           return res.boom.badRequest(err.cause.details[0].message);
         }
@@ -315,8 +322,120 @@ router.put('/users',
   }
 );
 
+/*
+router.post('/users/actions/password',
+  au.doku({  // json documentation
+    "description": "Change the own password",
+    "title": "Set new password",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostPassword",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The customer token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "bodyFields": 
+    {
+      "oldPassword": 
+      {
+        "description" : 'The old user\'s password ',
+        "type": 'string', 
+        "required": true
+      },
+      "newPassword": 
+      {
+        "description" : 'The new user\'s password to save',
+        "type": 'string', 
+        "required": true
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userId;
+    var email;
 
-router.get('/users/actions/favorites',
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      email = result.body.token.email;
+
+      // controllo se la vecchia passowrd e' valida
+      return tu.loginUser(email, req.body.oldPassword);
+    }).then(function (result)
+    {
+      if(result.response.statusCode != 201)
+      {
+        var err = new Error();
+        err.statusCode = result.response.statusCode;
+
+        switch(result.response.statusCode)
+        {
+          case 403:
+            err.message = "You current password is wrong";
+            break;
+          default:
+            err.message = result.body.error_message;
+        }
+
+        throw err;
+      }
+      else
+      {
+        return tu.changePassword(userId, userToken, req.body.oldPassword, req.body.newPassword);
+      }
+    }).then(function(result)
+    {
+      if(result.response.statusCode != 201)
+      {
+        var err = new Error();
+        err.statusCode = result.response.statusCode;
+        err.message = result.body.error_message;
+        throw err;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+*/
+
+
+
+
+router.get('/users/favorites',
   au.doku({  // json documentation
     "description" : "Get the customer's favorites suppliers list",
     "title": "Get the customer's favorites suppliers list",
@@ -357,7 +476,7 @@ router.get('/users/actions/favorites',
         }
 
         var query = {
-          'id' : userId
+          '_id' : userId
         };
 
         return User.find(query, "favoriteSupplier -_id").exec();
@@ -765,7 +884,7 @@ router.post('/users/actions/attachment',
   }
 );
 
-router.get('/users/actions/attachment/:supId',
+router.get('/users/attachment/:supId',
   au.doku({  // json documentation
     "description": "Get the supplier's attached document list",
     "title": "Get the supplier's attached document list",
@@ -820,7 +939,7 @@ router.get('/users/actions/attachment/:supId',
 );
 
 
-router.get('/users/actions/attachment/:supId/:file',
+router.get('/users/attachment/:supId/:file',
   au.doku({  // json documentation
     "description": "Download a document attached by a supplier",
     "title": 'Download a document attached by a supplier',
@@ -981,7 +1100,6 @@ router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 */
-
 
 
 
