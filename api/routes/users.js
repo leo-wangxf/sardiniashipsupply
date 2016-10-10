@@ -152,7 +152,7 @@ router.get('/users',
     });
 });
 
-router.get('/users/:supId',
+router.get('/users/supplier/:supId',
   au.doku({  // json documentation
     "description": 'Get the information of requested supplier',
     "title": 'Get supplier info',
@@ -173,7 +173,7 @@ router.get('/users/:supId',
     supId = req.params.supId    
     if(!require("mongoose").Types.ObjectId.isValid(supId))
     {
-      res.boom.badRequest("Invalid supplier id")      
+      return res.boom.badRequest("Invalid supplier id")      
     }
 
     var query = {
