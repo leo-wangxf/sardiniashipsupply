@@ -902,7 +902,6 @@ router.post('/users/actions/attachment',
       {
         return res.boom.forbidden("Only suppliers can use this function");
       }
-
       
       req.p_userId = userId;
 
@@ -911,22 +910,16 @@ router.post('/users/actions/attachment',
         var r = {} 
         if(err)
         {
-          r.success = false;
-          r.message = err.message;
-          return res.send(JSON.stringify(r));
+          return res.boom.badImplementation(err); // Error 500
         }
 
         if(req.diskQuotaExceeded)
         {
-          r.success = false;
-          r.message = "Disk quota exceeded";
-          return res.send(JSON.stringify(r));
+          return res.status(550).send("Disk quota exceeded");
         }
         else if(req.wrongFileType)
         {
-          r.success = false;
-          r.message = "You can upload only pdf files";
-          return res.send(JSON.stringify(r));
+          return res.boom.badRequest("You can upload only pdf files")      
         }
 
         r.success = true;
