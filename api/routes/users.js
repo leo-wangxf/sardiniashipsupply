@@ -962,24 +962,25 @@ router.get('/users/attachment/:supId',
     var supId = req.params.supId;
 
     var dir = path.join(conf.uploadDir, supId)
-    var r = {}
+
+    res.setHeader("Content-Type", "application/json");
 
     var fList = [];
     fs.readdir(dir, function(err, items)
     {
+      var r = {}
+
       if(err)
       {
         if(err.code === "ENOENT")
         {
           r.success = true;
           r.files = [];
-          return res.send(JSON.stringify(r));
+          return res.json(r);
         }
         else
         {
-          r.success = false;
-          r.message = err;
-          return res.send(JSON.stringify(r));        
+          return res.boom.badImplementation(err); // Error 500
         }
       }
 
@@ -990,7 +991,8 @@ router.get('/users/attachment/:supId',
       r.success = true;
       r.files = fList;
 
-      res.send(JSON.stringify(r));
+      return res.json(r);
+
     });
   }
 );
@@ -1041,7 +1043,7 @@ router.get('/users/attachment/:supId/:file',
     {
       if(err)
       {
-        res.status(404).send(JSON.stringify(r));
+        res.status(404).json(r);
         return res.boom.notFound("File not found");
       }
       else
