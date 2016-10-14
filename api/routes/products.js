@@ -5,7 +5,7 @@ var User = require('../models/users').User;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
-
+var mongoose = require('mongoose');
 
 // INSERT PRODUCT
 
@@ -90,38 +90,7 @@ router.post('/products',
  });
  */
 
-// GET PRODUCT
 
-router.get('/products/:id',
-    au.doku({  // json documentation
-        title: 'Get a product by id',
-        version: '1.0.0',
-        name: 'GetProduct',
-        group: 'Products',
-        description: 'Get a product by id',
-        params: {
-            id: {type: 'String', required: true, description: 'The product identifier'}
-        }
-
-    }), function (req, res) {
-        var id = req.params.id.toString();
-
-        var newVals = req.body; // body already parsed
-
-        Product.findById(id, newVals).then(function (entities) {
-
-            if (_.isEmpty(entities))
-                res.boom.notFound('No entry with id ' + id); // Error 404
-            else
-                res.send(entities);  // HTTP 200 ok
-        }).catch(function (err) {
-            if (err.name === 'CastError')
-                res.boom.badData('Id malformed'); // Error 422
-            else
-                res.boom.badImplementation(err);// Error 500
-        });
-    }
-);
 
 
 // UPDATE
@@ -326,7 +295,7 @@ router.get('/search',
 
 
 
-router.get('/search',
+router.get('/products/supplier',
     au.doku({  // json documentation
         title: 'Search products defined in db by name or only category',
         version: '1.0.0',
@@ -362,14 +331,16 @@ router.get('/search',
     }),
     function (req, res) {
 
-console.log('prova');
+//console.log(req.query);
     
 
     var query = _.extend({}, req.query);
     if (query.hasOwnProperty('page')) delete query.page;
     if (query.hasOwnProperty('limit')) delete query.limit;
 
-    query.name = new RegExp(req.query.name, "i");
+    if (query.name)
+        query.name = new RegExp(req.query.name, "i");
+    
 
 
 
@@ -390,20 +361,40 @@ Product.aggregate(
 
     );
 */
+var param = {};
 
-
+if (query.name)
+    param.name = query.name;
+if (query.categories && mongoose.Types.ObjectId.isValid(query.categories))
+{
+    var arr_param =  [];
+    arr_param.push(mongoose.Types.ObjectId(query.categories));
+    param.categories = {$in: arr_param};
+}
+if (query.tags)
+{
+    var arr_tags =  [];
+    arr_tags.push(query.tags);
+    param.tags = {$in: arr_tags};
+}
+    
 
 
 
 Product.aggregate(                                                                      
-                    { $match: { name: /prod/ } },                                                           
-                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } }                 
+                    {$match: param},
+                    //{ $match: {categories: {$in: [mongoose.Types.ObjectId('57c57c8e895708850b92bb2d')]}}},
+                    //{ $match: {tags: {$in: ['tipico']}}},
+                    //{ $match: { name: query.name, categories: {$in: []}}},                                                           
+                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } } 
+                                    
                 )
 .then(function (result){
     
-    
+    //console.log(result);
 
     var suppliersIds = _.map(result, function (el) {
+            console.log(el);
             return el._id.supplierId+'';
         });
 
@@ -416,61 +407,51 @@ Product.aggregate(
                     limit: req.query.limit
                 });
 }).then(function(result){
-  console.log(res);
+  
   res.send(result);
         }
 
     );
         
-/*
 
-        var suppliersIds = _.map(products, function (el) {
-
-            return el._doc.supplierId+'';
-        });
-
-        suppliersIds = _.unique(suppliersIds);
-        //suppliersIds = _.order(suppliersIds,);
-
-
-        if (_.isEmpty(suppliersIds))
-            return Promise.reject({
-                name: 'ItemNotFound',
-                message: 'No Requests found for query ' + JSON.stringify(query),
-                errorCode: 404
-            });
-        else {
-            return User.paginate(
-                {
-                    _id: {$in: suppliersIds}
-                },
-                {
-                    page: req.query.page,
-                    limit: req.query.limit
-                });
-        }
-
-    }).then(function (entities) {
-
-        if (entities.total === 0)
-            return res.boom.notFound('No items found for query ' + JSON.stringify(query)); // Error 404
-        else
-            return res.send(entities); // HTTP 200 ok
-    }).catch(function (err) {
-
-        if (err.errorCode) return res.status(err.errorCode).send(err); // Error 500
-        else return res.boom.badImplementation(); // Error 500
-    });
-
-
-*/
 
 });
 
 
 
 
+// GET PRODUCT
 
+router.get('/products/:id',
+    au.doku({  // json documentation
+        title: 'Get a product by id',
+        version: '1.0.0',
+        name: 'GetProduct',
+        group: 'Products',
+        description: 'Get a product by id',
+        params: {
+            id: {type: 'String', required: true, description: 'The product identifier'}
+        }
+
+    }), function (req, res) {
+        var id = req.params.id.toString();
+
+        var newVals = req.body; // body already parsed
+
+        Product.findById(id, newVals).then(function (entities) {
+
+            if (_.isEmpty(entities))
+                res.boom.notFound('No entry with id ' + id); // Error 404
+            else
+                res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
+            if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
+        });
+    }
+);
 
 
 

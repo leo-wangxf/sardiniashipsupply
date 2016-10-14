@@ -152,6 +152,55 @@ router.get('/users',
     });
 });
 
+router.get('/users/supplier/:supId',
+  au.doku({  // json documentation
+    "description": 'Get the information of requested supplier',
+    "title": 'Get supplier info',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetSupplier",
+    "params": 
+    {
+      "supId":
+      {
+        "description" : "The id of the supplier you want to retrieve information",
+        "type" : "string",
+        "required" : true
+      }
+    },
+  }),
+  function (req, res) {
+    supId = req.params.supId    
+    if(!require("mongoose").Types.ObjectId.isValid(supId))
+    {
+      return res.boom.badRequest("Invalid supplier id")      
+    }
+
+    var query = {
+      "_id" : supId,
+      "type": "supplier"           
+    };
+
+
+    User.find(query).limit(1).exec().then(function(result)
+    {
+      if(result.length == 0)
+      {
+        return res.boom.notFound("Supplier not found");
+      }
+      else
+      {      
+        res.send(result)
+      }
+    }).catch(function(err)
+    {
+      return res.boom.badImplementation(err); // Error 500
+    });
+});
+
+
+
+
 
 router.put('/users',
   au.doku({  // json documentation
@@ -502,9 +551,11 @@ router.get('/users/favorites',
         }
       }
 
+
       return User.find({'_id': {$in: arrId}}).exec();
     }).then(function(result)
     {
+
       return res.send(result);
     }).catch(function(err)
     {
@@ -851,7 +902,6 @@ router.post('/users/actions/attachment',
       {
         return res.boom.forbidden("Only suppliers can use this function");
       }
-
       
       req.p_userId = userId;
 
@@ -860,22 +910,16 @@ router.post('/users/actions/attachment',
         var r = {} 
         if(err)
         {
-          r.success = false;
-          r.message = err.message;
-          return res.send(JSON.stringify(r));
+          return res.boom.badImplementation(err); // Error 500
         }
 
         if(req.diskQuotaExceeded)
         {
-          r.success = false;
-          r.message = "Disk quota exceeded";
-          return res.send(JSON.stringify(r));
+          return res.status(550).send("Disk quota exceeded");
         }
         else if(req.wrongFileType)
         {
-          r.success = false;
-          r.message = "You can upload only pdf files";
-          return res.send(JSON.stringify(r));
+          return res.boom.badRequest("You can upload only pdf files")      
         }
 
         r.success = true;
@@ -918,24 +962,25 @@ router.get('/users/attachment/:supId',
     var supId = req.params.supId;
 
     var dir = path.join(conf.uploadDir, supId)
-    var r = {}
+
+    res.setHeader("Content-Type", "application/json");
 
     var fList = [];
     fs.readdir(dir, function(err, items)
     {
+      var r = {}
+
       if(err)
       {
         if(err.code === "ENOENT")
         {
           r.success = true;
           r.files = [];
-          return res.send(JSON.stringify(r));
+          return res.json(r);
         }
         else
         {
-          r.success = false;
-          r.message = err;
-          return res.send(JSON.stringify(r));        
+          return res.boom.badImplementation(err); // Error 500
         }
       }
 
@@ -946,7 +991,8 @@ router.get('/users/attachment/:supId',
       r.success = true;
       r.files = fList;
 
-      res.send(JSON.stringify(r));
+      return res.json(r);
+
     });
   }
 );
@@ -997,7 +1043,7 @@ router.get('/users/attachment/:supId/:file',
     {
       if(err)
       {
-        res.status(404).send(JSON.stringify(r));
+        res.status(404).json(r);
         return res.boom.notFound("File not found");
       }
       else
