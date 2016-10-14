@@ -21,12 +21,12 @@ function decodeToken(token)
     });
   }
 
-  var options = 
+  var options =
   {
     url: authUrl + "/decodeToken",
     qs: {decode_token : token},
     method: 'GET',
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + msToken
     }
@@ -60,13 +60,13 @@ function decodeToken(token)
 
 function editUser(uid, token, body)
 {
-  var options = 
+  var options =
   {
     url: userUrl + "/users/" + uid,
     method: 'PUT',
     json: true,
     body: body,
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + token,
       'content-type': 'application/json'
@@ -75,7 +75,7 @@ function editUser(uid, token, body)
 
   return new Promise(function(resolve, reject)
   {
-    request.put(options, function(error, response, body)    
+    request.put(options, function(error, response, body)
     {
       if(error)
       {
@@ -85,7 +85,7 @@ function editUser(uid, token, body)
         return reject(decodeError);
       }
 
-      var r = {};     
+      var r = {};
       try
       {
         r.body = JSON.parse(body);
@@ -103,13 +103,13 @@ function editUser(uid, token, body)
 
 function loginUser(username, password)
 {
-  var options = 
+  var options =
   {
     url: userUrl + "/users/signin",
     method: 'POST',
     json: true,
     body: {"username" : username, "password" : password},
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + msToken,
       'content-type': 'application/json'
@@ -118,7 +118,7 @@ function loginUser(username, password)
 
   return new Promise(function(resolve, reject)
   {
-    request.post(options, function(error, response, body)    
+    request.post(options, function(error, response, body)
     {
       if(error)
       {
@@ -128,7 +128,7 @@ function loginUser(username, password)
         return reject(decodeError);
       }
 
-      var r = {};     
+      var r = {};
       try
       {
         r.body = JSON.parse(body);
@@ -147,13 +147,13 @@ function loginUser(username, password)
 
 function changePassword(uid, token, oldPassword, newPassword)
 {
-  var options = 
+  var options =
   {
     url: userUrl + "/users/" + uid + "/actions/setpassword",
     method: 'POST',
     json: true,
     body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + token,
       'content-type': 'application/json'
@@ -162,7 +162,7 @@ function changePassword(uid, token, oldPassword, newPassword)
 
   return new Promise(function(resolve, reject)
   {
-    request.post(options, function(error, response, body)    
+    request.post(options, function(error, response, body)
     {
       if(error)
       {
@@ -172,7 +172,7 @@ function changePassword(uid, token, oldPassword, newPassword)
         return reject(decodeError);
       }
 
-      var r = {};     
+      var r = {};
       try
       {
         r.body = JSON.parse(body);

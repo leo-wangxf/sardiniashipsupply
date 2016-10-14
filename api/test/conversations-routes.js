@@ -39,10 +39,12 @@ var conversations = [];
 var token = "";
 
 var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
-
+//var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg0NzI3MzU5MjU5fQ.YYzZ7GcQVBQhvHkEU0T2pOs0Uk4gIt6l-wGRfNgsM6M";
 var username ="davide85@gmail.com";
 var password ="password";
+//var userUrl = "http://localhost:3008/users/signin";
 var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
 
 var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
 
@@ -397,7 +399,7 @@ describe('Conversations API', function () {
             var date = (new Date());
             var c = {url: apihost + apiprefix + '/conversations?date_in='+date.toDateString()+
             '&by_uid='+testSupplierId,headers:headers};
-            
+
             request.get(c, function (error, response, body) {
 
                     if (error) throw error;
@@ -408,7 +410,7 @@ describe('Conversations API', function () {
                         results.should.have.property('total');
                         results.should.have.property('docs');
                         results.docs[0].should.have.property('supplier');
-                        console.log(results.docs[0]);
+                        //console.log(results.docs[0]);
                         mongoose.Types.ObjectId(results.docs[0].supplier._id).id.should.be.equal(testSupplierId.id);
                         results.docs[0].should.have.property('dateIn');
                         new Date(results.docs[0].dateIn).toDateString().should.be.equal(new Date(date).toDateString());

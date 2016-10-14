@@ -7,6 +7,9 @@ var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
 var app = require("./../app");
 
+
+
+
 router.get('/conversations',
     au.doku({  // json documentation
         description: 'Get all the conversations defined in db',
@@ -71,7 +74,8 @@ router.get('/conversations',
 
             }
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true, populate:'requests messages supplier customer'})
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true,
+          populate:'requests messages supplier customer'})
             .then(function (entities) {
                 if (entities.total === 0)
                     return Promise.reject({
@@ -80,8 +84,9 @@ router.get('/conversations',
                         errorCode: 404
                     });
                 else{
-                    res.send(entities); // HTTP 200 ok
-                  //  console.log(entities);
+
+                 // console.log(entities);
+                   res.send(entities); // HTTP 200 ok
                 }
 
             }).catch(function (err) {
@@ -161,8 +166,10 @@ router.get('/conversations/:id',
            // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404
-            else
-                res.send(entities);  // HTTP 200 ok
+
+              res.send(entities);  // HTTP 200 ok
+
+
         }).catch(function (err) {
             if (err.name === 'CastError')
                 res.boom.badData('Id malformed'); // Error 422
