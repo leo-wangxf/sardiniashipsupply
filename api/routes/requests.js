@@ -400,7 +400,6 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
 
     function (req, res) {
 
-      console.log(req);
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body');
 
