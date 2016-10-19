@@ -6,7 +6,12 @@ var _ = require('underscore')._;
 
 var mongoosePaginate = require('mongoose-paginate');
 
+var isValid = function(date){
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  return now.getTime() <= new Date(date).getTime();
 
+}
 
 
 var Schema = mongoose.Schema,
@@ -24,15 +29,44 @@ var joiConversationSchema = Joi.object({
     messages:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Message'})),
     requests:Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Request'})),
     hidden:  Joi.boolean().default(false)
-} );
+} , {
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }});
 
 
 var ConversationSchema = new Schema(Joigoose.convert(joiConversationSchema),{strict:"throw"});
 
 ConversationSchema.plugin(mongoosePaginate);
 
+/*ConversationSchema.virtual('expired').get(function () {
+  //ConversationSchema.set ('expired', !isValid(this.dateValidity));
+  return !isValid(this.dateValidity);
+});*/
+
+if (!ConversationSchema.options.toObject) ConversationSchema.options.toObject = {};
+if (!ConversationSchema.options.toJSON) ConversationSchema.options.toJSON = {};
+ConversationSchema.options.toJSON.transform = ConversationSchema.options.toObject.transform  = function (doc, con, options) {
+  // remove the _id of every document before returning the result
+  con.expired = !isValid(con.dateValidity);
+  var r;
+  con.completed = true;
+  for(r=0; r<con.requests.length;r++){
+    var s = con.requests[r].status;
+    if(s=='pending'||s=='acceptedByS')
+      con.completed = false;
+  }
+
+  return con;
+}
+
 
 var Conversation = mongoose.model('Conversation', ConversationSchema);
+
+
 
 
 Conversation.prototype.getMessagesByQuery = function (query) { //Maybe already in mongoose? NO, it's not.

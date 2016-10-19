@@ -117,7 +117,6 @@ router.post('/conversations/:id/requests',
                     errorCode: 404
                 });
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id}, {"status":"expired"}, {new: true});
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The date validity to put a new request is expired',
@@ -284,12 +283,7 @@ router.delete('/conversations/:id_c/requests/:id_r',
 
     })
 
-    var isValid = function(date){
-        var now = new Date();
-        now.setHours(0,0,0,0);
-        return now.getTime() <= new Date(date).getTime();
 
-    }
 router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
     au.doku({
         // json documentation
@@ -349,16 +343,16 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 });
             }
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
                 return Promise.reject({
                     name: 'ItemGone',
-                    message: 'The request is expired',
+                    message: 'The RFQ is expired',
                     errorCode: 410
                 });
 
             }
             else
-                return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true})
+              return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true});
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -393,7 +387,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
         name: 'SetQuantityOrQuoteRequestForCustomer',
         group: 'Requests',
         description: 'Customer set quantity/quote or status in a request after a supplier modify. ' +
-        'The request must be valid, not expired',
+        'The Conversation must be valid, not expired',
         params: {
             id_c: {type: 'String', required: true, description: 'The conversation identifier'},
             id_r: {type: 'String', required: true, description: 'The request identifier'}
@@ -405,6 +399,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
     }),
 
     function (req, res) {
+
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body');
 
@@ -448,10 +443,11 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                 });
             }
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
+                results.completed=true;
+                results.save();
                 return Promise.reject({
                     name: 'ItemGone',
-                    message: 'The request is expired',
+                    message: 'The RFQ is expired',
                     errorCode: 410
                 });
 
@@ -521,19 +517,24 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                 });
             }
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
                 return Promise.reject({
                     name: 'ItemGone',
-                    message: 'The request is expired',
+                    message: 'The RFQ is expired',
                     errorCode: 410
                 });
 
             }
-            else
-                return Request.findOneAndUpdate(
-                    {_id: id_r, status: {$eq: "acceptedByS"}},
-                    {"status": 'acceptedByC'}, {new: true}
-                )
+            else{
+              if(isAllRequestsClosed(results)){
+                results.completed = true;
+                results.save();
+              }
+
+              return Request.findOneAndUpdate(
+                  {_id: id_r, status: {$eq: "acceptedByS"}},
+                  {"status": 'acceptedByC'}, {new: true}
+              )
+            }
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -596,7 +597,6 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                 });
             }
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -604,11 +604,17 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                 });
 
             }
-            else
-                return Request.findOneAndUpdate(
-                    {_id: id_r, status: {$eq: "acceptedByS"}},
-                    {"status": 'rejectedByC'}, {new: true}
-                )
+            else{
+              if(isAllRequestsClosed(results)){
+                results.completed = true;
+                results.save();
+              }
+              return Request.findOneAndUpdate(
+                {_id: id_r, status: {$eq: "acceptedByS"}},
+                {"status": 'rejectedByC'}, {new: true}
+              )
+            }
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -671,7 +677,6 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                 });
             }
             else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -679,11 +684,19 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                 });
 
             }
-            else
-                return Request.findOneAndUpdate(
-                    {_id: id_r, status: {$eq: "pending"}},
-                    {"status": 'rejectedByS'}, {new: true}
-                )
+            else{
+              if(isAllRequestsClosed(results)){
+                results.completed = true;
+                results.save();
+              }
+
+              return Request.findOneAndUpdate(
+                {_id: id_r, status: {$eq: "pending"}},
+                {"status": 'rejectedByS'}, {new: true}
+              )
+            }
+
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -712,5 +725,21 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
     });
 
+var isValid = function(date){
+  var now = new Date();
+  now.setHours(0,0,0,0);
+  return now.getTime() <= new Date(date).getTime();
+
+}
+
+var isAllRequestsClosed = function(requests){
+  for(var r = 0; r<requests.length; r++){
+    if(requests[r].status == 'acceptedByC' || requests[r].status == 'rejectedByC' ||
+      requests[r].status == 'rejectedByS'){
+      return true;
+    }
+    else return false;
+  }
+}
 
 module.exports = router;
