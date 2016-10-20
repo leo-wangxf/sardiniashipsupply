@@ -10,8 +10,8 @@ var Schema = mongoose.Schema,
 
 var joiCategorySchema = Joi.object({
     unspsc : Joi.string().required().meta({index: true}),
-    name : Joi.string().required(),
-    description : Joi.string()
+    name : Joi.array().required(),
+    level: Joi.array()
 });
 
 
