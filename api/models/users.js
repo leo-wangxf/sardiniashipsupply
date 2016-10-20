@@ -22,7 +22,7 @@ var joiUserSchema = Joi.object({
     password : Joi.string().required(),
     id: Joi.string().required().meta({ type: 'ObjectId'}),
     status : Joi.string().min(1).max(1),
-    certification: Joi.array().items(Joi.object()),
+    //certification: Joi.array().items(Joi.object()),
     categories: Joi.array().items(Joi.string()),
     favoriteSupplier : Joi.array().items(Joi.string()),
     pIva : Joi.string()
