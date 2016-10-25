@@ -102,10 +102,10 @@ var commentCatId =
 
 router.get('/categories/drop',
     au.doku({  // json documentation
-        description: 'List of name categories',
+        description: 'Get name categories for drop or autocomplete',
         title: 'Get categories',
         version: '1.0.0',
-        name: 'Get name categories for drop or autocomplete',
+        name: 'Get drop category ',
         group: 'Categories',
         fields: {
             name: {

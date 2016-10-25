@@ -195,7 +195,7 @@ router.get('/products',
             }
         ).then(function (entities) {
             if (entities.total === 0)
-                return res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
+                return res.boom.notFound('No Products found for query ' + JSON.stringify(query)); // Error 404
             else
                 return res.send(entities); // HTTP 200 ok
         }).catch(function (err) {
