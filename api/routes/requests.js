@@ -95,7 +95,10 @@ router.post('/conversations/:id/requests',
                 required: true
             },
             dateIn:{type: 'Date', description: 'Date Request'},
-            quantity: {type: 'Integer', description: 'Request quantity'},
+            'quantity.number': {type: 'Integer', description: 'Request quantity'},
+            'quantity.unity':{ type: 'String', description: 'Quantity unity',
+                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
+                default: 'unty'},
             quote: {type: 'Integer', description: 'Request quote'},
         }
     }),
@@ -116,7 +119,7 @@ router.post('/conversations/:id/requests',
                     message: 'no conversation found for request creation, having id ' + id,
                     errorCode: 404
                 });
-            else if(!isValid(results.dateValidity)){
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The date validity to put a new request is expired',
@@ -297,7 +300,10 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            quantity: {type: 'Number', required: false, description: 'The request quantity'},
+            'quantity.number': {type: 'Integer', description: 'Request quantity'},
+            'quantity.unity':{ type: 'String', description: 'Quantity unity',
+                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
+                default: 'unty'},
             quote: {type: 'Number', required: false, description: 'The request quote'}
         }
     }),
@@ -306,7 +312,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
 
         var id_r = req.params['id_r'].toString();
         var id_c = req.params['id_c'].toString();
-
+        var conv;
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
@@ -326,7 +332,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
         }
         query["status"] = "acceptedByS";
 
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -342,7 +348,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The RFQ is expired',
@@ -350,8 +356,11 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 });
 
             }
-            else
-              return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true});
+            else{
+                conv=results;
+                return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true});
+            }
+
 
         }).then(function (entity) {
 
@@ -359,12 +368,18 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 // console.log("empty");
                 return Promise.reject({
                     name: 'ItemNotFound',
-                    message: 'No entry with id ' + id_r +' and status pendind', // Error 404
+                    message: 'No entry with id ' + id_r +' and status pending', // Error 404
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id, "completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
                 res.status(200).send(entity);
+            }
+
         }).catch(function (err) {
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
             else if (err.name === 'CastError')
@@ -393,7 +408,10 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            quantity: {type: 'Number', required: false, description: 'The request quantity'},
+            'quantity.number': {type: 'Integer', description: 'Request quantity'},
+            'quantity.unity':{ type: 'String', description: 'Quantity unity',
+                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
+                default: 'unty'},
             quote: {type: 'Number', required: false, description: 'The request quote'}
         }
     }),
@@ -405,7 +423,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
-
+        var conv;
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
@@ -424,9 +442,9 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
             }
         }
         query["status"] = "pending";
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("supplier customer").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -442,18 +460,11 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                results.completed=true;
-                results.save();
-                return Promise.reject({
-                    name: 'ItemGone',
-                    message: 'The RFQ is expired',
-                    errorCode: 410
-                });
-
-            }
-            else
+            else {
+                conv = results;
                 return Request.findOneAndUpdate({_id: id_r, status: {$eq: "acceptedByS"}}, query, {new: true})
+            }
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -464,8 +475,14 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
         }).catch(function (err) {
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
@@ -498,9 +515,9 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -516,7 +533,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The RFQ is expired',
@@ -525,11 +542,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
 
             }
             else{
-              if(isAllRequestsClosed(results)){
-                results.completed = true;
-                results.save();
-              }
-
+                conv = results;
               return Request.findOneAndUpdate(
                   {_id: id_r, status: {$eq: "acceptedByS"}},
                   {"status": 'acceptedByC'}, {new: true}
@@ -545,8 +558,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -580,9 +600,10 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
-            if (_.isEmpty(results)) {
+        var conv;
 
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+            if (_.isEmpty(results)) {
                 return Promise.reject({
                     name: 'ItemNotFound',
                     message: 'no conversation found for request deletion, having id ' + id_c,
@@ -596,7 +617,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -604,15 +625,13 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                 });
 
             }
-            else{
-              if(isAllRequestsClosed(results)){
-                results.completed = true;
-                results.save();
-              }
-              return Request.findOneAndUpdate(
-                {_id: id_r, status: {$eq: "acceptedByS"}},
-                {"status": 'rejectedByC'}, {new: true}
-              )
+            else {
+                conv = results;
+
+                return Request.findOneAndUpdate(
+                    {_id: id_r, status: {$eq: "acceptedByS"}},
+                    {"status": 'rejectedByC'}, {new: true}
+                )
             }
 
         }).then(function (entity) {
@@ -625,7 +644,16 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                     errorCode: 404
                 });
             }
-            else res.status(200).send(entity);
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
+                res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -658,9 +686,9 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -676,7 +704,7 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -685,11 +713,7 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
             }
             else{
-              if(isAllRequestsClosed(results)){
-                results.completed = true;
-                results.save();
-              }
-
+                conv=results;
               return Request.findOneAndUpdate(
                 {_id: id_r, status: {$eq: "pending"}},
                 {"status": 'rejectedByS'}, {new: true}
@@ -707,8 +731,16 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -725,21 +757,6 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
     });
 
-var isValid = function(date){
-  var now = new Date();
-  now.setHours(0,0,0,0);
-  return now.getTime() <= new Date(date).getTime();
 
-}
-
-var isAllRequestsClosed = function(requests){
-  for(var r = 0; r<requests.length; r++){
-    if(requests[r].status == 'acceptedByC' || requests[r].status == 'rejectedByC' ||
-      requests[r].status == 'rejectedByS'){
-      return true;
-    }
-    else return false;
-  }
-}
 
 module.exports = router;

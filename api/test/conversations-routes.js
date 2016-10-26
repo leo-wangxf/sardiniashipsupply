@@ -156,7 +156,9 @@ describe('Conversations API', function () {
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
-                    attachments: ["http//:url"]
+                    attachments: ["http//:url"],
+                    automatic:false,
+                    link:"http//:url"
                 });
 
 
@@ -177,9 +179,9 @@ describe('Conversations API', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -225,9 +227,9 @@ describe('Conversations API', function () {
                 var request = new Request({
                     product: products[_.random(0, 99)],
                     status: 'pending',
-                    quantity: e * 100,
+                    dateIn: Date.now(),
+                    quantity: {"number": e * 100,"unity":"mtr"},
                     quote: e * 100,
-                    dateIn:new Date()
                 });
 
                 request.save(function (err, request) {

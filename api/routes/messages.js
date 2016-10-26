@@ -38,7 +38,6 @@ router.get('/conversations/:id/messages',
 
 
         var id = req.params.id.toString();
-console.log(query);
         Conversation.findById(id, "messages").then(function (entities) {
             if (_.isEmpty(entities))
                 return Promise.reject({
@@ -105,7 +104,8 @@ router.post('/conversations/:id/messages',
         var id = req.params.id.toString();
         var saveResults;
         var newmsg;
-        Conversation.findById(id, "messages").then(function (results) {
+        Conversation.findById(id,"messages")
+            .then(function (results) {
             saveResults = results;
             if (_.isEmpty(results))
                 return Promise.reject({
@@ -114,7 +114,9 @@ router.post('/conversations/:id/messages',
                     errorCode: 404
                 });
             else
+
                 return Message.create(req.body);
+            
 
 
         }).then(function (newmessage) {
@@ -125,20 +127,18 @@ router.post('/conversations/:id/messages',
             else {
                 saveResults.messages.push(newmessage._id);
                 newmsg = newmessage;
-                return saveResults.save();
 
+                return saveResults.save();
             }
 
         }).then(function (results) {
 
-          // console.log(req.app.get("socketio").emit("messages_id"+newmsg._id));
+            return Message.findById(newmsg._id).populate('sender');
 
-            // var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+        }).then(function (data) {
+            req.app.get("socketio").to(id+'_room').emit("message", data);
 
-            //  res.set('Location', fullUrl + "/" + id + '/messages/' + newmessage._id);
-            //res.status(201).send(newmessage);
-
-            res.status(201).send(newmsg);  // HTTP 201 created
+            return res.status(201).send(data);
 
         }).catch(function (err) {
 

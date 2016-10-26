@@ -65,6 +65,16 @@ describe('Request Model', function () {
             app.set('port', process.env.PORT || 3000);
 
             server = app.listen(app.get('port'), function () {
+                io = require('socket.io')(server);
+                var socket;
+                io.on('connection', function(socket) {
+                    socket=socket;
+
+                    socket.on('join', function(data) {
+                        socket.join('_room');
+                    });
+                });
+                app.set("socketio" , io);
 
                 apihost += ":" + server.address().port;
 
@@ -79,6 +89,14 @@ describe('Request Model', function () {
                         //console.log(token);
                         r.response = response;
                     }
+
+
+
+
+
+
+
+
                     done();
 
                 });
@@ -91,7 +109,11 @@ describe('Request Model', function () {
     after(function (done) {
 
         db.disconnect(function () {
+           // socket.disconnect();
+
             server.close();
+
+
             done();
         });
 
@@ -137,7 +159,9 @@ describe('Request Model', function () {
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
-                    attachments: ["http//:url"]
+                    attachments: ["http//:url"],
+                    automatic:false,
+                    link:" 2"
                 });
 
 
@@ -163,9 +187,9 @@ describe('Request Model', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -224,7 +248,7 @@ var count = 0;
                 var req = new Request({
                     product: products[_.random(0, 99)],
                     status: s,
-                    quantity: e * 100,
+                    quantity: {"number":_.random(0, 99) * 100,"unity":"mtr"},
                     quote: e * 100,
                     dateIn: Date.now(),
                 });
@@ -248,7 +272,7 @@ var count = 0;
                 //console.log(err);
                 // console.log(requests);
               //  testrequest = requests[_.random(0, 99)];
-               
+
                 callback(null);
             });
 
@@ -395,7 +419,7 @@ var count = 0;
             var data = {
                 product: products[_.random(0, 99)],
                 status: 'pending',
-                quantity: _.random(0, 99) * 100,
+                quantity: {"number":_.random(0, 99) * 100,"unity":"mtr"},
                 quote: _.random(0, 99) * 100,
             };
             var c = {
@@ -417,7 +441,7 @@ var count = 0;
                     results.should.have.property('status');
                     results.status.should.be.equal(data.status);
                     results.should.have.property('quantity');
-                    results.quantity.should.be.equal(data.quantity);
+                    results.quantity.number.should.be.equal(data.quantity.number);
                     results.should.have.property('quote');
                     results.quote.should.be.equal(data.quote);
 
@@ -584,7 +608,7 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: _.random(0, 99) * 100,
+                quantity: {"number": _.random(0, 99),"unity":"mtr"},
                 quote: _.random(0, 99) * 100,
             };
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id+'/actions/suppaccept',
@@ -602,7 +626,7 @@ var count = 0;
                      results.should.have.property('status');
                      results.status.should.be.equal('acceptedByS');
                      results.should.have.property('quantity');
-                     results.quantity.should.be.equal(data.quantity);
+                     results.quantity.number.should.be.equal(data.quantity.number);
                      results.should.have.property('quote');
                      results.quote.should.be.equal(data.quote);
 
@@ -621,7 +645,7 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: _.random(0, 99) * 100,
+                quantity: {"number": _.random(0, 99),"unity":"mtr"},
                 quote: _.random(0, 99) * 100,
             };
 
@@ -641,7 +665,7 @@ var count = 0;
                     results.should.have.property('status');
                     results.status.should.be.equal('pending');
                     results.should.have.property('quantity');
-                    results.quantity.should.be.equal(data.quantity);
+                    results.quantity.number.should.be.equal(data.quantity.number);
                     results.should.have.property('quote');
                     results.quote.should.be.equal(data.quote);
 

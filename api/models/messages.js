@@ -16,7 +16,8 @@ var joiMessageSchema = Joi.object({
     draft: Joi.boolean().default(false).required(),
     text: Joi.string().required(),
     automatic: Joi.boolean().default(false).required(),
-    attachments: Joi.array().items(Joi.string())
+    attachments: Joi.array().items(Joi.string()),
+    link:Joi.string()
 });
 
 var MessageSchema = new Schema(Joigoose.convert(joiMessageSchema));

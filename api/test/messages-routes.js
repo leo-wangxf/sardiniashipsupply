@@ -65,7 +65,16 @@ describe('Message Model', function () {
             app.set('port', process.env.PORT || 3000);
 
             server = app.listen(app.get('port'), function () {
+                io = require('socket.io')(server);
+                var socket;
+                io.on('connection', function(socket) {
+                    socket=socket;
 
+                    socket.on('join', function(data) {
+                        socket.join('_room');
+                    });
+                });
+                app.set("socketio" , io);
                 apihost += ":" + server.address().port;
 
 
@@ -136,12 +145,13 @@ describe('Message Model', function () {
             async.each(range, function (e, cb) {
                 message = new Message({
                     sender: users[_.random(0, 99)],
-                    type:"customer",
+                    type: "customer",
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
+                    attachments: ["http//:url"],
                     automatic:false,
-                    attachments: ["http//:url"]
+                    link:" 2"
                 });
 
 
@@ -168,9 +178,9 @@ describe('Message Model', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -221,10 +231,8 @@ describe('Message Model', function () {
                     product: products[_.random(0, 99)],
                     status: 'pending',
                     dateIn: Date.now(),
-                    quantityRequest: e * 100,
-                    quantityOffer: e * 100,
-                    quoteRequest: e * 100,
-                    quoteOffer: e * 100,
+                    quantity: {"number": e * 100,"unity":"mtr"},
+                    quote: e * 100,
                 });
 
                 request.save(function (err, request) {
@@ -409,9 +417,9 @@ describe('Message Model', function () {
     describe('POST ' + apiprefix + '/conversations/:id/messages', function () {
 
         it('must create one message in a conversation with given fields', function (done) {
-
+            var id =users[_.random(0, 99)];
             var data = {
-                sender: users[_.random(0, 99)],
+                sender: id,
                 type:"customer",
                 dateIn: Date.now(),
                 draft: false,
@@ -431,10 +439,10 @@ describe('Message Model', function () {
 
                 if (error) throw error;
                 else {
+
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
                     results.should.have.property('sender');
-                    mongoose.Types.ObjectId(results.sender).id.should.be.equal(data.sender.id);
                     results.should.have.property('type');
                     results.type.should.be.equal(data.type);
                     results.should.have.property('dateIn');

@@ -165,9 +165,9 @@ router.get('/conversations/:id',
         }).then(function (entities) {
            // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
-                res.boom.notFound('No entry with id ' + id); // Error 404
+                return res.boom.notFound('No entry with id ' + id); // Error 404
 
-              res.send(entities);  // HTTP 200 ok
+             return res.send(entities);  // HTTP 200 ok
 
 
         }).catch(function (err) {
