@@ -328,7 +328,7 @@ router.put('/users',
         {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
-          schemaOpt.categories = Joi.array().items(Joi.number());
+          schemaOpt.categories = Joi.array().items(Joi.string());
           schemaOpt.pIva = Joi.number();
         }
 
