@@ -5,6 +5,7 @@ var _ = require('underscore')._;
 var au = require('audoku');
 var Promise = require('bluebird');
 var User = require('../models/users').User;
+var Category = require('../models/categories').Category;
 var tu = require('../util/token');
 
 var multer = require('multer');
@@ -482,8 +483,6 @@ router.post('/users/actions/password',
 */
 
 
-
-
 router.get('/users/favorites',
   au.doku({  // json documentation
     "description" : "Get the customer's favorites suppliers list",
@@ -734,7 +733,6 @@ router.post('/users/actions/favorites',
   }
 );
 
-
 router.delete('/users/actions/favorites/:supId',
   au.doku({  // json documentation
     "description" : "Remove a supplier from the customer's favorites list",
@@ -825,6 +823,346 @@ router.delete('/users/actions/favorites/:supId',
     });
   }
 );
+
+
+router.get('/users/categories',
+  au.doku({  // json documentation
+    "description" : "Get the supplier's categories list",
+    "title": "Get the suppplier's categories list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetCategories",
+    "headers" :
+    {
+      "Authorization" :
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var userToken = req.token;
+    var userVals;
+    var userId;
+
+    //console.log(userToken);
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid == true)
+      {
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        if(userType != "supplier")
+        {
+          return res.boom.forbidden("Only supplier can use this function");
+        }
+
+        var query = {
+          '_id' : userId
+        };
+
+        return User.find(query, "categories -_id").exec();
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        return err;
+      }
+    }).then(function(result)
+    {
+      var arrId = [];
+
+      for(var i in result[0].categories)
+      {
+        if(!isNaN(i))
+        {
+          arrId.push(require("mongoose").Types.ObjectId(result[0].categories[i]));
+        }
+      }
+
+      return Category.find({'_id': {$in: arrId}}).exec();
+    }).then(function(result)
+    {
+
+      return res.send(result);
+    }).catch(function(err)
+    {
+      console.log(err);
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.post('/users/actions/categories',
+  au.doku({  // json documentation
+    "description": "Add a category to the supplier's list",
+    "title": "Add a category to the supplier's supplier list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostCategories",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "bodyFields": 
+    {
+      "category": 
+      {
+        "description" : 'The category to add to list',
+        "type": 'string', 
+        "required": true
+      },
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var catList;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only supplier can use this function");
+      }
+
+      var catData = req.body.category;
+      if(_.isArray(catData))
+      {
+        catList = catData;
+      }
+      else
+      {
+        catList = [catData];
+      }
+
+      // Guardo se tutte le categorie passate esistono
+      return Promise.reduce(catList, function(searchResult, category)
+      {
+        if(!require("mongoose").Types.ObjectId.isValid(category))
+        {
+            searchResult.status = false;
+            // ha senso creare una lista apposita?
+            searchResult.missing.push(category);
+            return searchResult;
+        }
+        else
+        {  
+          // Cerco la singola categoria dell'iterazione
+          return Category.count({_id: category}).exec().then(function(count)
+          {
+            if(count > 0)
+            {
+              searchResult.status = (searchResult.status && true);              
+            }
+            else
+            {
+              searchResult.status = false;
+              searchResult.missing.push(category);
+            }
+            return searchResult;
+          });
+        }
+      }, {"status" : true, "missing" : []});
+    }).then(function(result)
+    {
+      if(result.status == false)
+      {
+        var e = new Error;
+        e.message = "Some categories are unknown (" + result.missing.toString() + ")";
+        e.statusCode = 400;
+        throw e;
+      };
+
+      var query = 
+      {
+        id: userId,
+        type: "supplier",
+      };
+
+      var fields = "categories";
+
+      return User.find(query, fields).limit(1).lean().exec();
+    }).then(function(result)
+    {
+
+      // Guardo se qualche categoria e' gia' presente nella lista
+      for(var i in catList)
+      {        
+        if(result[0].categories.indexOf(catList[i]) > -1)
+        {
+          // Errore o elimino il supplier da aggiungere nella lista?
+          var er = new Error;
+          er.message = "Category " + catList[i] + " is already present";
+          er.statusCode = 400;
+          throw er;
+        }
+      }
+
+      var query = {id: userId};
+      var update = {$push: {categories : {$each: catList}}};
+
+      // Aggiungi le categorie alla lista
+      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.delete('/users/actions/categories/:catId',
+  au.doku({  // json documentation
+    "description" : "Remove a category from the supplier's list",
+    "title": "Remove a category from the supplier's list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteCategory",
+    "params": 
+    {
+      "catId":
+      {
+        "description" : "The id of the category you want to remove to your list",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var supList;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only suppliers can use this function");
+      }
+
+      catId = req.params.catId
+
+      var query = {id: userId};
+      var update = {$pull: {categories : catId}};
+
+      // Rimuovi il supplier dalla lista
+      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
 
 
 router.post('/users/actions/attachment',
