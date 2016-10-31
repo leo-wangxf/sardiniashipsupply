@@ -321,7 +321,6 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
         for (var v in fieldsToChange) {
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
-
                     query["quantity"] = fieldsToChange[v];
                     continue;
                 } else if (v === "quote") {
