@@ -268,13 +268,6 @@ router.put('/users',
         "type": 'string', 
         "required": false
       },
-      "user.categories":
-      {
-        "description": 'categories provided by the user (only for suppliers)',
-        // TODO tipo list al posto di string
-        "type": 'string', 
-        "required": false
-      },
       "user.pIva":
       {
         "description": 'The user\'s VAT identification number (only for suppliers)',
@@ -329,7 +322,6 @@ router.put('/users',
         {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
-          schemaOpt.categories = Joi.array().items(Joi.string());
           schemaOpt.pIva = Joi.number();
         }
 
