@@ -5,6 +5,8 @@ var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
+var User = require('../models/users').User;
+var Conversation = require('../models/conversations').Conversation;
 
 router.get('/evaluations',
     au.doku({  // json documentation
@@ -90,30 +92,50 @@ router.post('/evaluations',
      	console.log('req.body product_rate: ' + req.body["product_rate"]);
      	console.log('req.body delivery_rate: ' + req.body["delivery_rate"]);
      	console.log('req.body review: ' + req.body["overall_review"]);
-
-        // create the new Evaluation object
-        Evaluation.create(req.body).then(function (entities) {
-
-
-            if (!entities) {
-                console.log('inside server post, in case of no entities err 500 ');
-                return res.boom.badImplementation("boom message for 500 error: Bad implementation"); // Error 500
-	    } else {
-                console.log('else entities exist: ' + entities);
-                return res.status(201).send(entities);  // HTTP 201, evaluation successfully created
-	    }
-        }).catch(function (err) {
-	    console.log('server side error name is ' + err.name);
-	    console.log('server side error message is ' + err.message); // Remember to check whether in err a message is always present or not
-            if (err.name === "ValidationError") {
-		console.log('server side error name is ' + err.name);
-                return res.boom.badData(err.message); // Error 422
-	    } else {
-		console.log('server side error is different from 422');
-                return res.boom.badImplementation(err);
-	    }
-        });
-
+        // some checks on entities of the created Evaluation 
+        // check if both from and to user exist is implicitly made by middleware
+	// check if conversation exists
+	var convId = req.body["conversationId"].toString();
+        console.log('convId = ' + convId);
+	Conversation.findById(convId).exec().then(function(conv)
+	{
+		if (!conv){
+			return res.boom.notFound("No conversation found with id " + convId); 
+		}
+		//else if (conv.completed == false) {
+		//	return res.boom.notFound("Conversation with id " + convId + " has not been completed yet."); 
+		//}
+		else
+		{
+               // check if from and to are both involved in the conversation must be done with a call to db
+               // now create the new Evaluation object
+	       var params = req.body;
+	       console.log('conversation supplier is ' + conv.supplier);
+	       params['to'] = conv.supplier;
+               Evaluation.create(params).then(function (entities) {
+               if (!entities) {
+                   console.log('inside server post, in case of no entities err 500 ');
+                   return res.boom.badImplementation("boom message for 500 error: Bad implementation"); // Error 500
+	       } else {
+                   console.log('else entities exist so the Evaluation has been created: ' + entities);
+                   console.log('in entities from is ' + entities['from']);
+                   console.log('in entities conversation id is ' + entities['conversationId']);
+		   
+                   return res.status(201).send(entities);  // HTTP 201, evaluation successfully created
+	       }
+               }).catch(function (err) {
+	           console.log('server side error name is ' + err.name);
+	           console.log('server side error message is ' + err.message); // Remember to check whether in err a message is always present or not
+                   if (err.name === "ValidationError") {
+		       console.log('server side error name is ' + err.name);
+                       return res.boom.badData(err.message); // Error 422
+	           } else { 
+		       console.log('server side error is different from 422');
+                       return res.boom.badImplementation(err);
+	           }
+              });
+       }
+	  });
     });
 
 
