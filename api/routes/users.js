@@ -268,6 +268,18 @@ router.put('/users',
         "type": 'string', 
         "required": false
       },
+      "user.references.name":
+      {
+        "decription": "The first name of the account's referent",
+        "type": "string",
+        "required": false
+      },
+      "user.references.surname":
+      {
+        "description": "The last name of the account's referent",
+        "type": "string",
+        "required": false
+      },
       "user.pIva":
       {
         "description": 'The user\'s VAT identification number (only for suppliers)',
@@ -308,9 +320,10 @@ router.put('/users',
 
         var schemaOpt = 
         {
-          name: Joi.string().alphanum().min(3),
+          name: Joi.string().min(3),
           address: Joi.string().min(3),
           phone: Joi.number(),
+          references: Joi.object().keys({name: Joi.string(), surname: Joi.string()}),
           logo: Joi.string().uri()
         };
 
