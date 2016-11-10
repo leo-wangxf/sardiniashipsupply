@@ -17,8 +17,8 @@ var joiEvaluationSchema = Joi.object({
     product_rate:Joi.number().default(0).min(0).max(5),
     customer_service_rate:Joi.number().default(0).min(0).max(5),
     price_value_rate:Joi.number().default(0).min(0).max(5),
-    pros_review:Joi.string(),
-    cons_review:Joi.string(),
+    pros_review:Joi.string().allow(''),
+    cons_review:Joi.string().allow(''),
     conversation_end_time:Joi.date(),
     evaluation_time:Joi.date().default(Date.now, 'time of evaluation'),
 }, {strict: "throw", versionKey: false });
