@@ -96,10 +96,7 @@ router.post('/conversations/:id/requests',
             },
             dateIn:{type: 'Date', description: 'Date Request'},
             'quantity.number': {type: 'Integer', description: 'Request quantity'},
-            'quantity.unity':{ type: 'String', description: 'Quantity unity',
-                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
-                default: 'unty'},
-            quote: {type: 'Integer', description: 'Request quote'},
+             quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
     function (req, res) {
@@ -290,21 +287,17 @@ router.delete('/conversations/:id_c/requests/:id_r',
 router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
     au.doku({
         // json documentation
-        title: 'Supplier set quantity/quote and/or acceptance for a request',
+        title: 'Supplier set quantity and/or acceptance for a request',
         version: '1.0.0',
         name: 'SetQuantityOrQuoteRequestForSupplier',
         group: 'Requests',
-        description: 'Supplier set quantity/quote or status in a request',
+        description: 'Supplier set quantity or status in a request',
         params: {
             id_c: {type: 'String', required: true, description: 'The conversation identifier'},
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            'quantity.number': {type: 'Integer', description: 'Request quantity'},
-            'quantity.unity':{ type: 'String', description: 'Quantity unity',
-                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
-                default: 'unty'},
-            quote: {type: 'Number', required: false, description: 'The request quote'}
+            quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
 
@@ -316,17 +309,14 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
-        var allowedFields = ["quantity", "quote"];
+        var allowedFields = ["quantity"];
         var query = {};
-        for (var v in fieldsToChange) {
+        for (var v in fieldsToChange)
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
                     query["quantity"] = fieldsToChange[v];
                     continue;
-                } else if (v === "quote") {
-                    query["quote"] = fieldsToChange[v];
-                    continue;
-                }
+
             }
         }
         query["status"] = "acceptedByS";
@@ -396,22 +386,18 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
 router.post('/conversations/:id_c/requests/:id/actions/custmodify',
     au.doku({
         // json documentation
-        title: 'Customer set quantity/quote or status in a request',
+        title: 'Customer set quantity or status in a request',
         version: '1.0.0',
         name: 'SetQuantityOrQuoteRequestForCustomer',
         group: 'Requests',
-        description: 'Customer set quantity/quote or status in a request after a supplier modify. ' +
+        description: 'Customer set quantity or status in a request after a supplier modify. ' +
         'The Conversation must be valid, not expired',
         params: {
             id_c: {type: 'String', required: true, description: 'The conversation identifier'},
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            'quantity.number': {type: 'Integer', description: 'Request quantity'},
-            'quantity.unity':{ type: 'String', description: 'Quantity unity',
-                options: ['unty', 'ltr', 'kg','g','mtr','fot','lbr'],
-                default: 'unty'},
-            quote: {type: 'Number', required: false, description: 'The request quote'}
+            quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
 
@@ -426,18 +412,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
-        var allowedFields = ["quantity", "quote"];
+        var allowedFields = ["quantity"];
         var query = {};
-        for (var v in fieldsToChange) {
+        for (var v in fieldsToChange)
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
 
                     query["quantity"] = fieldsToChange[v];
                     continue;
-                } else if (v === "quote") {
-                    query["quote"] = fieldsToChange[v];
-                    continue;
-                }
+
             }
         }
         query["status"] = "pending";

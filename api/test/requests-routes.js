@@ -217,7 +217,13 @@ describe('Request Model', function () {
                     description: "Description product " + e,
                     supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
-                    images: ["http://ret"]
+                    images: ["http://ret"],
+                    price:10,
+                    minNum:10,
+                    maxNum:20,
+                    unit: 'unty',
+                    availability:100,
+                    tags:["uno"]
                 });
                 product.save(function (err, product) {
                     // console.log(err);
@@ -248,8 +254,7 @@ var count = 0;
                 var req = new Request({
                     product: products[_.random(0, 99)],
                     status: s,
-                    quantity: {"number":_.random(0, 99) * 100,"unity":"mtr"},
-                    quote: e * 100,
+                    quantity: _.random(0, 99) * 100,
                     dateIn: Date.now(),
                 });
 
@@ -419,8 +424,7 @@ var count = 0;
             var data = {
                 product: products[_.random(0, 99)],
                 status: 'pending',
-                quantity: {"number":_.random(0, 99) * 100,"unity":"mtr"},
-                quote: _.random(0, 99) * 100,
+                quantity: _.random(0, 99) * 100,
             };
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
@@ -441,9 +445,7 @@ var count = 0;
                     results.should.have.property('status');
                     results.status.should.be.equal(data.status);
                     results.should.have.property('quantity');
-                    results.quantity.number.should.be.equal(data.quantity.number);
-                    results.should.have.property('quote');
-                    results.quote.should.be.equal(data.quote);
+                    results.quantity.should.be.equal(data.quantity);
 
                 }
                 done();
@@ -608,8 +610,7 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: {"number": _.random(0, 99),"unity":"mtr"},
-                quote: _.random(0, 99) * 100,
+                quantity: _.random(0, 99),
             };
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id+'/actions/suppaccept',
                 body: JSON.stringify(data), headers:headers
@@ -626,9 +627,7 @@ var count = 0;
                      results.should.have.property('status');
                      results.status.should.be.equal('acceptedByS');
                      results.should.have.property('quantity');
-                     results.quantity.number.should.be.equal(data.quantity.number);
-                     results.should.have.property('quote');
-                     results.quote.should.be.equal(data.quote);
+                     results.quantity.should.be.equal(data.quantity);
 
                 }
                 done();
@@ -645,8 +644,7 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: {"number": _.random(0, 99),"unity":"mtr"},
-                quote: _.random(0, 99) * 100,
+                quantity:  _.random(0, 99),
             };
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custmodify',
@@ -665,9 +663,7 @@ var count = 0;
                     results.should.have.property('status');
                     results.status.should.be.equal('pending');
                     results.should.have.property('quantity');
-                    results.quantity.number.should.be.equal(data.quantity.number);
-                    results.should.have.property('quote');
-                    results.quote.should.be.equal(data.quote);
+                    results.quantity.should.be.equal(data.quantity);
 
                 }
                 done();

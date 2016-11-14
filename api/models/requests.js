@@ -13,8 +13,7 @@ var joiRequestSchema = Joi.object({
     // _id  implicit id
     product: Joi.string().meta({type: 'ObjectId', ref: 'Product', required:true}),
     status: Joi.string().valid(['pending', 'acceptedByS','acceptedByC', 'rejectedByC', 'rejectedByS']).default('pending'),
-    quantity: {number: Joi.number().optional(), unity: Joi.string().valid(['void','unty', 'ltr', 'kg','g','mtr', 'fot','lbr'])},
-    quote:  Joi.number().optional(),
+    quantity: Joi.number().optional(),
     dateIn:Joi.date().default(Date.now, 'time of creation').required()
 });
 
