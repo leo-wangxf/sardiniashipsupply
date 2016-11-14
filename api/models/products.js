@@ -19,7 +19,12 @@ var joiProductSchema = Joi.object({
     supplierId: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
     categories: Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Category'}).min(1).max(4)),  
     images:Joi.array().items(Joi.object()),
-    tags: Joi.array().items(Joi.string())
+    tags: Joi.array().items(Joi.string()),
+    price:Joi.number().default(0),
+    minNum:Joi.number().default(0),
+    maxNum:Joi.number().default(0),
+    unit: Joi.string().required(),
+    availability:Joi.number().default(0)
 });
 
 var ProductSchema = new Schema(Joigoose.convert(joiProductSchema))

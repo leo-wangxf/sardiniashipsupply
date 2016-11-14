@@ -394,7 +394,7 @@ Product.aggregate(
     //console.log(result);
 
     var suppliersIds = _.map(result, function (el) {
-            console.log(el);
+            // console.log(el);
             return el._id.supplierId+'';
         });
 
