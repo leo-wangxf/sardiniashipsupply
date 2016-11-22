@@ -404,7 +404,12 @@ Product.aggregate(
                 },
                 {
                     page: req.query.page,
-                    limit: req.query.limit
+                    limit: req.query.limit,
+                    sort:{
+                        'rates.overall_rate': -1,        
+                        name: 1
+                                 
+                         }
                 });
 }).then(function(result){
   

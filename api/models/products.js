@@ -24,7 +24,8 @@ var joiProductSchema = Joi.object({
     minNum:Joi.number().default(0),
     maxNum:Joi.number().default(0),
     unit: Joi.string().required(),
-    availability:Joi.number().default(0)
+    availability:Joi.number().default(0),
+    rates: Joi.object()
 });
 
 var ProductSchema = new Schema(Joigoose.convert(joiProductSchema))
