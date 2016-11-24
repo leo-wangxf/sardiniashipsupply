@@ -1,0 +1,14 @@
+{
+  "production": {
+    "dbPort":"27017",
+    "dbHost":"localhost",
+    "dbName":"serviceprofiles",
+    "driver":"mongo",
+    "enableCors":true,
+    "authProtocol":"http",
+    "authHost": "156.148.36.184", 
+    "authPort":"3005",
+    "decodedTokenFieldName": "serviceprofilerms",
+    "access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzkyMjM0MjYyOTAzfQ.tp79MBMuxZmiw7Tz5fyOVmfW91Pa3MsqoAww_0wF6FE"
+  }
+}
