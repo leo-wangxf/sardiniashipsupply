@@ -374,8 +374,11 @@ if (query.categories && mongoose.Types.ObjectId.isValid(query.categories))
 if (query.tags)
 {
     var arr_tags =  [];
+    console.log(query.tags);
     arr_tags.push(query.tags);
-    param.tags = {$in: arr_tags};
+    //param.tags = {$in: arr_tags};
+    param.tags = {$in: query.tags};
+    console.log(param);
 }
     
 
