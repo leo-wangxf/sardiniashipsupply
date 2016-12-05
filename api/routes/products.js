@@ -153,7 +153,7 @@ router.get('/products',
         description: 'Search products defined in db by name, category, supplierId and tags',
         fields: {
             name: {
-                description: 'name of the product',
+                description: 'string contained in the name, description or tag of the product',
                 type: 'string', required: false
             },
             category: {
@@ -181,18 +181,61 @@ router.get('/products',
     function (req, res) {
 
         var query = _.extend({}, req.query);
+        
+        
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
-
-        query.name = new RegExp(req.query.name, "i");
-
-
-        Product.paginate(query
-            , {
+        //query.name = new RegExp(req.query.name, "i");
+        
+        var option = {
                 populate: 'categories'
                 , page: req.query.page
                 , limit: req.query.limit
-            }
+                };
+        
+        if (query.name)
+        {
+            query = {$text: {$search: query.name}};
+            score = {"score": {"$meta": "textScore"}};
+            option['select'] = score;
+            option['sort'] =  score;
+        }
+        else
+            option['sort'] =  'name';
+        
+        
+        
+        if (req.query.supplierId && mongoose.Types.ObjectId.isValid(req.query.supplierId))
+        {
+            query.supplierId = req.query.supplierId;
+        }
+        
+        if (req.query.categories && mongoose.Types.ObjectId.isValid(req.query.categories))
+        {
+            var arr_param =  [];
+            arr_param.push(mongoose.Types.ObjectId(req.query.categories));
+            query.categories = {$in: arr_param};
+        }
+        
+        // tags
+        if (req.query.tags)
+        {
+            var arr_tags =  [];
+            console.log(req.query.tags);
+            if (Array.isArray(req.query.tags))
+                arr_tags = req.query.tags;
+            else
+                arr_tags.push(req.query.tags);
+            query.tags = {$in: arr_tags};
+        }
+        
+        
+        
+        
+        
+        
+        Product.paginate(query
+            , option
         ).then(function (entities) {
             if (entities.total === 0)
                 return res.boom.notFound('No Products found for query ' + JSON.stringify(query)); // Error 404
@@ -202,7 +245,7 @@ router.get('/products',
             if (err) return res.boom.badImplementation(err); // Error 500
             else return res.boom.badImplementation(); // Error 500
         });
-
+        
     });
 
 /*
@@ -297,18 +340,18 @@ router.get('/search',
 
 router.get('/products/supplier',
     au.doku({  // json documentation
-        title: 'Search products defined in db by name or only category',
+        title: 'Search suppliers from products defined in db by string contained in name, description or tags, category',
         version: '1.0.0',
         name: 'SearchProduct',
         group: 'Products',
         description: 'Search products defined in db by name, category, supplierId and tags',
         fields: {
             name: {
-                description: 'name of the product',
+                description: 'string  contained in title, description, tags of the product (words in the string are in OR clause)',
                 type: 'string', required: false
             },
             category: {
-                description: 'id of the category',
+                description: 'id of the category (search into array)',
                 type: 'string', required: false
             },
             supplierId: {
@@ -316,7 +359,7 @@ router.get('/products/supplier',
                 type: 'string', required: false
             },
             tags: {
-                description: 'tags associated',
+                description: 'tags associated (search into array)',
                 type: 'string', required: false
             },
             page: {
@@ -331,76 +374,65 @@ router.get('/products/supplier',
     }),
     function (req, res) {
 
-//console.log(req.query);
     
 
     var query = _.extend({}, req.query);
     if (query.hasOwnProperty('page')) delete query.page;
     if (query.hasOwnProperty('limit')) delete query.limit;
 
+    /*
     if (query.name)
         query.name = new RegExp(req.query.name, "i");
+    */
+
+
+
     
-
-
-
-    //Product.find(query, 'supplierId').then(function (products) {
-
-/*
-Product.aggregate(                                                                      
-                    { $match: { name: /prod/ } },                                                           
-                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } }                 
-                    
-
-                    ).populate('supplierId')
-.then(function (result){
-    
-    console.log(result);
-    return res.send(result);
-}
-
-    );
-*/
 var param = {};
 
+// name
 if (query.name)
-    param.name = query.name;
+    param = {$text: {$search: query.name}};
+    
+// categories
 if (query.categories && mongoose.Types.ObjectId.isValid(query.categories))
 {
     var arr_param =  [];
     arr_param.push(mongoose.Types.ObjectId(query.categories));
     param.categories = {$in: arr_param};
 }
+
+
+// tags
 if (query.tags)
 {
     var arr_tags =  [];
     console.log(query.tags);
     arr_tags.push(query.tags);
-    //param.tags = {$in: arr_tags};
     param.tags = {$in: query.tags};
-    console.log(param);
 }
-    
-
 
 
 Product.aggregate(                                                                      
                     {$match: param},
-                    //{ $match: {categories: {$in: [mongoose.Types.ObjectId('57c57c8e895708850b92bb2d')]}}},
-                    //{ $match: {tags: {$in: ['tipico']}}},
-                    //{ $match: { name: query.name, categories: {$in: []}}},                                                           
-                    { $group : {_id: {supplierId: "$supplierId"}, count : { $sum : 1 } } } 
+                    { $group : {_id: {supplierId: "$supplierId"}
+                    , count : { $sum : 1 } 
+                    , max : {$max: { $meta: "textScore" }}
+                    } } 
                                     
                 )
 .then(function (result){
+   
+  
+   
     
-    //console.log(result);
-
     var suppliersIds = _.map(result, function (el) {
-            // console.log(el);
             return el._id.supplierId+'';
         });
-
+   
+   
+   
+    
     return User.paginate(
                 {
                     _id: {$in: suppliersIds}
