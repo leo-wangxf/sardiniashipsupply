@@ -335,6 +335,7 @@ router.put('/users',
         {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
+          schemaOpt.certifications = Joi.array().items(Joi.object());
           schemaOpt.pIva = Joi.number();
         }
 
@@ -897,8 +898,7 @@ router.get('/users/categories',
 
       return Category.find({'_id': {$in: arrId}}).exec();
     }).then(function(result)
-    {
-
+    {      
       return res.send(result);
     }).catch(function(err)
     {
@@ -1168,7 +1168,292 @@ router.delete('/users/actions/categories/:catId',
   }
 );
 
+router.get('/users/certifications',
+  au.doku({  // json documentation
+    "description" : "Get the supplier's certifications list",
+    "title": "Get the supplier's certifications list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "GetCertifications",
+    "headers" :
+    {
+      "Authorization" :
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var userToken = req.token;
+    var userVals;
+    var userId;
 
+    //console.log(userToken);
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid == true)
+      {
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        if(userType != "supplier")
+        {
+          return res.boom.forbidden("Only supplier can use this function");
+        }
+
+        var query = {
+          '_id' : userId
+        };
+
+        return User.find(query, "certification -_id").lean().exec();
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        return err;
+      }
+    }).then(function(result)
+    {
+      var r = result[0].certification;
+      /*
+      if(result.length == 1 && Object.keys(result[0]).length == 0)
+        result = [];
+      */
+      return res.send(r);
+    }).catch(function(err)
+    {
+      console.log(err);
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.post('/users/actions/certifications',
+  au.doku({  // json documentation
+    "description": "Add a certification to the supplier's list",
+    "title": "Add a category to the supplier's supplier list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "PostCertifications",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "bodyFields": 
+    {
+      "certification": 
+      {
+        "description" : 'The certification to add to list',
+        "type": 'object', 
+        "required": true
+      },
+      "certification.name":
+      {
+        "description": 'The certification name',
+        "type": 'string',
+        "required": true
+      },
+      "certification.date":
+      {
+        "description": 'The certification date',
+        "type": 'string',
+        "required": false
+      },
+      "certification.description":
+      {
+        "description": 'The certification description',
+        "type": 'string',
+        "required": false
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var certList;
+    var certData;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only supplier can use this function");
+      }
+
+      certData = req.body.certification;
+
+      return User.count({_id: userId, certification: {$elemMatch: {name: certData.name}}}).exec()
+    }).then(function(count)
+    {
+      if(count > 0)
+      {
+        var e = new Error;
+        e.message = "This certification is already present";
+        e.statusCode = 409;
+        throw e;
+      }
+      var query = {id: userId};
+      var update = {$push: {certification : certData}};
+
+      // Aggiungi la certificazione  alla lista
+      return User.findOneAndUpdate(query, update, {safe:true, new:true, upsert:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {  
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.delete('/users/actions/certifications/:name',
+  au.doku({  // json documentation
+    "description" : "Remove a certification from the supplier's list",
+    "title": "Remove a certification from the supplier's list",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "DeleteCertification",
+    "params": 
+    {
+      "name":
+      {
+        "description" : "The name of the certification you want to remove to your list",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var userVals;
+    var userId;
+    var supList;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      if(userType != "supplier")
+      {
+        return res.boom.forbidden("Only suppliers can use this function");
+      }
+
+      certification = req.params.name
+
+      var query = {id: userId};
+      var update = {$pull: {certification : {name: certification}}};
+
+      // Rimuovi la certificazione  dalla lista
+      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
+    }).then(function(result)
+    {
+      if(result == null)
+      {
+        var er = new Error;
+        er.message = "INTERNAL SERVER ERROR (user not found)";
+        er.statusCode = 500;
+        throw er;
+      }
+      else
+      {
+        return res.send(result);
+      }
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 
 router.post('/users/actions/attachment',
   au.doku({  // json documentation
