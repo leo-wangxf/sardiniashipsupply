@@ -39,10 +39,12 @@ var conversations = [];
 var token = "";
 
 var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
-
+//var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg0NzI3MzU5MjU5fQ.YYzZ7GcQVBQhvHkEU0T2pOs0Uk4gIt6l-wGRfNgsM6M";
 var username ="davide85@gmail.com";
 var password ="password";
+//var userUrl = "http://localhost:3008/users/signin";
 var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
 
 var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
 
@@ -134,7 +136,7 @@ describe('Conversations API', function () {
                 t = token() +''+ getRandom(0,9);
                 user.save(function (err, us) {
                     if (err) throw err;
-                    users.push(us.id);
+                    users.push(us._id);
                     cb();
 
                 });
@@ -149,12 +151,14 @@ describe('Conversations API', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
+                    sender: users[_.random(0, 99)],
                     type:"customer",
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
-                    attachments: ["http//:url"]
+                    attachments: ["http//:url"],
+                    automatic:false,
+                    link:"http//:url"
                 });
 
 
@@ -175,9 +179,9 @@ describe('Conversations API', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -200,7 +204,7 @@ describe('Conversations API', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
@@ -221,12 +225,11 @@ describe('Conversations API', function () {
         var createRequests = function (callback) {
             async.each(range, function (e, cb) {
                 var request = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: 'pending',
-                    quantityRequest: e * 100,
-                    quantityOffer: e * 100,
-                    quoteRequest: e * 100,
-                    quoteOffer: e * 100,
+                    dateIn: Date.now(),
+                    quantity: {"number": e * 100,"unity":"mtr"},
+                    quote: e * 100,
                 });
 
                 request.save(function (err, request) {
@@ -246,8 +249,8 @@ describe('Conversations API', function () {
         var createConversations = function () {
 
             var conversationOpen = new Conversation({
-                supplierId: users[0],
-                customerId: users[1],
+                supplier: users[0],
+                customer: users[1],
                 dateIn: Date.now(),
                 dateValidity: Date.now(),
                 dateEnd: Date.now(),
@@ -265,8 +268,8 @@ describe('Conversations API', function () {
             testConversationOpId = conversationOpen._id;
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[0],
-                    customerId: users[1],
+                    supplier: users[0],
+                    customer: users[1],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -287,9 +290,10 @@ describe('Conversations API', function () {
             }, function (err) {
                 Conversation.findOne({}, function (err, cat) {
                     if (err) throw err;
+                    console.log(cat.supplier);
                     testConversationId = cat._id;
-                    testSupplierId = cat.supplierId;
-                    testCustomerId = cat.customerId;
+                    testSupplierId = cat.supplier;
+                    testCustomerId = cat.customer;
                     done();
                 });
             });
@@ -397,7 +401,7 @@ describe('Conversations API', function () {
             var date = (new Date());
             var c = {url: apihost + apiprefix + '/conversations?date_in='+date.toDateString()+
             '&by_uid='+testSupplierId,headers:headers};
-            
+
             request.get(c, function (error, response, body) {
 
                     if (error) throw error;
@@ -407,8 +411,9 @@ describe('Conversations API', function () {
                         var results = JSON.parse(body);
                         results.should.have.property('total');
                         results.should.have.property('docs');
-                        results.docs[0].should.have.property('supplierId');
-                        mongoose.Types.ObjectId(results.docs[0].supplierId).id.should.be.equal(testSupplierId.id);
+                        results.docs[0].should.have.property('supplier');
+                        //console.log(results.docs[0]);
+                        mongoose.Types.ObjectId(results.docs[0].supplier._id).id.should.be.equal(testSupplierId.id);
                         results.docs[0].should.have.property('dateIn');
                         new Date(results.docs[0].dateIn).toDateString().should.be.equal(new Date(date).toDateString());
                         /* results.should.have.property('supplierId');
@@ -432,8 +437,8 @@ describe('Conversations API', function () {
         it('must create one conversation with given fields', function (done) {
           //  console.log(apihost);
             var data = {
-                supplierId: users[_.random(0, 99)],
-                customerId: users[_.random(0, 99)],
+                supplier: users[_.random(0, 99)],
+                customer: users[_.random(0, 99)],
                 dateIn: Date.now(),
                 dateValidity: Date.now(),
                 dateEnd: Date.now(),
@@ -455,10 +460,10 @@ describe('Conversations API', function () {
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                     results.should.have.property('supplierId');
-                    mongoose.Types.ObjectId(results.supplierId).id.should.be.equal(data.supplierId.id);
-                     results.should.have.property('customerId');
-                    mongoose.Types.ObjectId(results.customerId).id.should.be.equal(data.customerId.id);
+                     results.should.have.property('supplier');
+                    mongoose.Types.ObjectId(results.supplier).id.should.be.equal(data.supplier.id);
+                     results.should.have.property('customer');
+                    mongoose.Types.ObjectId(results.customer).id.should.be.equal(data.customer.id);
                     results.should.have.property('dateIn');
                     new Date(results.dateIn).toString().should.be.equal(new Date(data.dateIn).toString());
                     results.should.have.property('dateValidity');
@@ -512,7 +517,7 @@ describe('Conversations API', function () {
 
             var c = {
                 url: apihost + apiprefix + '/conversations',
-                body: JSON.stringify({supplierId: users[_.random(0, 99)]}),
+                body: JSON.stringify({supplier: users[_.random(0, 99)]}),
                 headers: {'content-type': 'application/json',Authorization : "Bearer "+ token}
             };
 
@@ -560,7 +565,7 @@ describe('Conversations API', function () {
 
         it('must return the conversation with id=' + testConversationId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId, headers: headers};
+            var c = {url: apihost + apiprefix + '/conversations/' + testConversationId, headers: {'content-type': 'application/json',Authorization : "Bearer "+ token}};
 
             request.get(c, function (error, response, body) {
 

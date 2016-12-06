@@ -86,7 +86,7 @@ router.post('/conversations/:id/requests',
         name: 'PostRequests',
         group: 'Requests',
         bodyFields: {
-            productId: {type: 'String', required: true, description: 'Product Id'},
+            product: {type: 'String', required: true, description: 'Product Id'},
             status: {
                 type: 'String',
                 description: 'Request Status',
@@ -94,8 +94,9 @@ router.post('/conversations/:id/requests',
                 default: 'pending',
                 required: true
             },
-            quantity: {type: 'Integer', description: 'Request quantity'},
-            quote: {type: 'Integer', description: 'Request quote'},
+            dateIn:{type: 'Date', description: 'Date Request'},
+            'quantity.number': {type: 'Integer', description: 'Request quantity'},
+             quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
     function (req, res) {
@@ -115,8 +116,7 @@ router.post('/conversations/:id/requests',
                     message: 'no conversation found for request creation, having id ' + id,
                     errorCode: 404
                 });
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id}, {"status":"expired"}, {new: true});
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The date validity to put a new request is expired',
@@ -283,27 +283,21 @@ router.delete('/conversations/:id_c/requests/:id_r',
 
     })
 
-    var isValid = function(date){
-        var now = new Date();
-        now.setHours(0,0,0,0);
-        return now.getTime() <= new Date(date).getTime();
 
-    }
 router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
     au.doku({
         // json documentation
-        title: 'Supplier set quantity/quote and/or acceptance for a request',
+        title: 'Supplier set quantity and/or acceptance for a request',
         version: '1.0.0',
         name: 'SetQuantityOrQuoteRequestForSupplier',
         group: 'Requests',
-        description: 'Supplier set quantity/quote or status in a request',
+        description: 'Supplier set quantity or status in a request',
         params: {
             id_c: {type: 'String', required: true, description: 'The conversation identifier'},
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            quantity: {type: 'Number', required: false, description: 'The request quantity'},
-            quote: {type: 'Number', required: false, description: 'The request quote'}
+            quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
 
@@ -311,27 +305,23 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
 
         var id_r = req.params['id_r'].toString();
         var id_c = req.params['id_c'].toString();
-
+        var conv;
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
-        var allowedFields = ["quantity", "quote"];
+        var allowedFields = ["quantity"];
         var query = {};
-        for (var v in fieldsToChange) {
+        for (var v in fieldsToChange)
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
-
                     query["quantity"] = fieldsToChange[v];
                     continue;
-                } else if (v === "quote") {
-                    query["quote"] = fieldsToChange[v];
-                    continue;
-                }
+
             }
         }
         query["status"] = "acceptedByS";
 
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -347,29 +337,38 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
-                    message: 'The request is expired',
+                    message: 'The RFQ is expired',
                     errorCode: 410
                 });
 
             }
-            else
-                return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true})
+            else{
+                conv=results;
+                return Request.findOneAndUpdate({_id: id_r, status: {$eq: "pending"}}, query, {new: true});
+            }
+
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
                 // console.log("empty");
                 return Promise.reject({
                     name: 'ItemNotFound',
-                    message: 'No entry with id ' + id_r +' and status pendind', // Error 404
+                    message: 'No entry with id ' + id_r +' and status pending', // Error 404
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id, "completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
                 res.status(200).send(entity);
+            }
+
         }).catch(function (err) {
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
             else if (err.name === 'CastError')
@@ -387,50 +386,47 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
 router.post('/conversations/:id_c/requests/:id/actions/custmodify',
     au.doku({
         // json documentation
-        title: 'Customer set quantity/quote or status in a request',
+        title: 'Customer set quantity or status in a request',
         version: '1.0.0',
         name: 'SetQuantityOrQuoteRequestForCustomer',
         group: 'Requests',
-        description: 'Customer set quantity/quote or status in a request after a supplier modify. ' +
-        'The request must be valid, not expired',
+        description: 'Customer set quantity or status in a request after a supplier modify. ' +
+        'The Conversation must be valid, not expired',
         params: {
             id_c: {type: 'String', required: true, description: 'The conversation identifier'},
             id_r: {type: 'String', required: true, description: 'The request identifier'}
         },
         bodyFields: {
-            quantity: {type: 'Number', required: false, description: 'The request quantity'},
-            quote: {type: 'Number', required: false, description: 'The request quote'}
+            quantity: {type: 'Number', required: false, description: 'Request quantity'}
         }
     }),
 
     function (req, res) {
+
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body');
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
-
+        var conv;
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
-        var allowedFields = ["quantity", "quote"];
+        var allowedFields = ["quantity"];
         var query = {};
-        for (var v in fieldsToChange) {
+        for (var v in fieldsToChange)
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
 
                     query["quantity"] = fieldsToChange[v];
                     continue;
-                } else if (v === "quote") {
-                    query["quote"] = fieldsToChange[v];
-                    continue;
-                }
+
             }
         }
         query["status"] = "pending";
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("supplier customer").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -446,17 +442,11 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
-                return Promise.reject({
-                    name: 'ItemGone',
-                    message: 'The request is expired',
-                    errorCode: 410
-                });
-
-            }
-            else
+            else {
+                conv = results;
                 return Request.findOneAndUpdate({_id: id_r, status: {$eq: "acceptedByS"}}, query, {new: true})
+            }
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -467,8 +457,14 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
         }).catch(function (err) {
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
@@ -501,9 +497,9 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -519,20 +515,21 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
-                    message: 'The request is expired',
+                    message: 'The RFQ is expired',
                     errorCode: 410
                 });
 
             }
-            else
-                return Request.findOneAndUpdate(
-                    {_id: id_r, status: {$eq: "acceptedByS"}},
-                    {"status": 'acceptedByC'}, {new: true}
-                )
+            else{
+                conv = results;
+              return Request.findOneAndUpdate(
+                  {_id: id_r, status: {$eq: "acceptedByS"}},
+                  {"status": 'acceptedByC'}, {new: true}
+              )
+            }
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -543,8 +540,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -578,9 +582,10 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
-            if (_.isEmpty(results)) {
+        var conv;
 
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+            if (_.isEmpty(results)) {
                 return Promise.reject({
                     name: 'ItemNotFound',
                     message: 'no conversation found for request deletion, having id ' + id_c,
@@ -594,8 +599,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -603,11 +607,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                 });
 
             }
-            else
+            else {
+                conv = results;
+
                 return Request.findOneAndUpdate(
                     {_id: id_r, status: {$eq: "acceptedByS"}},
                     {"status": 'rejectedByC'}, {new: true}
                 )
+            }
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -618,7 +626,16 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                     errorCode: 404
                 });
             }
-            else res.status(200).send(entity);
+            else{
+                entity = entity.toJSON();
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
+                res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -651,9 +668,9 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
+        var conv;
 
-
-        Conversation.findById(id_c, "dateValidity requests").then(function (results) {
+        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -669,8 +686,7 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                     errorCode: 404
                 });
             }
-            else if(!isValid(results.dateValidity)){
-                Request.findOneAndUpdate({_id: id_r}, {"status":"expired"}, {new: true});
+            else if(results.expired){
                 return Promise.reject({
                     name: 'ItemGone',
                     message: 'The request is expired',
@@ -678,11 +694,15 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                 });
 
             }
-            else
-                return Request.findOneAndUpdate(
-                    {_id: id_r, status: {$eq: "pending"}},
-                    {"status": 'rejectedByS'}, {new: true}
-                )
+            else{
+                conv=results;
+              return Request.findOneAndUpdate(
+                {_id: id_r, status: {$eq: "pending"}},
+                {"status": 'rejectedByS'}, {new: true}
+              )
+            }
+
+
         }).then(function (entity) {
 
             if (_.isEmpty(entity)) {
@@ -693,8 +713,16 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
                     errorCode: 404
                 });
             }
-            else
+            else{
+                entity = entity.toJSON();
+
+                entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
+
+                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+
+
                 res.status(200).send(entity);
+            }
 
 
         }).catch(function (err) {
@@ -710,6 +738,7 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
         });
 
     });
+
 
 
 module.exports = router;

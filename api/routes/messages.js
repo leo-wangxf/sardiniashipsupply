@@ -38,7 +38,6 @@ router.get('/conversations/:id/messages',
 
 
         var id = req.params.id.toString();
-console.log(query);
         Conversation.findById(id, "messages").then(function (entities) {
             if (_.isEmpty(entities))
                 return Promise.reject({
@@ -89,7 +88,7 @@ router.post('/conversations/:id/messages',
         name: 'PostMessage',
         group: 'Messages',
         bodyFields: {
-           senderId: {type: 'String', required: true, description: 'Sender user'},
+           sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},
@@ -99,15 +98,14 @@ router.post('/conversations/:id/messages',
     }),
     function (req, res) {
         console.log("POST Message");
-
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
 
         var id = req.params.id.toString();
-
         var saveResults;
         var newmsg;
-        Conversation.findById(id, "messages").then(function (results) {
+        Conversation.findById(id,"messages")
+            .then(function (results) {
             saveResults = results;
             if (_.isEmpty(results))
                 return Promise.reject({
@@ -116,7 +114,9 @@ router.post('/conversations/:id/messages',
                     errorCode: 404
                 });
             else
+
                 return Message.create(req.body);
+            
 
 
         }).then(function (newmessage) {
@@ -127,17 +127,18 @@ router.post('/conversations/:id/messages',
             else {
                 saveResults.messages.push(newmessage._id);
                 newmsg = newmessage;
-                return saveResults.save();
 
+                return saveResults.save();
             }
 
         }).then(function (results) {
 
-            // var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+            return Message.findById(newmsg._id).populate('sender');
 
-            //  res.set('Location', fullUrl + "/" + id + '/messages/' + newmessage._id);
-            //res.status(201).send(newmessage);
-            res.status(201).send(newmsg);  // HTTP 201 created
+        }).then(function (data) {
+            req.app.get("socketio").to(id+'_room').emit("message", data);
+
+            return res.status(201).send(data);
 
         }).catch(function (err) {
 
@@ -244,7 +245,7 @@ router.put('/messages/:id',
             id: {type: 'String', required: true, description: 'The message identifier'}
         },
         bodyFields: {
-            senderId: {type: 'String', required: true, description: 'Sender user'},
+            sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},
@@ -265,7 +266,7 @@ router.patch('/messages/:id',
             id: {type: 'String', required: true}
         },
         bodyFields: {
-            senderId: {type: 'String', required: true, description: 'Sender user'},
+            sender: {type: 'String', required: true, description: 'Sender user'},
             type:{type: 'String', description: 'Type sender user', options: ['customer', 'supplier'], required:true},
             dateIn: {type: 'Date', description: 'Start message date ', required: true},
             text: {type: 'String', description: 'Message text ', required: true},

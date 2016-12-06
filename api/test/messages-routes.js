@@ -33,6 +33,29 @@ var categories = [];
 var conversations = [];
 
 
+var token = "";
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var username ="davide85@gmail.com";
+var password ="password";
+var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+var options =
+{
+    url: userUrl,
+    body:JSON.stringify( {
+        "username" : username,
+        "password" : password
+    }),
+    headers: headers
+};
+
+
+
+
 describe('Message Model', function () {
 
     before(function (done) {
@@ -42,10 +65,35 @@ describe('Message Model', function () {
             app.set('port', process.env.PORT || 3000);
 
             server = app.listen(app.get('port'), function () {
+                io = require('socket.io')(server);
+                var socket;
+                io.on('connection', function(socket) {
+                    socket=socket;
 
+                    socket.on('join', function(data) {
+                        socket.join('_room');
+                    });
+                });
+                app.set("socketio" , io);
                 apihost += ":" + server.address().port;
 
-                done();
+
+
+                request.post(options, function(error, response, body)
+                {
+                    if(error)
+                        console.log(error);
+                    else{
+                        var r = {};
+                        r.body = JSON.parse(body);
+                        token = r.body.access_credentials.apiKey.token;
+                        console.log(token);
+                        r.response = response;
+                    }
+                    done();
+
+                });
+
             });
 
         });
@@ -96,12 +144,14 @@ describe('Message Model', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
-                    type:"customer",
+                    sender: users[_.random(0, 99)],
+                    type: "customer",
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
-                    attachments: ["http//:url"]
+                    attachments: ["http//:url"],
+                    automatic:false,
+                    link:" 2"
                 });
 
 
@@ -109,7 +159,7 @@ describe('Message Model', function () {
                 message.save(function (err, message) {
                     if (err) throw err;
                     messages.push(message._id);
-                    testSenderId =message.senderId;
+                    testSenderId =message.sender;
                         cb();
 
                 });
@@ -128,9 +178,9 @@ describe('Message Model', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -156,7 +206,7 @@ describe('Message Model', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
                     images: ["http://ret"]
                 });
@@ -178,12 +228,11 @@ describe('Message Model', function () {
         var createRequests = function (callback) {
             async.each(range, function (e, cb) {
                 var request = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: 'pending',
-                    quantityRequest: e * 100,
-                    quantityOffer: e * 100,
-                    quoteRequest: e * 100,
-                    quoteOffer: e * 100,
+                    dateIn: Date.now(),
+                    quantity: {"number": e * 100,"unity":"mtr"},
+                    quote: e * 100,
                 });
 
                 request.save(function (err, request) {
@@ -206,8 +255,8 @@ describe('Message Model', function () {
             async.each(range, function (e, cb) {
                 testmessageId = messages[_.random(0, 99)];
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -309,7 +358,7 @@ describe('Message Model', function () {
 
         it('must return 2 messages and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?page=1&limit=2'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?page=1&limit=2', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -340,7 +389,7 @@ describe('Message Model', function () {
 
         it('must return messages and pagination metadata with type customer, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?type=customer'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages?type=customer', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -368,19 +417,20 @@ describe('Message Model', function () {
     describe('POST ' + apiprefix + '/conversations/:id/messages', function () {
 
         it('must create one message in a conversation with given fields', function (done) {
-
+            var id =users[_.random(0, 99)];
             var data = {
-                senderId: users[_.random(0, 99)],
+                sender: id,
                 type:"customer",
                 dateIn: Date.now(),
                 draft: false,
+                automatic: false,
                 text: "Message for quote CA",
                 attachments: ["http//:url"]
             };
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
             //     console.log(c);
 
@@ -389,10 +439,10 @@ describe('Message Model', function () {
 
                 if (error) throw error;
                 else {
+
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                    results.should.have.property('senderId');
-                    mongoose.Types.ObjectId(results.senderId).id.should.be.equal(data.senderId.id);
+                    results.should.have.property('sender');
                     results.should.have.property('type');
                     results.type.should.be.equal(data.type);
                     results.should.have.property('dateIn');
@@ -401,6 +451,8 @@ describe('Message Model', function () {
                     results.draft.should.be.equal(data.draft);
                     results.should.have.property('text');
                     results.text.should.be.equal(data.text);
+                    results.should.have.property('automatic');
+                    results.draft.should.be.equal(data.automatic);
                     results.should.have.property('attachments');
                     results.attachments.length.should.be.equal(data.attachments.length);
                     results.should.have.property('_id');
@@ -421,7 +473,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: "",
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -442,7 +494,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/conversations/' + testconv + '/messages',
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -472,7 +524,7 @@ describe('Message Model', function () {
                 var c = {
                     url: apihost + apiprefix + '/messages/' + tstMessageId,
                     body: JSON.stringify({draft: true}),
-                    headers: {'content-type': 'application/json'}
+                    headers:headers
                 };
 
                 request.put(c, function (error, response) {
@@ -499,7 +551,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: "",
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.put(c, function (error, response, body) {
@@ -523,7 +575,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -548,7 +600,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + notExistingId,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -573,7 +625,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + tooShortId,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -598,7 +650,7 @@ describe('Message Model', function () {
             var c = {
                 url: apihost + apiprefix + '/messages/' + testmessage,
                 body: JSON.stringify({draft: true}),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.patch(c, function (error, response, body) {
@@ -621,7 +673,7 @@ describe('Message Model', function () {
 
         it('must return the messages for the conversation with id=' + testconv, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages'};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -641,7 +693,7 @@ describe('Message Model', function () {
 
         it('must return the message with id=' + testmessage, function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + testmessage};
+            var c = {url: apihost + apiprefix + '/messages/' + testmessage, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -662,7 +714,7 @@ describe('Message Model', function () {
 
         it('must return "not found 404" for message with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/messages/' + notExistingId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -682,7 +734,7 @@ describe('Message Model', function () {
 
         it('must return "bad data 422" for message with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/messages/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/messages/' + tooShortId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -703,7 +755,7 @@ describe('Message Model', function () {
 
         it('must delete and return "204 ok" for message with id=' + testmessageId + 'in conversation with id =' + testconv, function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages/' + testmessageId};
+            var c = {url: apihost + apiprefix + '/conversations/' + testconv + '/messages/' + testmessageId, headers:headers};
 
             request.delete(c, function (error, response, body) {
 

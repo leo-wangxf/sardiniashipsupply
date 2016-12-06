@@ -15,7 +15,7 @@ var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
 var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
-
+var cors = require('cors');
 var app = express();
 
 var configs = {
@@ -50,13 +50,14 @@ app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(bearerToken());
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(cors());
 //pagination
 var paginate = require('express-paginate');
 app.use(paginate.middleware(10, 50));
@@ -76,10 +77,10 @@ app.use(prefix, users);
 
 app.use(prefix,  categories);
 app.use(prefix, products);
-app.use(prefix, evaluations);
-app.use(prefix, messages);
-app.use(prefix, requests);
+app.use(prefix, tokenMiddleware, messages);
+app.use(prefix, tokenMiddleware, requests);
 app.use(prefix, tokenMiddleware, conversations);
+app.use(prefix, tokenMiddleware, evaluations);
 
 
 

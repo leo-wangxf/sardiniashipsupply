@@ -6,6 +6,8 @@ var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJu
 var authUrl = "http://seidue.crs4.it:3007";
 var userUrl = "http://seidue.crs4.it:3008";
 
+//var authUrl = "http://localhost:3007";
+//var userUrl = "http://localhost:3008";
 
 function decodeToken(token)
 {
@@ -19,12 +21,12 @@ function decodeToken(token)
     });
   }
 
-  var options = 
+  var options =
   {
     url: authUrl + "/decodeToken",
     qs: {decode_token : token},
     method: 'GET',
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + msToken
     }
@@ -56,16 +58,15 @@ function decodeToken(token)
   });
 }
 
-
 function editUser(uid, token, body)
 {
-  var options = 
+  var options =
   {
     url: userUrl + "/users/" + uid,
     method: 'PUT',
     json: true,
     body: body,
-    headers: 
+    headers:
     {
       'Authorization': 'Bearer ' + token,
       'content-type': 'application/json'
@@ -74,7 +75,7 @@ function editUser(uid, token, body)
 
   return new Promise(function(resolve, reject)
   {
-    request.put(options, function(error, response, body)    
+    request.put(options, function(error, response, body)
     {
       if(error)
       {
@@ -84,7 +85,7 @@ function editUser(uid, token, body)
         return reject(decodeError);
       }
 
-      var r = {};     
+      var r = {};
       try
       {
         r.body = JSON.parse(body);
@@ -96,12 +97,93 @@ function editUser(uid, token, body)
 
       r.response = response;
       return resolve(r);
-      /*
-      if(response.statusCode == 200 && body)
+    });
+  });
+}
+
+function loginUser(username, password)
+{
+  var options =
+  {
+    url: userUrl + "/users/signin",
+    method: 'POST',
+    json: true,
+    body: {"username" : username, "password" : password},
+    headers:
+    {
+      'Authorization': 'Bearer ' + msToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
       {
-        return resolve(body);
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
       }
-      */
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+function changePassword(uid, token, oldPassword, newPassword)
+{
+  var options =
+  {
+    url: userUrl + "/users/" + uid + "/actions/setpassword",
+    method: 'POST',
+    json: true,
+    body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
+    headers:
+    {
+      'Authorization': 'Bearer ' + token,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
     });
   });
 }
@@ -110,3 +192,5 @@ function editUser(uid, token, body)
 
 exports.decodeToken  = decodeToken;
 exports.editUser  = editUser;
+exports.loginUser = loginUser;
+exports.changePassword = changePassword;

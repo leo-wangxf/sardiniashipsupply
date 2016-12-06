@@ -11,10 +11,10 @@ var Schema = mongoose.Schema,
 
 var joiRequestSchema = Joi.object({
     // _id  implicit id
-    productId: Joi.string().meta({type: 'ObjectId', ref: 'Product', required:true}),
-    status: Joi.string().allow(['pending', 'accepted', 'rejByC', 'rejByS']).default('pending'),
-    quantity:  Joi.number().optional(),
-    quote:  Joi.number().optional()
+    product: Joi.string().meta({type: 'ObjectId', ref: 'Product', required:true}),
+    status: Joi.string().valid(['pending', 'acceptedByS','acceptedByC', 'rejectedByC', 'rejectedByS']).default('pending'),
+    quantity: Joi.number().optional(),
+    dateIn:Joi.date().default(Date.now, 'time of creation').required()
 });
 
 var RequestSchema = new Schema(Joigoose.convert(joiRequestSchema));

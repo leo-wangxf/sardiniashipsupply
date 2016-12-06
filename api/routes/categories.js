@@ -5,6 +5,11 @@ var _ = require('underscore')._;
 var router = express();
 var au = require('audoku');
 
+
+
+
+
+
 router.get('/categories',
     au.doku({  // json documentation
         description: 'Get all the categories defined in db',
@@ -93,6 +98,60 @@ var commentCatId =
     }
 
 };
+
+
+router.get('/categories/drop',
+    au.doku({  // json documentation
+        description: 'Get name categories for drop or autocomplete',
+        title: 'Get categories',
+        version: '1.0.0',
+        name: 'Get drop category ',
+        group: 'Categories',
+        fields: {
+            name: {
+                description: 'Name of the category',
+                type: 'string', required: false
+            },
+            lang: {
+                description: 'Lang',
+                type: 'string', required: false
+            }
+        }
+    }),
+    function (req, res) {
+        
+
+        var param = {};
+        var elem = {};
+        
+        elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '":"1"}');
+        
+        if (req.query.name)
+        {
+            var name = new RegExp(req.query.name, "i");
+            var str = 'name.'+ req.query.lang;
+            param[str] = name; 
+        }
+
+        
+        
+        
+            Category.find(param, elem, {"limit": 10}).then(function (entities) {
+            if (_.isEmpty(entities))
+                res.boom.notFound('No entry '); // Error 404
+            else
+                res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
+            console.log(err);
+                
+            if (err.name === 'CastError')
+                res.boom.badData('Url malformed'); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
+        });
+        
+    }); 
+
 
 router.get('/categories/:id',
     au.doku(commentCatId), function (req, res) {
@@ -208,4 +267,7 @@ router.delete('/categories/:id',
     });
 
 
+   
+    
+    
 module.exports = router;

@@ -5,6 +5,9 @@ var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
+var app = require("./../app");
+
+
 
 
 router.get('/conversations',
@@ -40,11 +43,13 @@ router.get('/conversations',
         }
     }),
     function (req, res) {
-        //    console.log("GET Conversation");
+          console.log("=================GET Conversation =====================");
+
+        //console.dir( req.app.locals.settings.socketio.emit("data",{"d":"a"}));
+
         var query = _.extend({}, req.query);
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
-        //   console.log(query);
 
          var allowedFields = ["completed", "date_in","by_uid"];
         for (var v in req.query)
@@ -59,8 +64,8 @@ router.get('/conversations',
                     continue;
                 }
                 else if (v === "by_uid") {
-                    var s = {'supplierId': new ObjectId(query[v])};
-                    var c = {'customerId': new ObjectId(query[v])};
+                    var s = {'supplier': new ObjectId(query[v])};
+                    var c = {'customer': new ObjectId(query[v])};
                     query['$or'] = [s,c];
                     delete query[v];
                     continue;
@@ -69,7 +74,8 @@ router.get('/conversations',
 
             }
 
-        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true, populate:'messages requests'})
+        Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true,
+          populate:'requests messages supplier customer'})
             .then(function (entities) {
                 if (entities.total === 0)
                     return Promise.reject({
@@ -77,8 +83,12 @@ router.get('/conversations',
                         message: 'no conversation found',
                         errorCode: 404
                     });
-                else
-                res.send(entities); // HTTP 200 ok
+                else{
+
+                 // console.log(entities);
+                   res.send(entities); // HTTP 200 ok
+                }
+
             }).catch(function (err) {
             console.log(err);
             if(err.name==="ItemNotFound") res.boom.notFound(err.message); // Error 404
@@ -101,8 +111,8 @@ router.post('/conversations',
         name: 'PostConversation',
         group: 'Conversations',
         bodyFields: {
-            supplierId: {type: 'String', required: true, description: 'Supplier user'},
-            customerId: {type: 'String', required: true, description: 'Customer user'},
+            supplier: {type: 'String', required: true, description: 'Supplier user'},
+            customer: {type: 'String', required: true, description: 'Customer user'},
             dateIn: {type: 'Date', required: true, description: 'Start conversation date '},
             dateValidity: {type: 'Date', required: true, description: 'Validity for requests'},
             dateEnd: {type: 'Date', description: 'End conversation date '},
@@ -150,12 +160,16 @@ router.get('/conversations/:id',
 
         var newVals = req.body; // body already parsed
 
-        Conversation.findById(id, newVals).populate('messages requests').then(function (entities) {
+        Conversation.findById(id, newVals).populate({path:'requests messages supplier customer', populate: [{ path: 'product',model:'Product',populate:[{path:'categories',model:'Category'}]},
+            { path: 'sender',model:'User'} ]
+        }).then(function (entities) {
            // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
-                res.boom.notFound('No entry with id ' + id); // Error 404
-            else
-                res.send(entities);  // HTTP 200 ok
+                return res.boom.notFound('No entry with id ' + id); // Error 404
+
+             return res.send(entities);  // HTTP 200 ok
+
+
         }).catch(function (err) {
             if (err.name === 'CastError')
                 res.boom.badData('Id malformed'); // Error 422
@@ -211,8 +225,6 @@ router.post('/conversations/:id/actions/close',
     function (req, res) {
 
         var id = req.params.id.toString();
-
-
         var query = {"completed":true, "dateEnd": new Date()};
         Conversation.findOneAndUpdate({_id: id, completed: {$eq: false}}, query, {new: true}).
         then(function (entities) {

@@ -10,12 +10,14 @@ var Schema = mongoose.Schema,
 
 
 var joiMessageSchema = Joi.object({
-    senderId: Joi.string().required().meta({type: 'ObjectId', ref: 'User'}),
+    sender: Joi.string().required().meta({type: 'ObjectId', ref: 'User'}),
     type:Joi.string().required().allow(['customer', 'supplier']).required(),
     dateIn:  Joi.date().default(Date.now, 'time of creation').required(),
     draft: Joi.boolean().default(false).required(),
     text: Joi.string().required(),
-    attachments: Joi.array().items(Joi.string())
+    automatic: Joi.boolean().default(false).required(),
+    attachments: Joi.array().items(Joi.string()),
+    link:{url: Joi.string().optional(), info: Joi.string().valid(['accepted','pending', 'rejected']).optional()},
 });
 
 var MessageSchema = new Schema(Joigoose.convert(joiMessageSchema));

@@ -5,6 +5,8 @@ var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
+var User = require('../models/users').User;
+var Conversation = require('../models/conversations').Conversation;
 
 router.get('/evaluations',
     au.doku({  // json documentation
@@ -70,32 +72,73 @@ router.post('/evaluations',
             overall_rate:{type:"Float", required:true, description:"overall user rate"},
             delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
             product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
-            overall_review:{type:"String", required:false, description:"overall user textual review"},
-            conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
-            evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
+            price_value_rate:{type:"Float", required:false, description:"user rate about purchase price/value"},
+            customer_service_rate:{type:"Float", required:false, description:"user rate about customer service"},
+            pros_review:{type:"String", required:false, description:"User textual review about positive elements"},
+            cons_review:{type:"String", required:false, description:"User textual review about negative elements"},
+            conversation_end_time:{type:"Date", required:false, description:"When the related conversation ended."},
+            evaluation_time:{type:"Date", required:false, description:"Time of evaluation."},
             description: {type: "String", required: false}
 
         }
     }),
     function (req, res) {
+	console.log('\nINSIDE EVALUATION POST\n');
 
         if (_.isEmpty(req.body))
             return res.boom.badData("Empty body"); // Error 422
-
-        Evaluation.create(req.body).then(function (entities) {
-
-
-            if (!entities)
-                return res.boom.badImplementation("Someting strange"); // Error 500
-            else
-                return res.status(201).send(entities);  // HTTP 201 created
-        }).catch(function (err) {
-            if (err.name === "ValidationError")
-                return res.boom.badData(err.message); // Error 422
-            else
-                return res.boom.badImplementation(err);// Error 500
-        });
-
+     	console.log('If I am here, req.body is not empty: ' + req.body);
+     	console.log('req.body from: ' + req.body["from"]);
+     	console.log('req.body to: ' + req.body["to"]);
+     	console.log('req.body conversationId: ' + req.body["conversationId"]);
+     	console.log('req.body overall_rate: ' + req.body["overall_rate"]);
+     	console.log('req.body product_rate: ' + req.body["product_rate"]);
+     	console.log('req.body delivery_rate: ' + req.body["delivery_rate"]);
+     	console.log('req.body review: ' + req.body["overall_review"]);
+        // some checks on entities of the created Evaluation 
+        // check if both from and to user exist is implicitly made by middleware
+	// check if conversation exists
+	var convId = req.body["conversationId"].toString();
+        console.log('convId = ' + convId);
+	Conversation.findById(convId).exec().then(function(conv)
+	{
+		if (!conv){
+			return res.boom.notFound("No conversation found with id " + convId); 
+		}
+		//else if (conv.completed == false) {
+		//	return res.boom.notFound("Conversation with id " + convId + " has not been completed yet."); 
+		//}
+		else
+		{
+               // check if from and to are both involved in the conversation must be done with a call to db
+               // now create the new Evaluation object
+	       var params = req.body;
+	       console.log('conversation supplier is ' + conv.supplier);
+	       params['to'] = conv.supplier;
+               Evaluation.create(params).then(function (entities) {
+               if (!entities) {
+                   console.log('inside server post, in case of no entities err 500 ');
+                   return res.boom.badImplementation("boom message for 500 error: Bad implementation"); // Error 500
+	       } else {
+                   console.log('else entities exist so the Evaluation has been created: ' + entities);
+                   console.log('in entities from is ' + entities['from']);
+                   console.log('in entities conversation id is ' + entities['conversationId']);
+		   
+                   return res.status(201).send(entities);  // HTTP 201, evaluation successfully created
+	       }
+               }).catch(function (err) {
+	           console.log('server side error name is ' + err.name);
+	           console.log('server side error message is ' + err.message); // Remember to check whether in err a message is always present or not
+                   if (err.name === "ValidationError") {
+		       console.log('server side error name is ' + err.name);
+                       return res.boom.badData(err.message); // Error 422
+	           } else { 
+		       console.log('server side error is different from 422');
+                       return res.boom.badImplementation(err);
+	           }
+              });
+       }
+	  });
     });
 
 
@@ -167,7 +210,10 @@ router.put('/evaluations/:id',
             overall_rate:{type:"Float", required:true, description:"overall user rate"},
             delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
             product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
-            overall_review:{type:"String", required:false, description:"overall user textual review"},
+            price_value_rate:{type:"Float", required:false, description:"user rate about purchase price/value"},
+            customer_service_rate:{type:"Float", required:false, description:"user rate about customer service"},
+            pros_review:{type:"String", required:false, description:"User textual review about positive elements"},
+            cons_review:{type:"String", required:false, description:"User textual review about negative elements"},
             conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
             evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
@@ -188,7 +234,10 @@ router.patch('/evaluations/:id',
             overall_rate:{type:"Float", required:true, description:"overall user rate"},
             delivery_rate:{type:"Float", required:false, description:"user rate about delivery service"},
             product_rate:{type:"Float", required:false, description:"user rate about product or service quality"},
-            overall_review:{type:"String", required:false, description:"overall user textual review"},
+            price_value_rate:{type:"Float", required:false, description:"user rate about purchase price/value"},
+            customer_service_rate:{type:"Float", required:false, description:"user rate about customer service"},
+            pros_review:{type:"String", required:false, description:"User textual review about positive elements"},
+            cons_review:{type:"String", required:false, description:"User textual review about negative elements"},
             conversation_end_time:{type:"Date", required:true, description:"When the related conversation ended."},
             evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}

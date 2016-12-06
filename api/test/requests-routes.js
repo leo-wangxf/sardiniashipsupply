@@ -32,6 +32,30 @@ var categories = [];
 var conversations = [];
 
 
+var token = "";
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var username ="davide85@gmail.com";
+var password ="password";
+var userUrl = "http://seidue.crs4.it:3008/users/signin";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+var options =
+{
+    url: userUrl,
+    body:JSON.stringify( {
+        "username" : username,
+        "password" : password
+    }),
+    headers: headers
+};
+
+
+
+
+
 describe('Request Model', function () {
 
     before(function (done) {
@@ -41,10 +65,41 @@ describe('Request Model', function () {
             app.set('port', process.env.PORT || 3000);
 
             server = app.listen(app.get('port'), function () {
+                io = require('socket.io')(server);
+                var socket;
+                io.on('connection', function(socket) {
+                    socket=socket;
+
+                    socket.on('join', function(data) {
+                        socket.join('_room');
+                    });
+                });
+                app.set("socketio" , io);
 
                 apihost += ":" + server.address().port;
 
-                done();
+                request.post(options, function(error, response, body)
+                {
+                    if(error)
+                        console.log(error);
+                    else{
+                        var r = {};
+                        r.body = JSON.parse(body);
+                        token = r.body.access_credentials.apiKey.token;
+                        //console.log(token);
+                        r.response = response;
+                    }
+
+
+
+
+
+
+
+
+                    done();
+
+                });
             });
 
         });
@@ -54,7 +109,11 @@ describe('Request Model', function () {
     after(function (done) {
 
         db.disconnect(function () {
+           // socket.disconnect();
+
             server.close();
+
+
             done();
         });
 
@@ -95,12 +154,14 @@ describe('Request Model', function () {
         var createMessages = function (callback) {
             async.each(range, function (e, cb) {
                 message = new Message({
-                    senderId: users[_.random(0, 99)],
+                    sender: users[_.random(0, 99)],
                     type: "customer",
                     dateIn: Date.now(),
                     draft: false,
                     text: "AA123 " + e + " CA",
-                    attachments: ["http//:url"]
+                    attachments: ["http//:url"],
+                    automatic:false,
+                    link:" 2"
                 });
 
 
@@ -126,9 +187,9 @@ describe('Request Model', function () {
         var createCategories = function (callback) {
             async.each(range, function (e, cb) {
                 cat = new Category({
-                    unspsc: _.random(0, 99),
+                    unspsc: [_.random(0, 99)],
                     name: "Name " + e + " CAtegoria",
-                    description: "Description " + e + " CA"
+                    level: [1]
                 });
 
 
@@ -154,9 +215,15 @@ describe('Request Model', function () {
                 product = new Product({
                     name: "Name product " + e,
                     description: "Description product " + e,
-                    supplierId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
                     categories: [categories[_.random(0, 99)]],
-                    images: ["http://ret"]
+                    images: ["http://ret"],
+                    price:10,
+                    minNum:10,
+                    maxNum:20,
+                    unit: 'unty',
+                    availability:100,
+                    tags:["uno"]
                 });
                 product.save(function (err, product) {
                     // console.log(err);
@@ -185,10 +252,10 @@ var count = 0;
                 }
 
                 var req = new Request({
-                    productId: products[_.random(0, 99)],
+                    product: products[_.random(0, 99)],
                     status: s,
-                    quantity: e * 100,
-                    quote: e * 100,
+                    quantity: _.random(0, 99) * 100,
+                    dateIn: Date.now(),
                 });
 
 
@@ -210,7 +277,7 @@ var count = 0;
                 //console.log(err);
                 // console.log(requests);
               //  testrequest = requests[_.random(0, 99)];
-               
+
                 callback(null);
             });
 
@@ -220,8 +287,8 @@ var count = 0;
         var createConversations = function () {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -324,7 +391,7 @@ var count = 0;
 
         it('must return 2 requests and pagination metadata, all fields', function (done) {
 
-            var c = {url: apihost + apiprefix + '/conversations/'+ testconv+'/requests?page=1&limit=2'};
+            var c = {url: apihost + apiprefix + '/conversations/'+ testconv+'/requests?page=1&limit=2',headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -355,15 +422,14 @@ var count = 0;
         it('must create one request in a conversation with given fields', function (done) {
 
             var data = {
-                productId: products[_.random(0, 99)],
+                product: products[_.random(0, 99)],
                 status: 'pending',
                 quantity: _.random(0, 99) * 100,
-                quote: _.random(0, 99) * 100,
             };
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
        //     console.log(c);
 
@@ -374,14 +440,12 @@ var count = 0;
                 else {
                     response.statusCode.should.be.equal(201);
                     var results = JSON.parse(body);
-                    results.should.have.property('productId');
-                    mongoose.Types.ObjectId(results.productId).id.should.be.equal(data.productId.id);
+                    results.should.have.property('product');
+                    mongoose.Types.ObjectId(results.product).id.should.be.equal(data.product.id);
                     results.should.have.property('status');
                     results.status.should.be.equal(data.status);
                     results.should.have.property('quantity');
                     results.quantity.should.be.equal(data.quantity);
-                    results.should.have.property('quote');
-                    results.quote.should.be.equal(data.quote);
 
                 }
                 done();
@@ -397,7 +461,7 @@ var count = 0;
 
         it('must get bad data error (empty request body)', function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', body: "", headers: {'content-type': 'application/json'}};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', body: "",headers:headers};
 
             request.post(c, function (error, response, body) {
 
@@ -416,8 +480,7 @@ var count = 0;
 
             var c = {
                 url: apihost + apiprefix +'/conversations/'+ testconv+'/requests',
-                body: JSON.stringify({status:'pending'}),
-                headers: {'content-type': 'application/json'}
+                body: JSON.stringify({status:'pending'}),headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -440,7 +503,7 @@ var count = 0;
 
         it('must return the requests for the conversation with id='+testconv, function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests'};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests', headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -460,7 +523,7 @@ var count = 0;
 
         it('must return the request with id='+testrequest, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id};
+            var c = {url: apihost + apiprefix + '/requests/' + testrequest._id, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -481,7 +544,7 @@ var count = 0;
 
         it('must return "not found 404" for request with id=' + notExistingId, function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + notExistingId};
+            var c = {url: apihost + apiprefix + '/requests/' + notExistingId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -501,7 +564,7 @@ var count = 0;
 
         it('must return "bad data 422" for request with id=' + tooShortId + ' (id too short)', function (done) {
 
-            var c = {url: apihost + apiprefix + '/requests/' + tooShortId};
+            var c = {url: apihost + apiprefix + '/requests/' + tooShortId, headers:headers};
 
             request.get(c, function (error, response, body) {
 
@@ -523,7 +586,7 @@ var count = 0;
 
         it('must delete the requests '+testrequest+' for the conversation with id='+testconv, function (done) {
 
-            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id};
+            var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id, headers:headers};
 
             request.delete(c, function (error, response, body) {
 
@@ -547,12 +610,10 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: _.random(0, 99) * 100,
-                quote: _.random(0, 99) * 100,
+                quantity: _.random(0, 99),
             };
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/'+testrequest._id+'/actions/suppaccept',
-                body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                body: JSON.stringify(data), headers:headers
             };
             //     console.log(c);
 
@@ -567,8 +628,6 @@ var count = 0;
                      results.status.should.be.equal('acceptedByS');
                      results.should.have.property('quantity');
                      results.quantity.should.be.equal(data.quantity);
-                     results.should.have.property('quote');
-                     results.quote.should.be.equal(data.quote);
 
                 }
                 done();
@@ -585,13 +644,12 @@ var count = 0;
         it('must change one request in a conversation with given fields', function (done) {
 
             var data = {
-                quantity: _.random(0, 99) * 100,
-                quote: _.random(0, 99) * 100,
+                quantity:  _.random(0, 99),
             };
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custmodify',
                 body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
             //     console.log(c);
 
@@ -606,8 +664,6 @@ var count = 0;
                     results.status.should.be.equal('pending');
                     results.should.have.property('quantity');
                     results.quantity.should.be.equal(data.quantity);
-                    results.should.have.property('quote');
-                    results.quote.should.be.equal(data.quote);
 
                 }
                 done();
@@ -627,7 +683,7 @@ var count = 0;
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest_abs._id+'/actions/custaccept',
                 //body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+               headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -656,7 +712,7 @@ var count = 0;
 
             var c = {url:  apihost + apiprefix +'/conversations/'+ testconv+ '/requests/' + testrequest_abs._id+'/actions/custreject',
            //     body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
@@ -686,7 +742,7 @@ var count = 0;
 
             var c = {url: apihost + apiprefix +'/conversations/'+ testconv+'/requests/' + testrequest._id+'/actions/suppreject',
                // body: JSON.stringify(data),
-                headers: {'content-type': 'application/json'}
+                headers:headers
             };
 
             request.post(c, function (error, response, body) {
