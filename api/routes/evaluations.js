@@ -58,7 +58,6 @@ router.get('/evaluations',
         }).catch(function (err) {
             res.boom.badImplementation(err); // Error 500
         });
-
     });
 
 
@@ -94,7 +93,10 @@ router.post('/evaluations',
      	console.log('req.body overall_rate: ' + req.body["overall_rate"]);
      	console.log('req.body product_rate: ' + req.body["product_rate"]);
      	console.log('req.body delivery_rate: ' + req.body["delivery_rate"]);
-     	console.log('req.body review: ' + req.body["overall_review"]);
+     	console.log('req.body price_value_rate: ' + req.body["price_value_rate"]);
+     	console.log('req.body customer_service_rate: ' + req.body["customer_service_rate"]);
+     	console.log('req.body pros review: ' + req.body["pros_review"]);
+     	console.log('req.body cons review: ' + req.body["cons_review"]);
         // some checks on entities of the created Evaluation 
         // check if both from and to user exist is implicitly made by middleware
 	// check if conversation exists
@@ -115,6 +117,7 @@ router.post('/evaluations',
 	       var params = req.body;
 	       console.log('conversation supplier is ' + conv.supplier);
 	       params['to'] = conv.supplier;
+	       console.log('\n\nparams to create evaluations are:' + params);
                Evaluation.create(params).then(function (entities) {
                if (!entities) {
                    console.log('inside server post, in case of no entities err 500 ');
@@ -271,6 +274,71 @@ router.delete('/evaluations/:id',
         );
 
     });
+
+router.get('/users/supplier/:id/evaluations',
+    au.doku({ 
+        description: 'Get all evaluations about a supplier',
+        title: 'Get all evaluations about a supplier',
+        version: '1.0.0',
+        name: 'GetSupplierEvaluations',
+	group: 'Evaluations',
+	fields: {
+		page: {description: 'Page of evaluations for pagination',
+			type: 'integer', required: false
+		},
+		limit: {description: 'Limit for pagination',
+			type: 'integer', required: false
+			}
+		}
+    }),
+    function(req, res) {
+	console.log('\n*** INSIDE GET EVALUATIONS ABOUT A SUPPLIER ***\n');
+        var query = _.extend({}, req.query);
+	if (query.hasOwnProperty('page')) delete query.page;
+	if (query.hasOwnProperty('limit')) delete query.limit;
+	console.log('supplier id is: ' + req.params.id);
+	var uid = req.params.id.toString(); // id of the supplier
+        //Users.findById(uid, "evaluations").then(function(evaluations) {
+	var query = {
+		"to":uid
+	};
+        //Evaluation.find().exec().then(function(evaluations) {
+        Evaluation.find(query).exec().then(function(evaluations) {
+        console.log('number of evaluations:' + evaluations.length);
+        //console.log('evaluations:' + evaluations[0]);
+            if (_.isEmpty(evaluations)) {
+		return Promise.reject({
+				name: 'ItemNotFound',
+				request: "no evaluation found in db about user id " + uid,
+				errorCode: 404 
+                });
+	    } else {
+                return Evaluation.paginate(evaluations, {page:req.query.page, limit: req.query.limit});
+            }
+        }).then(function (evaluations) {
+		if (evaluations.total === 0) {
+		  return Promise.reject ({
+                    name: 'ItemNotFound',
+		    message: 'No Evaluations found for query ' + JSON.stringify(query), 
+                    errorCode: 404
+                  });
+                } else {
+		    console.log(evaluations);
+		    console.log('RESPONSE: status 200, everything was OK!');
+                    res.status(200).send(evaluations);
+                }
+       }).catch(function(err) {
+           if (err.name === 'ItemNotFound') res.boom.notFound(err.message);  // Error 404 Item  NOT found
+           else if (err.name === 'ValidationError') {
+              res.boom.badData(err.message); // Error 422
+	   } else {
+              //console.log('\n\n E ==============================> PASSA DI QUI?');
+	      //console.log('error name is: ' + err.name);
+	      //console.log('error stack is: ' + err.stack);
+              res.boom.badImplementation('Error: ' + err);
+	   }
+      });
+});
 
 
 module.exports = router;

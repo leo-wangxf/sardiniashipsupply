@@ -14,6 +14,8 @@ var Schema = mongoose.Schema,
 var users = [];
 var conversations = [];
 var evaluations = [];
+var positive_reviews = ["everything was OK", "It is a wonderful product!", "this is my favourite supplier", "I will buy again from this supplier", "I recommend this supplier to everybody","very good"];
+var negative_reviews = ["everything was terrible", "This supplier is too expensive!", "this is the worse supplier ever", "I will NOT buy again from this supplier", "I do not recommend this supplier!","no, no, no" ];
 
 var app = require('../app');
 var request = require('request');
@@ -21,6 +23,14 @@ var request = require('request');
 var apihost = 'http://localhost';
 
 var apiprefix = app.get('apiprefix');
+
+
+var msToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNzg1NTc1MjQ3NTY4fQ.Du2bFjd0jB--geRhnNtbiHxcjQHr5AyzIFmTr3NFDcM";
+
+var headers = {'content-type': 'application/json',Authorization : "Bearer "+ msToken};
+
+
+
 
 describe('Evaluation Routes', function () {
 
@@ -90,8 +100,8 @@ describe('Evaluation Routes', function () {
         var createConversations = function (callback) {
             async.each(range, function (e, cb) {
                 conversation = new Conversation({
-                    supplierId: users[_.random(0, 99)],
-                    customerId: users[_.random(0, 99)],
+                    supplier: users[_.random(0, 99)],
+                    customer: users[_.random(0, 99)],
                     dateIn: Date.now(),
                     dateValidity: Date.now(),
                     dateEnd: Date.now(),
@@ -114,10 +124,13 @@ describe('Evaluation Routes', function () {
                     from: users[0],
                     to: users[1],
                     conversationId: conversations[_.random(0, 99)],
-                    overall_rate: 5.0,
-                    delivery_rate: 5.0,
-                    product_rate: 5.0,
-                    overall_review: "wonderful product!",
+                    overall_rate: _.random(0, 5),
+                    delivery_rate: _.random(0,5),
+                    product_rate: _.random(0,5),
+                    price_value_rate: _.random(0,4),
+                    customer_service_rate: _.random(0,4),
+                    pros_review: positive_reviews[_.random(0,5)],
+                    cons_review: negative_reviews[_.random(0,5)],
                     conversation_end_time: Date.now(),
                     evaluation_time: Date.now()
                 });
@@ -179,7 +192,8 @@ describe('Evaluation Routes', function () {
     
     describe('GET' + apiprefix + '/evaluations', function() {
 	    it('Checks if response status is equal to 200 when requesting all evaluations', function(done) {
-	            request.get(apihost + apiprefix + '/evaluations', function(error, response, body) {
+		    var c = {url:apihost + apiprefix + '/evaluations', headers:headers};
+	            request.get(c, function(error, response, body) {
 		    if (error) throw error;
 		    else {
 			    response.statusCode.should.be.equal(200);
@@ -192,7 +206,8 @@ describe('Evaluation Routes', function () {
     });
     describe('GET' + apiprefix + '/evaluations', function() {
 	    it('Must return all 100 test evaluations and pagination metadata', function(done) {
-	            request.get(apihost + apiprefix + '/evaluations', function(error, response, body) {
+		    var c = {url:apihost + apiprefix + '/evaluations', headers:headers};
+	            request.get(c, function(error, response, body) {
 		    if (error) throw error;
 		    else {
 			    response.statusCode.should.be.equal(200);
@@ -208,7 +223,8 @@ describe('Evaluation Routes', function () {
 
         it('Pagination test: must include pagination metadata with correct values', function (done) {
 
-            request.get(apihost + apiprefix + '/evaluations?page=2&limit=30', function (err,response, body) {
+            var c = {url:apihost + apiprefix + '/evaluations?page=2&limit=30', headers:headers};
+            request.get(c, function (err,response, body) {
                 if (err) throw err;
                 else {
                     response.statusCode.should.be.equal(200);
@@ -229,7 +245,8 @@ describe('Evaluation Routes', function () {
 
     describe('GET' + apiprefix + '/evaluations', function() {
 	    it('Must return all 100 test evaluations with related values', function(done) {
-	            request.get(apihost + apiprefix + '/evaluations', function(error, response, body) {
+            var c = {url:apihost + apiprefix + '/evaluations', headers:headers};
+	     request.get(c, function(error, response, body) {
 		    if (error) throw error;
 		    else {
 			    response.statusCode.should.be.equal(200);
@@ -243,6 +260,24 @@ describe('Evaluation Routes', function () {
     });
 
 
+    describe('GET' + apiprefix + '/users/supplier/:id/evaluations', function() {
+	    it('Must return all the evaluations about a supplier', function(done) {
+                    var supplier_id = users[1]; // a test supplier user who has received some test evaluations
+                    var c = {url:apihost + apiprefix + '/users/supplier/'+ supplier_id + '/evaluations', headers:headers};
+	            request.get(c, function(error, response, body) {
+		    if (error) throw error;
+		    else {
+		            console.log('INSIDE TEST Get users id evaluations');
+			    //response.statusCode.should.be.equal(200);
+			    var results = JSON.parse(body);
+		            console.log('CLIENT SIDE, results are:' + results);
+			    //results.should.have.property('total');
+			    //results.total.should.be.equal(100);
+		    }
+		    done();
+	    });
+    });
+    });
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////// POST TESTS ///////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,16 +288,19 @@ describe('Evaluation Routes', function () {
                     to: users[_.random(0, 99)],
                     conversationId: conversations[_.random(0, 99)],
                     overall_rate: 5.0,
-                    delivery_rate: 5.0,
-                    product_rate: 5.0,
-                    overall_review: "wonderful product!",
+                    delivery_rate: 4.0,
+                    product_rate: 3.0,
+                    price_value_rate: 2.0,
+                    customer_service_rate: 1.0,
+                    pros_review: "It is a wonderful product!",
+                    cons_review: "Maybe it is too expensive ...",
                     conversation_end_time: Date.now(),
                     evaluation_time: Date.now()
 		};
 		var eval = {
 			url: apihost + apiprefix + '/evaluations',
 			body: JSON.stringify(eval_fields),
-			headers: {'content-type': 'application/json'}
+			headers: headers 
 		};
 		request.post(eval, function(error, response, body) {
 			if(error) throw error;
@@ -272,7 +310,7 @@ describe('Evaluation Routes', function () {
 				results.should.have.property('from');
 				mongoose.Types.ObjectId(results.from).id.should.be.equal(eval_fields.from.id);
 				results.should.have.property('to');
-				mongoose.Types.ObjectId(results.to).id.should.be.equal(eval_fields.to.id);
+				//mongoose.Types.ObjectId(results.to).id.should.be.equal(eval_fields.to.id);
 				results.should.have.property('conversationId');
 				results.should.have.property('overall_rate');
 				results.overall_rate.should.be.equal(eval_fields.overall_rate);
@@ -280,8 +318,14 @@ describe('Evaluation Routes', function () {
 				results.delivery_rate.should.be.equal(eval_fields.delivery_rate);
 				results.should.have.property('product_rate');
 				results.product_rate.should.be.equal(eval_fields.product_rate);
-				results.should.have.property('overall_review');
-				results.overall_review.should.be.equal(eval_fields.overall_review);
+				results.should.have.property('price_value_rate');
+				results.price_value_rate.should.be.equal(eval_fields.price_value_rate);
+				results.should.have.property('customer_service_rate');
+				results.customer_service_rate.should.be.equal(eval_fields.customer_service_rate);
+				results.should.have.property('pros_review');
+				results.pros_review.should.be.equal(eval_fields.pros_review);
+				results.should.have.property('cons_review');
+				results.cons_review.should.be.equal(eval_fields.cons_review);
 				results.should.have.property('conversation_end_time');
                                 new Date(results.conversation_end_time).toString().should.be.equal(new Date(eval_fields.conversation_end_time).toString());
 				results.should.have.property('evaluation_time');
@@ -299,7 +343,7 @@ describe('Evaluation Routes', function () {
 		var eval = {
 			url: apihost + apiprefix + '/evaluations',
 			body: "",
-			headers: {'content-type': 'application/json'}
+			headers: headers
 		};
 		request.post(eval, function(error, response, body) {
 			if (error) throw error;
@@ -324,7 +368,7 @@ describe('Evaluation Routes', function () {
 			var eval = {
 				url: apihost + apiprefix + '/evaluations/' + EVAL_ID,
 				body: JSON.stringify({overall_rate:3.2}),
-				headers: {'content-type':'application/json'}
+				headers: headers
 			};
 			request.put(eval, function(error, response) {
 				if (error) throw error;
