@@ -261,13 +261,6 @@ router.put('/users',
         "type": 'string', 
         "required": false
       },
-      "user.certifications":
-      {
-        "description": 'The list of the user\'s certifications (only for suppliers)',
-        // TODO tipo object al posto di string
-        "type": 'string', 
-        "required": false
-      },
       "user.references.name":
       {
         "decription": "The first name of the account's referent",
@@ -335,7 +328,6 @@ router.put('/users',
         {          
           schemaOpt.description = Joi.string();
           schemaOpt.web = Joi.string().uri();
-          schemaOpt.certifications = Joi.array().items(Joi.object());
           schemaOpt.pIva = Joi.number();
         }
 
@@ -1212,7 +1204,7 @@ router.get('/users/certifications',
           '_id' : userId
         };
 
-        return User.find(query, "certification -_id").lean().exec();
+        return User.find(query, "certifications -_id").lean().exec();
       }
       else
       {
@@ -1223,7 +1215,9 @@ router.get('/users/certifications',
       }
     }).then(function(result)
     {
-      var r = result[0].certification;
+      var r = result[0].certifications;
+      if(r == undefined)
+        r = [];
       /*
       if(result.length == 1 && Object.keys(result[0]).length == 0)
         result = [];
@@ -1321,7 +1315,7 @@ router.post('/users/actions/certifications',
 
       certData = req.body.certification;
 
-      return User.count({_id: userId, certification: {$elemMatch: {name: certData.name}}}).exec()
+      return User.count({_id: userId, certifications: {$elemMatch: {name: certData.name}}}).exec()
     }).then(function(count)
     {
       if(count > 0)
@@ -1332,7 +1326,7 @@ router.post('/users/actions/certifications',
         throw e;
       }
       var query = {id: userId};
-      var update = {$push: {certification : certData}};
+      var update = {$push: {certifications : certData}};
 
       // Aggiungi la certificazione  alla lista
       return User.findOneAndUpdate(query, update, {safe:true, new:true, upsert:true}).exec();
@@ -1347,6 +1341,7 @@ router.post('/users/actions/certifications',
       }
       else
       {
+        console.log(result);
         return res.send(result);
       }
     }).catch(function(err)
@@ -1423,7 +1418,7 @@ router.delete('/users/actions/certifications/:name',
       certification = req.params.name
 
       var query = {id: userId};
-      var update = {$pull: {certification : {name: certification}}};
+      var update = {$pull: {certifications : {name: certification}}};
 
       // Rimuovi la certificazione  dalla lista
       return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
