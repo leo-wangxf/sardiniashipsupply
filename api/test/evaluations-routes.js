@@ -267,15 +267,54 @@ describe('Evaluation Routes', function () {
 	            request.get(c, function(error, response, body) {
 		    if (error) throw error;
 		    else {
+			    
 		            console.log('INSIDE TEST Get users id evaluations');
 			    //response.statusCode.should.be.equal(200);
 			    var results = JSON.parse(body);
+			    results.should.have.property('total');
+			    results.total.should.be.equal(100);
+			    results.should.have.property('docs');
 		            console.log('CLIENT SIDE, results are:' + results);
+		            console.log('results total are:' + results.total);
+		            console.log('results docs are:' + results.docs);
+		            console.log('results docs length is:' + results.docs.length);
+			    // in docs there are the evaluations of one page only
+                            for (var i=0; i< results.docs.length; i++) {
+		                console.log('evaluation id = ' + results.docs[i]._id);
+		                console.log('evaluation from = ' + results.docs[i].from);
+		                console.log('evaluation to = ' + results.docs[i].to);
+		                console.log('evaluation overall rate = ' + results.docs[i].overall_rate);
+		            }
 			    //results.should.have.property('total');
 			    //results.total.should.be.equal(100);
 		    }
 		    done();
 	    });
+    });
+    });
+
+    describe('GET' + apiprefix + '/users/supplier/:id/evaluations/avg_overall_rate', function() {
+	    it('Must return the average overall rate received by a supplier', function(done) {
+                    var supplier_id = users[1]; // a test supplier user who has received some test evaluations
+		    console.log('CLIENT SIDE supplier id: ' + supplier_id);
+                    var c = {url:apihost + apiprefix + '/users/supplier/'+ supplier_id + '/evaluations/avg_overall_rate', headers:headers};
+	            request.get(c, function(error, response, body) {
+		    if (error) throw error;
+		    else {
+			    
+		            console.log('INSIDE TEST Get average overall rate of a supplier');
+			    //response.statusCode.should.be.equal(200);
+			    var results = JSON.parse(body);
+			    //results.should.have.property('supplier_id');
+			    //results.should.have.property('average_overall_rate'); 
+		            console.log('CLIENT SIDE, avg_overall_rate result:' + results);
+			    Object.getOwnPropertyNames(results).forEach(function(val, idx,array) {
+				    console.log(val + ' ---> ' + results[val]);
+			    });
+		            console.log('CLIENT SIDE, avg_overall_rate result docs:' + results.docs);
+		            }
+		    done();
+	          });
     });
     });
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,6 +332,7 @@ describe('Evaluation Routes', function () {
                     price_value_rate: 2.0,
                     customer_service_rate: 1.0,
                     pros_review: "It is a wonderful product!",
+
                     cons_review: "Maybe it is too expensive ...",
                     conversation_end_time: Date.now(),
                     evaluation_time: Date.now()
