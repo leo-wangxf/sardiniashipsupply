@@ -4,6 +4,7 @@ var Evaluation = require('../models/evaluations.js').Evaluation;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
+var mongoose = require('mongoose');
 var ObjectId = require('mongoose').Types.ObjectId;
 var User = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
@@ -275,6 +276,7 @@ router.delete('/evaluations/:id',
 
     });
 
+
 router.get('/users/supplier/:id/evaluations',
     au.doku({ 
         description: 'Get all evaluations about a supplier',
@@ -294,18 +296,17 @@ router.get('/users/supplier/:id/evaluations',
     function(req, res) {
 	console.log('\n*** INSIDE GET EVALUATIONS ABOUT A SUPPLIER ***\n');
         var query = _.extend({}, req.query);
+	console.log(' query limit = ' + query.limit);
+	console.log(' query page = ' + query.page);
 	if (query.hasOwnProperty('page')) delete query.page;
 	if (query.hasOwnProperty('limit')) delete query.limit;
 	console.log('supplier id is: ' + req.params.id);
 	var uid = req.params.id.toString(); // id of the supplier
-        //Users.findById(uid, "evaluations").then(function(evaluations) {
-	var query = {
+	query = {
 		"to":uid
 	};
-        //Evaluation.find().exec().then(function(evaluations) {
         Evaluation.find(query).exec().then(function(evaluations) {
         console.log('number of evaluations:' + evaluations.length);
-        //console.log('evaluations:' + evaluations[0]);
             if (_.isEmpty(evaluations)) {
 		return Promise.reject({
 				name: 'ItemNotFound',
@@ -317,11 +318,7 @@ router.get('/users/supplier/:id/evaluations',
             }
         }).then(function (evaluations) {
 		if (evaluations.total === 0) {
-		  return Promise.reject ({
-                    name: 'ItemNotFound',
-		    message: 'No Evaluations found for query ' + JSON.stringify(query), 
-                    errorCode: 404
-                  });
+                  res.status(200).send({});
                 } else {
 		    console.log(evaluations);
 		    console.log('RESPONSE: status 200, everything was OK!');
@@ -332,13 +329,67 @@ router.get('/users/supplier/:id/evaluations',
            else if (err.name === 'ValidationError') {
               res.boom.badData(err.message); // Error 422
 	   } else {
-              //console.log('\n\n E ==============================> PASSA DI QUI?');
-	      //console.log('error name is: ' + err.name);
-	      //console.log('error stack is: ' + err.stack);
               res.boom.badImplementation('Error: ' + err);
 	   }
       });
 });
 
+
+
+router.get('/users/supplier/:id/evaluations/avg_overall_rate',
+    au.doku({ 
+        description: 'Get the average value of the overall_rate evalutions received by a supplier',
+        title: 'Get average overall_rate of a supplier',
+        version: '1.0.0',
+        name: 'GetSupplierAverageOverallRate',
+	group: 'Evaluations', 
+    }),
+    function(req, res) {
+	console.log('\n*** INSIDE GET AVERAGE OVERALL RATE OF A SUPPLIER ***\n');
+        var query = _.extend({}, req.query);
+	if (query.hasOwnProperty('page')) delete query.page;
+	if (query.hasOwnProperty('limit')) delete query.limit;
+	console.log('supplier id is: ' + req.params.id);
+	var uid = req.params.id.toString(); // id of the supplier
+	var suppid = mongoose.Types.ObjectId(uid); // id of the supplier
+
+        Evaluation.aggregate( {$match:{to:suppid}}, 
+
+		{$group:{_id:"$to"
+		, count:{$avg:"$overall_rate"}}}
+	)
+	.exec().then(function(average_overall_rate) {
+		console.log(average_overall_rate);
+		if (_.isEmpty(average_overall_rate)) {
+	        Object.getOwnPropertyNames(query).forEach(function(val, idx, array) {
+		    console.log(val + ' -> ' + query[val]);
+	        });
+		return Promise.reject({
+				name: 'ItemNotFound',
+				request: "no evaluation found in db about supplier id " + uid,
+				errorCode: 404 
+                });
+	    } else {
+                return { 'average_overall_rate':average_overall_rate};
+            }
+        }).then(function (average_overall_rate) {
+		if (!average_overall_rate) {
+                  res.status(200).send({});
+                } else {
+		    console.log('average_overall_rate = ' + average_overall_rate);
+		    console.log('RESPONSE: status 200, everything was OK!');
+                    res.status(200).send({'average_overall_rate':average_overall_rate});
+                }
+       }).catch(function(err) {
+           if (err.name === 'ItemNotFound') {
+		   res.boom.notFound(err.message);
+	   }  // Error 404 Item  NOT found
+           else if (err.name === 'ValidationError') {
+              res.boom.badData(err.message); // Error 422
+	   } else {
+              res.boom.badImplementation('Error: ' + err);
+	   }
+      });
+});
 
 module.exports = router;
