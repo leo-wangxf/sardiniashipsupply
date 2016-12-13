@@ -7,6 +7,7 @@ var Promise = require('bluebird');
 var User = require('../models/users').User;
 var Category = require('../models/categories').Category;
 var tu = require('../util/token');
+var uu = require('../util/users');
 
 var multer = require('multer');
 var fs = require('fs');
@@ -1773,8 +1774,6 @@ router.delete('/users/actions/attachment/:file',
     });
   }
 );
-
-
 
 /* GET users listing. */
 /*
