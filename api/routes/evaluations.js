@@ -8,6 +8,7 @@ var mongoose = require('mongoose');
 var ObjectId = require('mongoose').Types.ObjectId;
 var User = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
+var utilUser = require('../util/users');
 
 router.get('/evaluations',
     au.doku({  // json documentation
@@ -79,7 +80,6 @@ router.post('/evaluations',
             conversation_end_time:{type:"Date", required:false, description:"When the related conversation ended."},
             evaluation_time:{type:"Date", required:false, description:"Time of evaluation."},
             description: {type: "String", required: false}
-
         }
     }),
     function (req, res) {
@@ -120,6 +120,11 @@ router.post('/evaluations',
 	       params['to'] = conv.supplier;
 	       console.log('\n\nparams to create evaluations are:' + params);
                Evaluation.create(params).then(function (entities) {
+		       return addRates(conv.supplier, {"product_rate" : req.body["product_rate"], "delivery_rate" : 
+			       req.body["delivery_rate"], "overall_rate" : req.body["overall_rate"], 
+			       "customer_service_rate": req.body["customer_service_rate"],
+		                "price_value_rate": req.body["price_value_rate"]}); 
+	       }).then(function (entities) {
                if (!entities) {
                    console.log('inside server post, in case of no entities err 500 ');
                    return res.boom.badImplementation("boom message for 500 error: Bad implementation"); // Error 500
