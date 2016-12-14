@@ -3,23 +3,28 @@ var request = require('request');
 var User = require('../models/users').User;
 
 
-function addRates(uid, product_rate, delivery_rate, overall_rate)
+function addRates(uid, product_rate, delivery_rate, overall_rate, customer_service_rate, price_value_rate)
 {
   var r = {}
 
   if(product_rate != undefined && delivery_rate == undefined && 
-     overall_rate == undefined && typeof product_rate == "object")
+     overall_rate == undefined && customer_service_rate && price_value_rate && 
+     typeof product_rate == "object")
   {
     r.product_rate = product_rate.product_rate;
     r.delivery_rate = product_rate.delivery_rate;
     r.overall_rate = product_rate.overall_rate;
+    r.customer_service_rate = product_rate.customer_service_rate;
+    r.price_value_rate = product_rate.price_value_rate;
   }
   else
   {
     r = {
       "product_rate": product_rate,
       "delivery_rate": delivery_rate,
-      "overall_rate" : overall_rate
+      "overall_rate" : overall_rate,
+      "customer_service_rate" : customer_service_rate,
+      "price_value_rate" : price_value_rate
     }
   }
 
@@ -126,8 +131,19 @@ function addOverallRate(uid, overall_rate)
   return addRates(uid, undefined, undefined, overall_rate);
 }
   
+function addCustomerServiceRate(uid, customer_service_rate)
+{
+  return addRates(uid, undefined, undefined, undefined, customer_service_rate, undefined);
+}
+
+function addPriceValueRate(uid, price_value_rate)
+{
+  return addRates(uid, undefined, undefined, undefined, undefined, price_value_rate);
+}
 
 exports.addRates  = addRates;
 exports.addProductRate = addProductRate;
 exports.addDeliveryRate = addDeliveryRate;
 exports.addOverallRate = addOverallRate;
+exports.addCustomerServiceRate = addCustomerServiceRate;
+exports.addPriceValueRate = addPriceValueRate;
