@@ -120,7 +120,7 @@ router.post('/evaluations',
 	       params['to'] = conv.supplier;
 	       console.log('\n\nparams to create evaluations are:' + params);
                Evaluation.create(params).then(function (entities) {
-		       return addRates(conv.supplier, {"product_rate" : req.body["product_rate"], "delivery_rate" : 
+		       return utilUser.addRates(conv.supplier, {"product_rate" : req.body["product_rate"], "delivery_rate" : 
 			       req.body["delivery_rate"], "overall_rate" : req.body["overall_rate"], 
 			       "customer_service_rate": req.body["customer_service_rate"],
 		                "price_value_rate": req.body["price_value_rate"]}); 
