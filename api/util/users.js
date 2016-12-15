@@ -7,9 +7,7 @@ function addRates(uid, product_rate, delivery_rate, overall_rate, customer_servi
 {
   var r = {}
 
-  if(product_rate != undefined && delivery_rate == undefined && 
-     overall_rate == undefined && customer_service_rate && price_value_rate && 
-     typeof product_rate == "object")
+  if(typeof product_rate == "object")
   {
     r.product_rate = product_rate.product_rate;
     r.delivery_rate = product_rate.delivery_rate;
