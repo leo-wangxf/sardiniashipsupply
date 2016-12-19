@@ -9,6 +9,8 @@ var ObjectId = require('mongoose').Types.ObjectId;
 var User = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
 var utilUser = require('../util/users');
+var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
+
 
 router.get('/evaluations',
     au.doku({  // json documentation
@@ -63,7 +65,7 @@ router.get('/evaluations',
     });
 
 
-router.post('/evaluations',
+router.post('/evaluations', [tokenMiddleware,
     au.doku({  // json documentation
         description: 'Create an evaluation in db',
         fields: {
@@ -81,7 +83,7 @@ router.post('/evaluations',
             evaluation_time:{type:"Date", required:false, description:"Time of evaluation."},
             description: {type: "String", required: false}
         }
-    }),
+    })],
     function (req, res) {
 	console.log('\nINSIDE EVALUATION POST\n');
 
@@ -151,13 +153,13 @@ router.post('/evaluations',
     });
 
 
-router.get('/evaluations/:id',
+router.get('/evaluations/:id', [tokenMiddleware,
     au.doku({  // json documentation
         description: 'Get an evaluation by id',
         params: {
             id: {type: "String", required: true}
         }
-    }), function (req, res) {
+    })], function (req, res) {
         var id = req.params.id.toString();
 
         var newVals = req.body; // body already parsed
@@ -206,7 +208,7 @@ var putCallback = function (req, res) {
 };
 
 
-router.put('/evaluations/:id',
+router.put('/evaluations/:id', [tokenMiddleware,
     au.doku({  // json documentation
         description: 'Update an evaluation by id',
         params: {
@@ -227,10 +229,10 @@ router.put('/evaluations/:id',
             evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
         }
-    }), putCallback
+    })], putCallback
 );
 
-router.patch('/evaluations/:id',
+router.patch('/evaluations/:id', [tokenMiddleware,
     au.doku({  // json documentation
         description: 'Update an evaluation by id',
         params: {
@@ -251,11 +253,11 @@ router.patch('/evaluations/:id',
             evaluation_time:{type:"Date", required:true, description:"Time of evaluation."},
             description: {type: "String", required: false}
         }
-    }), putCallback
+    })], putCallback
 );
 
 
-router.delete('/evaluations/:id',
+router.delete('/evaluations/:id',[ tokenMiddleware,
     au.doku({  // json documentation
 	title: 'Delete an evaluation found by id',
         description: 'Delete an evaluation by id',
@@ -263,7 +265,7 @@ router.delete('/evaluations/:id',
         params: {
 		id: {type: "String", required: true, description: 'Evaluation ID'}
         }
-    }),
+    })],
     function (req, res) {
 
         var id = req.params.id.toString();
@@ -282,7 +284,7 @@ router.delete('/evaluations/:id',
     });
 
 
-router.get('/users/supplier/:id/evaluations',
+router.get('/users/supplier/:id/evaluations', [tokenMiddleware,
     au.doku({ 
         description: 'Get all evaluations about a supplier',
         title: 'Get all evaluations about a supplier',
@@ -297,7 +299,7 @@ router.get('/users/supplier/:id/evaluations',
 			type: 'integer', required: false
 			}
 		}
-    }),
+    })],
     function(req, res) {
 	console.log('\n*** INSIDE GET EVALUATIONS ABOUT A SUPPLIER ***\n');
         var query = _.extend({}, req.query);
@@ -341,14 +343,14 @@ router.get('/users/supplier/:id/evaluations',
 
 
 
-router.get('/users/supplier/:id/evaluations/avg_overall_rate',
+router.get('/users/supplier/:id/evaluations/avg_overall_rate', [tokenMiddleware,
     au.doku({ 
         description: 'Get the average value of the overall_rate evalutions received by a supplier',
         title: 'Get average overall_rate of a supplier',
         version: '1.0.0',
         name: 'GetSupplierAverageOverallRate',
 	group: 'Evaluations', 
-    }),
+    })],
     function(req, res) {
 	console.log('\n*** INSIDE GET AVERAGE OVERALL RATE OF A SUPPLIER ***\n');
         var query = _.extend({}, req.query);
