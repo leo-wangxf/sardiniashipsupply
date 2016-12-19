@@ -10,14 +10,19 @@ var routes = require('./routes/index');
 
 
 var index = require('./routes/index');
-var users = require('./routes/users');
-var users = require('./routes/api');
+var loadevaluations = require('./routes/loadevaluations');
 
 //QMiner
 var qm = require('qminer');
 var loader = require('qminer-data-loader');
 
 var app = express();
+var config = require('propertiesmanager').conf;
+
+let prefix = '/api/v1';
+
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -55,14 +60,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
-app.use('/users', users);
+app.use('/loadevaluations', loadevaluations);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
   next(err);
-});
+});*/
 
 // error handler
 app.use(function(err, req, res, next) {
