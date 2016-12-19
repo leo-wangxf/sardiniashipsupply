@@ -77,10 +77,10 @@ app.use(prefix, users);
 
 app.use(prefix,  categories);
 app.use(prefix, products);
+app.use(prefix, evaluations);
 app.use(prefix, tokenMiddleware, messages);
 app.use(prefix, tokenMiddleware, requests);
 app.use(prefix, tokenMiddleware, conversations);
-app.use(prefix, tokenMiddleware, evaluations);
 
 
 
