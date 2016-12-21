@@ -6,10 +6,11 @@ var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var mongoose = require('mongoose');
+var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
 
 // INSERT PRODUCT
 
-router.post('/products',
+router.post('/products',[tokenMiddleware,
     au.doku({  // json documentation
 
         description: 'Insert a new product',
@@ -20,16 +21,24 @@ router.post('/products',
         bodyFields: {
             name: {type: 'String', required: true, description: 'Name of product'},
             description: {type: 'String', required: true, description: 'Description of product'},
-            supplierId: {type: 'ObjectId', required: true, description: 'Owner of the product [supplier Id]'},
+            //supplierId: {type: 'ObjectId', required: true, description: 'Owner of the product [supplier Id]'},
             categories: {type: 'Array', required: true, description: 'Product categories'},
             images: {type: 'Array', required: false, description: 'Product images'},
             tags: {type: 'Array', required: false, description: 'Product tags'}
         }
-    }),
+    })],
     function (req, res) {
 
         if (_.isEmpty(req.body))
             return res.boom.badData('Empty body'); // Error 422
+
+        if(req.user.type != "supplier")
+        {
+          return res.boom.forbidden("Only supplier can use this function");          
+        }
+
+        req.body.supplierId = require("mongoose").Types.ObjectId(req.user.id);
+
 
         Product.create(req.body).then(function (entities) {
 

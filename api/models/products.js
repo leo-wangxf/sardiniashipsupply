@@ -21,6 +21,7 @@ var joiProductSchema = Joi.object({
     images:Joi.array().items(Joi.object()),
     tags: Joi.array().items(Joi.string()),
     price:Joi.number().default(0),
+    deliveryIn:Joi.number(),
     minNum:Joi.number().default(0),
     maxNum:Joi.number().default(0),
     unit: Joi.string().required(),
