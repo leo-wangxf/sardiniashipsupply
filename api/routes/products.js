@@ -104,7 +104,7 @@ router.post('/products',[tokenMiddleware,
 
 // UPDATE
 
-router.put('/products/:id',
+router.put('/products/:id',[tokenMiddleware,
     au.doku({  // json documentation
         title: 'Update a product by id',
         version: '1.0.0',
@@ -122,7 +122,7 @@ router.put('/products/:id',
             images: {type: 'Array', required: false, description: 'Product images'},
             tags: {type: 'Array', required: false, description: 'Product tags'}
         }
-    }),
+    })],
     function (req, res) {
 
         if (_.isEmpty(req.body))
@@ -132,7 +132,11 @@ router.put('/products/:id',
 
         var newVals = req.body; // body already parsed
 
-        Product.findByIdAndUpdate(id, newVals).then(function (entities) {
+        var supId = require("mongoose").Types.ObjectId(req.user.id);
+
+
+        //Product.findByIdAndUpdate(id, newVals).then(function (entities) {
+        Product.findOneAndUpdate({_id: id, supplierId:  supId}, newVals).then(function (entities) {
 
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404
