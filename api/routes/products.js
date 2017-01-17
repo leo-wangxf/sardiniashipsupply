@@ -155,6 +155,45 @@ router.put('/products/:id',[tokenMiddleware,
 );
 
 
+// DELETE
+router.delete('/products/:id',[tokenMiddleware,
+    au.doku({  // json documentation
+        title: 'Delete a product by id',
+        version: '1.0.0',
+        name: 'DeleteProduct',
+        group: 'Products',
+        description: 'Deletea product by id',
+        params: {
+            id: {type: 'String', required: true, description: 'The product identifier'}
+        }
+    })],
+    function (req, res) {
+
+        var id = req.params.id;
+
+        var supId = require("mongoose").Types.ObjectId(req.user.id);
+
+        //Product.findByIdAndUpdate(id, newVals).then(function (entities) {
+        Product.findOneAndRemove({_id: id, supplierId:  supId}).then(function (entities) {
+
+            if (_.isEmpty(entities))
+                res.boom.notFound('No entry with id ' + id); // Error 404
+            else
+                res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) {
+            if (err.name === 'ValidationError')
+                res.boom.badData(err.message); // Error 422
+            else if (err.name === 'CastError')
+                res.boom.badData('Id malformed'); // Error 422
+            else
+                res.boom.badImplementation(err);// Error 500
+        });
+
+    }
+);
+
+
+
 // SEARCH
 
 router.get('/products',
