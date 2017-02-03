@@ -402,7 +402,7 @@ router.get('/products/supplier',
                 description: 'string  contained in title, description, tags of the product (words in the string are in OR clause)',
                 type: 'string', required: false
             },
-            category: {
+            id_category: {
                 description: 'id of the category (search into array)',
                 type: 'string', required: false
             },
@@ -447,10 +447,10 @@ if (query.name)
     param = {$text: {$search: query.name}};
     
 // categories
-if (query.categories && mongoose.Types.ObjectId.isValid(query.categories))
+if (query.id_category && mongoose.Types.ObjectId.isValid(query.id_category))
 {
     var arr_param =  [];
-    arr_param.push(mongoose.Types.ObjectId(query.categories));
+    arr_param.push(mongoose.Types.ObjectId(query.id_category));
     param.categories = {$in: arr_param};
 }
 
