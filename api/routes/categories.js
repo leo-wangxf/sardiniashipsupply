@@ -112,9 +112,13 @@ router.get('/categories/drop',
                 description: 'Name of the category',
                 type: 'string', required: false
             },
+            liv: {
+                description: 'Number of level',
+                type: 'numeric', required: false
+            },
             lang: {
                 description: 'Lang',
-                type: 'string', required: false
+                type: 'string', required: true
             }
         }
     }),
@@ -123,6 +127,7 @@ router.get('/categories/drop',
 
         var param = {};
         var elem = {};
+        var option = {};
         
         elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '":"1"}');
         
@@ -131,12 +136,23 @@ router.get('/categories/drop',
             var name = new RegExp(req.query.name, "i");
             var str = 'name.'+ req.query.lang;
             param[str] = name; 
-        }
+        };
 
+        if (req.query.liv)
+        {
+            var liv = parseInt(req.query.liv);
+            var str = 'level.liv';
+            param[str] = liv; 
+        }
         
         
+        var option = {
+                limit: 100
+                , sort: 'name.'+ req.query.lang
+                };
         
-            Category.find(param, elem, {"limit": 10}).then(function (entities) {
+        
+            Category.find(param, elem, option).then(function (entities) {
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry '); // Error 404
             else
