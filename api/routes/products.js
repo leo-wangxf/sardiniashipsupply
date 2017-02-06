@@ -208,7 +208,7 @@ router.get('/products',
                 description: 'string contained in the name, description or tag of the product',
                 type: 'string', required: false
             },
-            category: {
+            id_category: {
                 description: 'id of the category',
                 type: 'string', required: false
             },
@@ -262,11 +262,13 @@ router.get('/products',
             query.supplierId = req.query.supplierId;
         }
         
-        if (req.query.categories && mongoose.Types.ObjectId.isValid(req.query.categories))
+        // categories
+        if (query.id_category && mongoose.Types.ObjectId.isValid(query.id_category))
         {
             var arr_param =  [];
-            arr_param.push(mongoose.Types.ObjectId(req.query.categories));
+            arr_param.push(mongoose.Types.ObjectId(query.id_category));
             query.categories = {$in: arr_param};
+            delete(query.id_category);
         }
         
         // tags
@@ -475,14 +477,10 @@ Product.aggregate(
                 )
 .then(function (result){
    
-  
-   
     
     var suppliersIds = _.map(result, function (el) {
-            return el._id.supplierId+'';
+        return el._id.supplierId+'';
         });
-   
-   
    
     
     return User.paginate(
