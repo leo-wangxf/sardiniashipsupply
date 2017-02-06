@@ -245,9 +245,12 @@ router.get('/products',
                 , limit: req.query.limit
                 };
         
+        var param = {};
+        
         if (query.name)
         {
-            query = {$text: {$search: query.name}};
+            //query = {$text: {$search: query.name}};
+            param = {$text: {$search: query.name}};
             score = {"score": {"$meta": "textScore"}};
             option['select'] = score;
             option['sort'] =  score;
@@ -259,7 +262,7 @@ router.get('/products',
         
         if (req.query.supplierId && mongoose.Types.ObjectId.isValid(req.query.supplierId))
         {
-            query.supplierId = req.query.supplierId;
+            param.supplierId = req.query.supplierId;
         }
         
         // categories
@@ -267,7 +270,7 @@ router.get('/products',
         {
             var arr_param =  [];
             arr_param.push(mongoose.Types.ObjectId(query.id_category));
-            query.categories = {$in: arr_param};
+            param.categories = {$in: arr_param};
             delete(query.id_category);
         }
         
@@ -275,22 +278,27 @@ router.get('/products',
         if (req.query.tags)
         {
             var arr_tags =  [];
-            console.log(req.query.tags);
+            
             if (Array.isArray(req.query.tags))
                 arr_tags = req.query.tags;
             else
                 arr_tags.push(req.query.tags);
-            query.tags = {$in: arr_tags};
+            
+            param.tags = {$in: arr_tags};
         }
         
+        console.log(param);
+        console.log(option);
         
-        
-        
-        
-        
+        Product.paginate(
+                param,
+                option)
+        /*
         Product.paginate(query
             , option
-        ).then(function (entities) {
+        )
+        */
+        .then(function (entities) {
             if (entities.total === 0)
                 return res.boom.notFound('No Products found for query ' + JSON.stringify(query)); // Error 404
             else
