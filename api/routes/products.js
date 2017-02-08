@@ -220,6 +220,14 @@ router.get('/products',
                 description: 'tags associated',
                 type: 'string', required: false
             },
+            type_search: {
+                description: 'type of serch, define joins with other collections',
+                type: 'string', required: false
+            },
+            tags: {
+                description: 'tags associated',
+                type: 'string', required: false
+            },
             page: {
                 description: 'The current page for pagination',
                 type: 'integer', required: false
@@ -239,11 +247,20 @@ router.get('/products',
         if (query.hasOwnProperty('limit')) delete query.limit;
         //query.name = new RegExp(req.query.name, "i");
         
+        
+        //* option definition
         var option = {
                 populate: 'categories'
                 , page: req.query.page
                 , limit: req.query.limit
                 };
+        
+        
+        if (req.query.type_search)
+        {
+            option.populate = option.populate + ' supplierId'; 
+        }
+        
         
         var param = {};
         
@@ -258,6 +275,8 @@ router.get('/products',
         else
             option['sort'] =  'name';
         
+        
+        //* param definition
         
         
         if (req.query.supplierId && mongoose.Types.ObjectId.isValid(req.query.supplierId))
@@ -287,17 +306,9 @@ router.get('/products',
             param.tags = {$in: arr_tags};
         }
         
-        console.log(param);
-        console.log(option);
-        
         Product.paginate(
                 param,
                 option)
-        /*
-        Product.paginate(query
-            , option
-        )
-        */
         .then(function (entities) {
             if (entities.total === 0)
                 return res.boom.notFound('No Products found for query ' + JSON.stringify(query)); // Error 404
