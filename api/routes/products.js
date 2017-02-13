@@ -306,6 +306,21 @@ router.get('/products',
             param.tags = {$in: arr_tags};
         }
         
+        
+        
+        
+        return Product.paginate(
+                param,
+                option)
+            .then(function(result){
+             res.send(result);
+             }).catch(function (err) {
+                    if (err) return res.boom.badImplementation(err); // Error 500
+                    else return res.boom.badImplementation(); // Error 500
+        });
+        
+  
+  /*
         Product.paginate(
                 param,
                 option)
@@ -318,8 +333,10 @@ router.get('/products',
             if (err) return res.boom.badImplementation(err); // Error 500
             else return res.boom.badImplementation(); // Error 500
         });
-        
+     */   
     });
+    
+    
 
 /*
 router.get('/search',
@@ -516,11 +533,11 @@ Product.aggregate(
                          }
                 });
 }).then(function(result){
-  
-  res.send(result);
-        }
-
-    );
+      res.send(result);
+        }).catch(function (err) {
+                    if (err) return res.boom.badImplementation(err); // Error 500
+                    else return res.boom.badImplementation(); // Error 500
+        });
         
 
 
