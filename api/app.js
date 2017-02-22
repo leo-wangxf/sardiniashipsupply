@@ -15,6 +15,7 @@ var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
 var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
+var files = require('./routes/files');
 var cors = require('cors');
 var app = express();
 
@@ -29,7 +30,7 @@ var configs = {
     production: {
         dbHost: "seidue.crs4.it",
         dbPort: "3996",
-        dbName: "api"
+        dbName: "api2"
     }
 };
 
@@ -57,7 +58,16 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(bearerToken());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
+//app.use(cors());
+//
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, Accept, Content-Type, Authorization, Content-Length, X-Requested-With');
+  if ('OPTIONS' == req.method) res.send(200);
+    else next();
+});
+
 //pagination
 var paginate = require('express-paginate');
 app.use(paginate.middleware(10, 50));
@@ -74,6 +84,7 @@ var tokenMiddleware = require('./util/middlewares').tokenMiddleware;
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
 app.use(prefix, users);
+app.use(prefix, files);
 
 app.use(prefix,  categories);
 app.use(prefix, products);
@@ -121,6 +132,10 @@ if (app.get("env") !== 'development') {
             {
                 basepath: "http://localhost:" + app.get('port') + prefix,
                 router: evaluations
+            },
+            {
+                basepath: "http://localhost:" + app.get('port') + prefix,
+                router: files
             },
             {
                 basepath: "http://localhost:" + app.get('port') + prefix,

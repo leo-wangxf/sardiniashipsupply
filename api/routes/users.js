@@ -341,7 +341,7 @@ router.put('/users',
         var err = new Error();
         err.message = result.body.error_message;
         err.statusCode = result.response.statusCode;
-        return err;
+        throw err;
       }
     }).then(function(done)
     {
@@ -535,7 +535,7 @@ router.get('/users/favorites',
         var err = new Error();
         err.message = result.body.error_message;
         err.statusCode = result.response.statusCode;
-        return err;
+        throw err;
       }
     }).then(function(result)
     {
@@ -553,7 +553,6 @@ router.get('/users/favorites',
       return User.find({'_id': {$in: arrId}}).exec();
     }).then(function(result)
     {
-
       return res.send(result);
     }).catch(function(err)
     {
@@ -855,7 +854,7 @@ router.get('/users/categories',
     tu.decodeToken(userToken).then(function(result)
     {
       if(result.response.statusCode == 200 && result.body.valid == true)
-      {
+      {        
         userId = result.body.token._id;
         var userType = result.body.token.type;
 
@@ -875,7 +874,7 @@ router.get('/users/categories',
         var err = new Error();
         err.message = result.body.error_message;
         err.statusCode = result.response.statusCode;
-        return err;
+        throw err;
       }
     }).then(function(result)
     {
@@ -1212,7 +1211,7 @@ router.get('/users/certifications',
         var err = new Error();
         err.message = result.body.error_message;
         err.statusCode = result.response.statusCode;
-        return err;
+        throw err;
       }
     }).then(function(result)
     {
