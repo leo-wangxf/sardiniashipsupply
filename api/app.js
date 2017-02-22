@@ -16,7 +16,7 @@ var messages = require('./routes/messages');
 var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
 var files = require('./routes/files');
-var cors = require('cors');
+//var cors = require('cors');
 var app = express();
 
 var configs = {

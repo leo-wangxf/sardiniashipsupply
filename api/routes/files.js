@@ -2,7 +2,6 @@ var express = require('express');
 var extend = require('util')._extend;
 var router = express.Router();
 var _ = require('underscore')._;
-var formidable = require('formidable');
 var au = require('audoku');
 var Promise = require('bluebird');
 var multer = require('multer');
