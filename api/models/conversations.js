@@ -54,13 +54,16 @@ ConversationSchema.options.toJSON.transform = ConversationSchema.options.toObjec
   con.expired = !isValid(con.dateValidity);
   var r;
   con.completed = true;
-  for(r=0; r<con.requests.length;r++){
-    var s = con.requests[r].status;
-    if(s=='pending'||s=='acceptedByS')
-      con.completed = false;
-  }
+  if(con.requests)
+  {
+    for(r=0; r<con.requests.length;r++){
+      var s = con.requests[r].status;
+      if(s=='pending'||s=='acceptedByS')
+        con.completed = false;
+    }
 
-  return con;
+    return con;
+  }
 }
 
 

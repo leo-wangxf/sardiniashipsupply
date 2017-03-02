@@ -1,11 +1,13 @@
 var express = require('express');
 var Message = require('../models/messages').Message;
+var Users = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
 //var util = require('util');
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
+var email = require('../util/email');
 /* GET all messages  */
 
 router.get('/conversations/:id/messages',
@@ -104,7 +106,7 @@ router.post('/conversations/:id/messages',
         var id = req.params.id.toString();
         var saveResults;
         var newmsg;
-        Conversation.findById(id,"messages")
+        Conversation.findById(id,"messages customer supplier")
             .then(function (results) {
             saveResults = results;
             if (_.isEmpty(results))
@@ -132,15 +134,44 @@ router.post('/conversations/:id/messages',
             }
 
         }).then(function (results) {
-
             return Message.findById(newmsg._id).populate('sender');
 
         }).then(function (data) {
+            var uid;
+            if(data.type == "customer")
+            {
+              uid = saveResults.supplier;    
+            }
+            else if(data.type == "supplier")
+            {
+              uid = saveResults.customer;    
+            }
+            else
+            {
+              return Promise.reject("unknown user type");
+            }
+            var body = data.text;
+
+            Users.findById(uid, "email").lean().then(function(result){
+              console.log("send to: " + result.email);
+              email.sendMail(result.email, "You have a new message", body, undefined, undefined, "Cagliari Port 2020")
+                .then(function(result)
+                {
+                  console.log(result);
+                }).catch(function(err)
+                {
+                  console.log(err);
+                });
+            }).catch(function(err){
+              console.log(err);
+            });
+
             req.app.get("socketio").to(id+'_room').emit("message", data);
 
             return res.status(201).send(data);
 
         }).catch(function (err) {
+            console.log(err);
 
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
             else if (err.name === 'ValidationError')

@@ -1,4 +1,5 @@
 var express = require('express');
+var Users = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
 //var util = require('util');
 var _ = require('underscore')._;
@@ -6,9 +7,8 @@ var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
 var app = require("./../app");
-
-
-
+var email = require('../util/email');
+var config = require('../config/default.json');
 
 router.get('/conversations',
     au.doku({  // json documentation
@@ -131,10 +131,33 @@ router.post('/conversations',
         Conversation.create(req.body).then(function (entities) {
 
             if (!entities)
-                res.boom.badImplementation('Someting strange'); // Error 500
+                return res.boom.badImplementation('Someting strange'); // Error 500
             else
-                res.status(201).send(entities);  // HTTP 201 created
+            {
+              var body = "You have a new RFQ\n Subject: " + req.body.subject + "\n";
+              var url = config.frontendUrl + "/page_rfq_single.html?convId=" + entities._id;
+              body += "You can see the request by clicking this link " + url;
+
+              console.log(req.body.supplier)
+                           
+              Users.findById(req.body.supplier, "email").lean().then(function(result){
+                email.sendMail(result.email, "You have a new RFQ", body, undefined, undefined, "Cagliari Port 2020")
+                  .then(function(result)
+                  {
+                    console.log(result);
+                  }).catch(function(err)
+                  {
+                    console.log(err);
+                  });
+              }).catch(function(err){
+                console.log(err);
+              });
+
+              return res.status(201).send(entities);  // HTTP 201 created
+            }              
+
         }).catch(function (err) {
+            console.log(err);
             if (err.name === 'ValidationError')
                 res.boom.badData(err.message); // Error 422
             else

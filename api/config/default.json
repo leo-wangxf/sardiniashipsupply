@@ -6,5 +6,12 @@
   "userMsToken": "",
   
   "uploadMsUrl": "http://seidue.crs4.it/api/upload/v1/file",
-  "uploadMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoidXBsb2FkMiIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgwMjU5OTE5ODg2OX0.d5x1M1Rk5e-2OgSE3qAXJE8CUA10noI4FEki4v_fzfQ"
+  "uploadMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoidXBsb2FkMiIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgwMjU5OTE5ODg2OX0.d5x1M1Rk5e-2OgSE3qAXJE8CUA10noI4FEki4v_fzfQ",
+
+  "emailFromAddress" : "cport2020@gmail.com",
+  "emailUsername": "cport2020@gmail.com",
+  "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
+
+  "frontendUrl": "http://seidue.crs4.it:3010"
+
 }

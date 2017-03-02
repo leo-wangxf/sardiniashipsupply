@@ -6,6 +6,8 @@ var Request = require('../models/requests').Request;
 var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
+var email = require('../util/email');
+var config = require('../config/default.json');
 
 /* GET all requests  */
 
@@ -108,7 +110,7 @@ router.post('/conversations/:id/requests',
 
         var saveResults;
         var newreq;
-        Conversation.findById(id, "dateValidity requests").then(function (results) {
+        Conversation.findById(id, "dateValidity requests supplier subject").then(function (results) {
             saveResults = results;
             if (_.isEmpty(results))
                 return Promise.reject({
@@ -147,6 +149,28 @@ router.post('/conversations/:id/requests',
             //  res.set('Location', fullUrl + "/" + id + '/requests/' + newrequest._id);
             //res.status(201).send(newrequest);
             res.status(201).send(newreq);  // HTTP 201 created
+
+            /*
+
+            Users.findById(saveResults.supplier, "email").lean().then(function(result){
+              var sbj = "You have a new request for conversation \"" + saveResults.subject + "\"";
+              var body = "A new request has benn added to conversation " + saveResults.subject + "\n";
+              
+
+              console.log("send to: " + result.email);
+              email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                .then(function(result)
+                {
+                  console.log(result);
+                }).catch(function(err)
+                {
+                  console.log(err);
+                });
+            }).catch(function(err){
+              console.log(err);
+            });
+            */
+
 
         }).catch(function (err) {
             if (err.name === 'ItemNotFound')  res.boom.notFound(err.message); // Error 404
@@ -302,6 +326,8 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
     }),
 
     function (req, res) {
+        var saveResults;
+        var edited = false;
 
         var id_r = req.params['id_r'].toString();
         var id_c = req.params['id_c'].toString();
@@ -315,13 +341,17 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
             if (_.contains(allowedFields, v)) {
                 if (v === "quantity") {
                     query["quantity"] = fieldsToChange[v];
+                    edited = true;
                     continue;
 
             }
         }
+
         query["status"] = "acceptedByS";
 
         Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+            saveResults = results;
+
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -367,6 +397,47 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 req.app.get("socketio").to(id_c+'_room').emit("request", entity);
 
                 res.status(200).send(entity);
+/*
+	        Users.findById(saveResults.customer, "email").lean().then(function(result){
+
+                  var sbj;
+                  var body;
+                 
+                  var url = config.frontendUrl + "/page_rfq_single.html?convId=" + saveResults._id;
+
+                  if(edited)
+                  {
+                    sbj = "A request has been changed";
+                    body = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
+                            You can access to RFQ by clicking to this link:                            
+                           `;
+                    body += url + "\n\n";
+                           
+                  }
+                  else
+                  {
+                    sbj = "A request has been accepted by supplier";
+                    body = `The supplier has  accepted yor request. You can confirm it from the RFQ page.
+                           `;
+                   body += url + "\n\n";
+                  }
+
+ 
+                  console.log("send to: " + result.email);
+                  email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                    .then(function(result)
+                    {
+                     console.log(result);
+                    }).catch(function(err)
+                    {
+                      console.log(err);
+                    });
+                }).catch(function(err){
+                  console.log(err);
+                });
+            */
+
+
             }
 
         }).catch(function (err) {
