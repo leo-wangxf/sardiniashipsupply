@@ -75,7 +75,8 @@ router.get('/conversations',
             }
 
         Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true,
-          populate:'requests messages supplier customer'})
+          populate:'requests messages supplier customer',
+          sort:{dateIn: 'desc' }})
             .then(function (entities) {
                 if (entities.total === 0)
                     return Promise.reject({

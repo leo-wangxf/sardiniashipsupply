@@ -523,7 +523,7 @@ router.get('/users/favorites',
         }
 
         var query = {
-          '_id' : userId
+          '_id' : require("mongoose").Types.ObjectId(userId)
         };
 
         return User.find(query, "favoriteSupplier -_id").exec();
@@ -675,7 +675,7 @@ router.post('/users/actions/favorites',
 
       var query = 
       {
-        id: userId,
+        _id: require("mongoose").Types.ObjectId(userId),
         type: "customer",
       };
 
@@ -698,7 +698,7 @@ router.post('/users/actions/favorites',
         }
       }
 
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$push: {favoriteSupplier : {$each: supList}}};
 
       // Aggiungi i supplier alla lista
@@ -789,7 +789,7 @@ router.delete('/users/actions/favorites/:supId',
 
       supId = req.params.supId
 
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$pull: {favoriteSupplier : supId}};
 
       // Rimuovi il supplier dalla lista
@@ -864,7 +864,7 @@ router.get('/users/categories',
         }
 
         var query = {
-          '_id' : userId
+          '_id' : require("mongoose").Types.ObjectId(userId)
         };
 
         return User.find(query, "categories -_id").exec();
@@ -880,11 +880,14 @@ router.get('/users/categories',
     {
       var arrId = [];
 
-      for(var i in result[0].categories)
+      if(result[0])
       {
-        if(!isNaN(i))
+        for(var i in result[0].categories)
         {
-          arrId.push(require("mongoose").Types.ObjectId(result[0].categories[i]));
+          if(!isNaN(i))
+          {
+            arrId.push(require("mongoose").Types.ObjectId(result[0].categories[i]));
+          }
         }
       }
 
@@ -1013,7 +1016,7 @@ router.post('/users/actions/categories',
 
       var query = 
       {
-        id: userId,
+        _id: require("mongoose").Types.ObjectId(userId),
         type: "supplier",
       };
 
@@ -1025,18 +1028,21 @@ router.post('/users/actions/categories',
 
       // Guardo se qualche categoria e' gia' presente nella lista
       for(var i in catList)
-      {        
-        if(result[0].categories.indexOf(catList[i]) > -1)
-        {
-          // Errore o elimino il supplier da aggiungere nella lista?
-          var er = new Error;
-          er.message = "Category " + catList[i] + " is already present";
-          er.statusCode = 400;
-          throw er;
+      { 
+        if(result[0])
+        {       
+          if(result[0].categories.indexOf(catList[i]) > -1)
+          {
+            // Errore o elimino il supplier da aggiungere nella lista?
+            var er = new Error;
+            er.message = "Category " + catList[i] + " is already present";
+            er.statusCode = 400;
+            throw er;
+          }
         }
       }
 
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$push: {categories : {$each: catList}}};
 
       // Aggiungi le categorie alla lista
@@ -1127,7 +1133,7 @@ router.delete('/users/actions/categories/:catId',
 
       catId = req.params.catId
 
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$pull: {categories : catId}};
 
       // Rimuovi il supplier dalla lista
@@ -1201,7 +1207,7 @@ router.get('/users/certifications',
         }
 
         var query = {
-          '_id' : userId
+          '_id' : require("mongoose").Types.ObjectId(userId)
         };
 
         return User.find(query, "certifications -_id").lean().exec();
@@ -1215,7 +1221,10 @@ router.get('/users/certifications',
       }
     }).then(function(result)
     {
-      var r = result[0].certifications;
+      var r;
+      if(result[0])
+        r = result[0].certifications;
+
       if(r == undefined)
         r = [];
       /*
@@ -1315,7 +1324,7 @@ router.post('/users/actions/certifications',
 
       certData = req.body.certification;
 
-      return User.count({_id: userId, certifications: {$elemMatch: {name: certData.name}}}).exec()
+      return User.count({_id: require("mongoose").Types.ObjectId(userId), certifications: {$elemMatch: {name: certData.name}}}).exec()
     }).then(function(count)
     {
       if(count > 0)
@@ -1325,7 +1334,7 @@ router.post('/users/actions/certifications',
         e.statusCode = 409;
         throw e;
       }
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$push: {certifications : certData}};
 
       // Aggiungi la certificazione  alla lista
@@ -1417,7 +1426,7 @@ router.delete('/users/actions/certifications/:name',
 
       certification = req.params.name
 
-      var query = {id: userId};
+      var query = {_id: require("mongoose").Types.ObjectId(userId)};
       var update = {$pull: {certifications : {name: certification}}};
 
       // Rimuovi la certificazione  dalla lista
