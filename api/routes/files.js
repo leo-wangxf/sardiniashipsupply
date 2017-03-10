@@ -195,7 +195,7 @@ router.post('/files',[tokenMiddleware,
     {
       if(result.response.statusCode == 200)
       {
-        return res.end(result.body);
+        return res.end(JSON.stringify(result.body));
       }
       else
       {
