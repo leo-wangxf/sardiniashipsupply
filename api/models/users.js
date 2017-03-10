@@ -25,6 +25,7 @@ var joiUserSchema = Joi.object({
     //certification: Joi.array().items(Joi.string()),
     certifications: Joi.array().items(Joi.object()),
     categories: Joi.array().items(Joi.string()),
+    attachments: Joi.object(),
     favoriteSupplier : Joi.array().items(Joi.string()),
     references: Joi.object().keys({name: Joi.string(), surname: Joi.string()}),
     pIva: Joi.string(),

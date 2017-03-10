@@ -30,7 +30,7 @@ var configs = {
     production: {
         dbHost: "seidue.crs4.it",
         dbPort: "3996",
-        dbName: "api2"
+        dbName: "port_broker"
     }
 };
 
@@ -53,8 +53,8 @@ app.set('view engine', 'jade');
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({extended: false, limit: '50mb'}));
 app.use(cookieParser());
 app.use(bearerToken());
 app.use(express.static(path.join(__dirname, 'public')));
