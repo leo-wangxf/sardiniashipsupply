@@ -129,7 +129,7 @@ router.get('/categories/drop',
         var elem = {};
         var option = {};
         
-        elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '":"1"}');
+        elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '": 1, "description.'+ req.query.lang + '": 1, "css": 1}');
         
         if (req.query.name)
         {
@@ -141,7 +141,7 @@ router.get('/categories/drop',
         if (req.query.liv)
         {
             var liv = parseInt(req.query.liv);
-            var str = 'level.liv';
+            var str = 'level';
             param[str] = liv; 
         }
         

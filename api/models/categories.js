@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Joigoose = require('joigoose')(mongoose);
 var Joi = require('joi');
+Joi.objectId = require('joi-objectid')(Joi);
 
 var mongoosePaginate = require('mongoose-paginate');
 
@@ -9,11 +10,14 @@ var Schema = mongoose.Schema,
 
 
 var joiCategorySchema = Joi.object({
-    unspsc : Joi.string().required().meta({index: true}),
+    level : Joi.number().required(),
     name : Joi.object().required(),
-    level: Joi.array()
+    description : Joi.object().required(),
+    unspsc : Joi.object(),
+    aida : Joi.object(),
+    parent: Joi.objectId(),
+    css: Joi.object()
 });
-
 
 var CategorySchema = new Schema(Joigoose.convert(joiCategorySchema),{'strict':'throw'});
 
