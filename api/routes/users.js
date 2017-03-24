@@ -541,11 +541,14 @@ router.get('/users/favorites',
     {
       var arrId = [];
 
-      for(var i in result[0].favoriteSupplier)
+      if(result[0])
       {
-        if(!isNaN(i))
+        for(var i in result[0].favoriteSupplier)
         {
-          arrId.push(require("mongoose").Types.ObjectId(result[0].favoriteSupplier[i]));
+          if(!isNaN(i))
+          {
+            arrId.push(require("mongoose").Types.ObjectId(result[0].favoriteSupplier[i]));
+          }
         }
       }
 
@@ -688,13 +691,16 @@ router.post('/users/actions/favorites',
       // Guardo se qualche supplier e' gia' presente nella lista dei preferiti
       for(var i in supList)
       {        
-        if(result[0].favoriteSupplier.indexOf(supList[i]) > -1)
+        if(result[0])
         {
-          // Errore o elimino il supplier da aggiungere nella lista?
-          var er = new Error;
-          er.message = "Supplier " + supList[i] + " is already present";
-          er.statusCode = 400;
-          throw er;
+          if(result[0].favoriteSupplier.indexOf(supList[i]) > -1)
+          {
+            // Errore o elimino il supplier da aggiungere nella lista?
+            var er = new Error;
+            er.message = "Supplier " + supList[i] + " is already present";
+            er.statusCode = 400;
+            throw er;
+          }
         }
       }
 
@@ -702,7 +708,7 @@ router.post('/users/actions/favorites',
       var update = {$push: {favoriteSupplier : {$each: supList}}};
 
       // Aggiungi i supplier alla lista
-      return User.findOneAndUpdate(query, update, {safe:true, new:true}).exec();
+      return User.findOneAndUpdate(query, update, {safe:true, new:true, upsert:true}).exec();
     }).then(function(result)
     {
       if(result == null)
