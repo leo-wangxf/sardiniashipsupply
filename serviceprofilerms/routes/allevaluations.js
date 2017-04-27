@@ -10,7 +10,7 @@ var loader = require('qminer-data-loader');
 
 
 
-router.get('/',  function(req, res, next) {
+router.get('/allevaluations',  function(req, res, next) {
   // to be called as:
   // IP_of_serviceprofilerms:3016/allevaluations
   console.log('inside router get allevaluations');
