@@ -11,6 +11,7 @@ var routes = require('./routes/index');
 
 var index = require('./routes/index');
 var loadevaluations = require('./routes/loadevaluations');
+var synch_evaluations = require('./routes/allevaluations');
 
 //QMiner
 var qm = require('qminer');
@@ -19,7 +20,7 @@ var loader = require('qminer-data-loader');
 var app = express();
 var config = require('propertiesmanager').conf;
 
-let prefix = '/api/v1';
+//let prefix = '/api/v1';
 
 
 
@@ -61,6 +62,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
 app.use('/loadevaluations', loadevaluations);
+app.use('/allevaluations', loadevaluations);
 
 // catch 404 and forward to error handler
 /*app.use(function(req, res, next) {
