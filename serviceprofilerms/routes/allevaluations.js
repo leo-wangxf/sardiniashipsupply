@@ -6,12 +6,16 @@ var Promise = require('bluebird');
 var _apiMsUrl = "http://localhost:3000/api/v1/";
 var qm = require('qminer');
 
+// to be called as:
+// IP_of_serviceprofilerms:3016/allevaluations/all
+// because in app.js there are 
+// var allevaluations = require('./routes/allevaluations');
+// app.use('/allevaluations', allevaluations); // the first part of the path
+// while in this file there is /all  which is the last part of the path
 
 
 
-router.get('/allevaluations',  function(req, res, next) {
-  // to be called as:
-  // IP_of_serviceprofilerms:3016/allevaluations
+router.get('/all',  function(req, res, next) {
   console.log('inside router get allevaluations');
   var options =
   {
@@ -30,9 +34,13 @@ router.get('/allevaluations',  function(req, res, next) {
 					 return reject(decodeError);
 				 }
 				 var r = {};
+				 // r.body.doc is used by paginator, here no paginator is used ...
 				 r.body = JSON.parse(body);
 				 console.log('BEFORE');
-
+                                 // the following is the schema definition
+				 // for _id primary: true is required
+				 // for all the fields null:true allows records without
+				 // that particular fields (can be the case of old records, for instance)
                                  var base = new qm.Base({
 					 mode:'createClean',
 					 schema: [{
@@ -49,19 +57,15 @@ router.get('/allevaluations',  function(req, res, next) {
 						          {name:'delivery_rate', type:'int', null:true},
 						          {name:'overall_rate', type:'int', null:true},
 						 ],
-
-
 					 }]});
+				 // to store the data in the qminer db, a push of each records is necessary
+				 // so it is convenient to store all the records using push inside a loop
 				 for(var i in r.body) {
 			            console.log('r body ' + i + ' \n' +JSON.stringify(r.body[i]));
 				    base.store('Evaluations').push(r.body[i]);
 				 }
 				 console.log('base store 0' + base.store('Evaluations')[0]);
 				 base.close();
-
-
-
-
 				 r.response = response;
 				 console.log('response:' + r.response); 
 				 console.log('AFTER');
