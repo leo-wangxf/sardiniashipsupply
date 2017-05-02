@@ -185,7 +185,7 @@ function uploadFile(req, allowedMime)
 
     var fd = r.form();
 
-    form.on('error', function(err) 
+    form.on('error', function(error) 
     {
       const decodeError = new Error();
       decodeError.message = error.message;

@@ -65,6 +65,55 @@ router.get('/evaluations',
     });
 
 
+// synch evaluations without pagination
+router.get('/synch_evaluations',
+    au.doku({  // json documentation
+        description: 'Get all the evaluations defined in db',
+	title: 'Get evaluations',
+	name: 'GetEvaluations',
+	group: 'Evaluations',
+        fields: {
+        }
+    }),
+    function (req, res) {
+        var query = _.extend({}, req.query);
+        if (query.hasOwnProperty('page')) delete query.page;
+        if (query.hasOwnProperty('limit')) delete query.limit;
+
+	// now prepare a proper query for mongoose ...
+	var searchFields = ["from","to", "conversationId", "evaluation_time"]
+	for (var searchBy in req.query)
+	       if(_.contains(searchFields, searchBy)) {
+		       if (searchBy === "evaluation_time") {
+                         var eval_time = {};
+                         eval_time["$gte"] = new Date(req.query[v]);
+                         eval_time["$lt"] = new Date(req.query[v]);
+                         eval_time["$lt"].setDate(eval_time["$lt"].getDate() +1);
+                         delete query[eval_time];
+                         query['evaluation_range_time'] = eval_time ;
+                         continue;
+
+		       }
+               query[searchBy] = req.query[searchBy];
+	       }
+
+
+        Evaluation.find(query).then(function (entities) {
+
+            if (entities.total === 0)
+                res.boom.notFound("No Evaluations found for query " + JSON.stringify(query)); // Error 404
+            else
+                res.send(entities); // HTTP 200 ok
+
+        }).catch(function (err) {
+            res.boom.badImplementation(err); // Error 500
+        });
+    });
+
+
+
+
+
 router.post('/evaluations', [tokenMiddleware,
     au.doku({  // json documentation
         description: 'Create an evaluation in db',

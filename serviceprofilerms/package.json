@@ -6,20 +6,24 @@
     "start": "node ./bin/www"
   },
   "author": {
-	  "name": "Maria Laura Clemente",
-	  "email": "clem@crs4.it"
+    "name": "Maria Laura Clemente",
+    "email": "clem@crs4.it"
   },
   "dependencies": {
+    "bluebird": "^3.4.7",
     "body-parser": "~1.15.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
     "express": "~4.14.0",
     "express-boom": "^1.0.0",
     "jade": "~1.11.0",
+    "joigoose": "^2.0.0",
+    "mongoose": "^4.9.7",
+    "mongoose-paginate": "^5.0.3",
     "morgan": "~1.7.0",
     "propertiesmanager": "^1.0.10",
     "qminer": "^7.1.0",
-    "qminer-data-loader": "^2.0.1",
+    "request": "^2.79.0",
     "serve-favicon": "~2.3.0",
     "tokenmanager": "^1.0.24"
   }
