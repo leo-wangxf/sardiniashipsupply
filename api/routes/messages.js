@@ -151,6 +151,7 @@ router.post('/conversations/:id/messages',
               return Promise.reject("unknown user type");
             }
             var body = data.text;
+            console.log(data.text);
 
             Users.findById(uid, "email").lean().then(function(result){
               console.log("send to: " + result.email);

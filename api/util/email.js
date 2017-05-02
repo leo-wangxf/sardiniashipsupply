@@ -10,7 +10,7 @@ function sendMail(to, subject, bodyText, bodyHtml, from, fromName)
   // Make sure to add your username and api_key below.
   var opts = {
     'username' : config.emailUsername,
-    'apikey': config.emailApiKey,
+    'api_key': config.emailApiKey,
     'to' : to,
     'subject' : subject,
     'isTransactional': false

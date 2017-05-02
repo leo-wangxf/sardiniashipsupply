@@ -8,6 +8,7 @@ var router = express.Router();
 var au = require('audoku');
 var email = require('../util/email');
 var config = require('../config/default.json');
+var Users = require('../models/users').User;
 
 /* GET all requests  */
 
@@ -148,16 +149,13 @@ router.post('/conversations/:id/requests',
 
             //  res.set('Location', fullUrl + "/" + id + '/requests/' + newrequest._id);
             //res.status(201).send(newrequest);
-            res.status(201).send(newreq);  // HTTP 201 created
 
-            /*
-
+            ///*
             Users.findById(saveResults.supplier, "email").lean().then(function(result){
               var sbj = "You have a new request for conversation \"" + saveResults.subject + "\"";
-              var body = "A new request has benn added to conversation " + saveResults.subject + "\n";
+              var body = "A new request has been added to conversation " + saveResults.subject + "\n";
               
 
-              console.log("send to: " + result.email);
               email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
                 .then(function(result)
                 {
@@ -166,10 +164,11 @@ router.post('/conversations/:id/requests',
                 {
                   console.log(err);
                 });
-            }).catch(function(err){
+            }).catch(function(err){           
               console.log(err);
             });
-            */
+            //*/
+            res.status(201).send(newreq);  // HTTP 201 created
 
 
         }).catch(function (err) {
@@ -179,7 +178,10 @@ router.post('/conversations/:id/requests',
             else if(err.name === 'ItemGone')
                 res.boom.resourceGone('Resource expired'); // Error 410
             else
+            {
                 res.boom.badImplementation('something blew up, ERROR:' + err);
+            } 
+                
 
         });
 
@@ -397,7 +399,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 req.app.get("socketio").to(id_c+'_room').emit("request", entity);
 
                 res.status(200).send(entity);
-/*
+///*
 	        Users.findById(saveResults.customer, "email").lean().then(function(result){
 
                   var sbj;
@@ -435,7 +437,7 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                 }).catch(function(err){
                   console.log(err);
                 });
-            */
+//            */
 
 
             }
@@ -480,6 +482,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
         var id_r = req.params['id'].toString();
         var id_c = req.params['id_c'].toString();
         var conv;
+        var saveResults;
         var fieldsToChange = _.extend({}, req.body);
         if (fieldsToChange.hasOwnProperty('page')) delete fieldsToChange.page;
         if (fieldsToChange.hasOwnProperty('limit')) delete fieldsToChange.limit;
@@ -498,6 +501,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
         var conv;
 
         Conversation.findById(id_c).populate("supplier customer").then(function (results) {
+            saveResults = results;
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -533,6 +537,31 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                 entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
                 req.app.get("socketio").to(id_c+'_room').emit("request", entity);
 
+	        Users.findById(saveResults.supplier, "email").lean().then(function(result){
+
+                  var sbj;
+                  var body;
+                 
+                  var url = config.frontendUrl + "/page_rfq_single.html?convId=" + saveResults._id;
+
+                  sbj = "A request has been changed";
+                  body = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
+                          You can access to RFQ by clicking to this link:                            
+                           `;
+                  body += url + "\n\n";
+                           
+                  console.log("send to: " + result.email);
+                  email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                    .then(function(result)
+                    {
+                     console.log(result);
+                    }).catch(function(err)
+                    {
+                      console.log(err);
+                    });
+                }).catch(function(err){
+                  console.log(err);
+                });
 
                 res.status(200).send(entity);
             }

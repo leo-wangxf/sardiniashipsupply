@@ -199,8 +199,13 @@ router.post('/files',[tokenMiddleware,
       }
       else
       {
-        var err = new Error("");
-        err.message = result.body.message;
+        var msg = "";
+        if(result.body.message != undefined)
+        {
+          msg = result.body.message;
+        }
+        var err = new Error();
+        err.message = msg;
         err.statusCode = result.response.statusCode;
         throw err;
       }
