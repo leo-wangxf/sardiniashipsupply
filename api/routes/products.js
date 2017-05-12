@@ -507,7 +507,7 @@ Product.aggregate(
                     {$match: param},
                     { $group : {_id: {supplierId: "$supplierId"}
                     , count : { $sum : 1 } 
-                    , max : {$max: { $meta: "textScore" }}
+                    // , max : {$max: { $meta: "textScore" }}
                     } } 
                                     
                 )
