@@ -31,7 +31,7 @@ var configs = {
     production: {
         dbHost: "seidue.crs4.it",
         dbPort: "3996",
-        dbName: "port_broker_test"
+        dbName: "port_broker"
     }
 };
 
