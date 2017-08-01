@@ -26,6 +26,8 @@ var joiProductSchema = Joi.object({
     maxNum:Joi.number().default(0),
     unit: Joi.string().required(),
     availability:Joi.number().default(0),
+    languaage: Joi.string(),
+    translation: Joi.array().items(Joi.object()),
     rates: Joi.object()
 });
 

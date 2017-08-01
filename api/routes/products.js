@@ -224,6 +224,10 @@ router.get('/products',
                 description: 'type of serch, define joins with other collections',
                 type: 'string', required: false
             },
+            lang: {
+                description: 'language',
+                type: 'string', required: false
+            },
             tags: {
                 description: 'tags associated',
                 type: 'string', required: false
@@ -266,8 +270,22 @@ router.get('/products',
         
         if (query.name)
         {
+            
+            switch (req.query.lang)
+                {
+                    case 'en':
+                        query.lang = "english";
+                    break;
+                    case 'it':
+                        query.lang = "italian";
+                    break;
+                    default:
+                        query.lang = "italian"; 
+                } 
+             
+            
             //query = {$text: {$search: query.name}};
-            param = {$text: {$search: query.name}};
+            param = {$text: {$search: query.name, $language: query.lang}};
             score = {"score": {"$meta": "textScore"}};
             option['select'] = score;
             option['sort'] =  score;

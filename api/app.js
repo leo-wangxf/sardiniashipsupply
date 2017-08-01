@@ -16,6 +16,7 @@ var messages = require('./routes/messages');
 var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
 var files = require('./routes/files');
+var test = require('./routes/test');
 //var cors = require('cors');
 var app = express();
 
@@ -30,7 +31,7 @@ var configs = {
     production: {
         dbHost: "seidue.crs4.it",
         dbPort: "3996",
-        dbName: "port_broker"
+        dbName: "port_broker_test"
     }
 };
 
@@ -89,6 +90,7 @@ app.use(prefix, files);
 app.use(prefix,  categories);
 app.use(prefix, products);
 app.use(prefix, evaluations);
+//app.use(prefix, test);
 app.use(prefix, tokenMiddleware, messages);
 app.use(prefix, tokenMiddleware, requests);
 app.use(prefix, tokenMiddleware, conversations);
