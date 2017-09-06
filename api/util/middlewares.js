@@ -7,7 +7,13 @@ exports.tokenMiddleware = function (req,res,next) {
         next();
         return;
     }
-    decodeToken(req.token)
+    var token = req.token;
+    if(!token)
+    {
+      token = req.query.token;
+    }
+
+    decodeToken(token)
         .then(function (result) {
           //  console.log(result.response.statusCode)
             if(result.response.statusCode == 200 && result.body.valid == true)

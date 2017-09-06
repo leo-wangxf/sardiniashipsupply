@@ -167,7 +167,7 @@ router.post('/conversations/:id/messages',
               console.log(err);
             });
 
-            req.app.get("socketio").to(id+'_room').emit("message", data);
+            req.app.get("socketio").to(id).emit("message", data);
 
             return res.status(201).send(data);
 
@@ -197,6 +197,8 @@ router.get('/messages/:id',
 
     }), function (req, res) {
         var id = req.params.id.toString();
+        if(id == "socket")
+          return res.status(201).send({});
 
         var newVals = req.body; // body already parsed
 

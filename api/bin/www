@@ -112,15 +112,13 @@ function onListening() {
 
 
 
-
-var io = require('socket.io')(server);
-
+var io = require('socket.io')(server, { origins:'*:*', transports: ["websocket", "xhr-polling"]});
 
 io.on('connection', function(socket) {
 
 
     socket.on('join', function(data) {
-        socket.join(data+'_room');
+        socket.join(data);
     });
 });
 
