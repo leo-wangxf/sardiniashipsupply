@@ -104,6 +104,8 @@ router.post('/files/actions/attachments',[tokenMiddleware,
         var fileName = result.parameters.fileName;
         var update = {"$push" : {"attachments.files": {"id": fileId, "name" : fileName}}};
 
+        User.findOneAndUpdate(query, {"$addToSet": {"attachments": {"files": []}}}).exec();
+
         return User.findOneAndUpdate(query, update, {safe: true, new: true}).lean().exec();
       }
       else
