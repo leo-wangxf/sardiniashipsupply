@@ -9,6 +9,44 @@ var au = require('audoku');
 var email = require('../util/email');
 var config = require('../config/default.json');
 var Users = require('../models/users').User;
+var fs = require('fs');
+
+var mailNewRequestObj = {};
+
+mailNewRequestObj["en"] = "You have a new request";
+mailNewRequestObj["it"] = "Hai una nuova richiesta";
+
+
+var mailNewRequestBdy = {};
+mailNewRequestBdy["en"] = "A new request has been added to ";
+mailNewRequestBdy["it"] = "Una nuova richiesta &egrave; stata aggiunta alla conversazione ";
+
+var mailNewRequestBody = "$$LABEL$$ '$$SUBJECT$$'";
+
+var mailRequestChangedSbj = {}
+mailRequestChangedSbj["en"] = "A request has been changed";
+mailRequestChangedSbj["it"] = "Una richiesta &egrave; stata modificata";
+
+var mailRequestChangedBdy = {}
+mailRequestChangedBdy["en"] = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
+You can access to RFQ by clicking to this link:`;
+
+mailRequestChangedBdy["it"] = `Il fornitore ha aggiornato la tua richiesta. Puoi accettarla, rifiutarla o fare una controfferta.
+Puoi accedere alla RFQ tramite questo link:`;
+
+
+var mailRequestAcceptedSbj = {}
+mailRequestAcceptedSbj["en"] = "A request has been accepted by supplier";
+mailRequestAcceptedSbj["it"] = "Una richiesta &egrave; stata accettata dal fornitore";
+
+var mailRequestAcceptedBdy = {}
+mailRequestAcceptedBdy["en"] = `The supplier has  accepted yor request. You can confirm it from the RFQ page`;
+
+mailRequestAcceptedBdy["it"] = `Il fornitore ha accettato la tua richiesta. Puoi confermarla nella pagina delle RFQ`;
+
+var mailRequestActionLayout = "$$TEXT$$ <a href=\"$$LINK$$\">RFQ</a>";
+
+
 
 /* GET all requests  */
 
@@ -152,11 +190,19 @@ router.post('/conversations/:id/requests',
 
             ///*
             Users.findById(saveResults.supplier, "email").lean().then(function(result){
-              var sbj = "You have a new request for conversation \"" + saveResults.subject + "\"";
-              var body = "A new request has been added to conversation " + saveResults.subject + "\n";
-              
+              //var sbj = "You have a new request for conversation \"" + saveResults.subject + "\"";
+              //var body = "A new request has been added to conversation " + saveResults.subject + "\n";
 
-              email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+              var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+              var body = mailNewRequestBody.replace("$$LABEL$$", mailNewRequestBdy["en"])
+                                           .replace("$$SUBJECT$$", saveResults.subject);
+
+              var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+
+              body = template.replace("$$BODY_TITLE$$", mailNewRequestObj["en"]).replace("$$BODY$$", body);
+              
+              //email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+              email.sendMail(result.email, mailNewRequestObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                 .then(function(result)
                 {
                   console.log(result);
@@ -396,40 +442,53 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
             else{
                 entity = entity.toJSON();
                 entity.conversation={"_id":conv._id, "completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
-                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+                req.app.get("socketio").to(id_c).emit("request", entity);
 
                 res.status(200).send(entity);
 ///*
 	        Users.findById(saveResults.customer, "email").lean().then(function(result){
 
                   var sbj;
-                  var body;
+                  var body;                  
                  
                   var url = config.frontendUrl + "/page_rfq_single.html?convId=" + saveResults._id;
 
+
                   if(edited)
                   {
-                    sbj = "A request has been changed";
-                    body = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
-                            You can access to RFQ by clicking to this link:                            
-                           `;
-                    body += url + "\n\n";
+                    //sbj = "A request has been changed";
+                    sbj = mailRequestChangedSbj["en"];
+                    body = mailRequestChangedBdy["en"];
+                    //body += url + "\n\n";
+                    //body = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
+                    //        You can access to RFQ by clicking to this link:                            
+                    //       `;
+
                            
                   }
                   else
                   {
-                    sbj = "A request has been accepted by supplier";
-                    body = `The supplier has  accepted yor request. You can confirm it from the RFQ page.
-                           `;
-                   body += url + "\n\n";
+                    sbj = mailRequestAcceptedSbj["en"];
+                    body = mailRequestAcceptedBdy["en"];
+                    //body += url + "\n\n";
+                    //sbj = "A request has been accepted by supplier";
+                    //body = `The supplier has  accepted yor request. You can confirm it from the RFQ page.
+                    //       ;
                   }
 
+                  var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+
+                  body = mailRequestActionLayout.replace("$$TEXT$$", body)
+                                                .replace("$$LINK$$", url);
+                  body = template.replace("$$BODY_TITLE$$", sbj).replace("$$BODY$$", body);
+
+
  
-                  console.log("send to: " + result.email);
-                  email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                  //console.log("send to: " + result.email);
+                  email.sendMail(result.email, sbj, undefined, body, undefined, "Cagliari Port 2020")
                     .then(function(result)
                     {
-                     console.log(result);
+                     //console.log(result);
                     }).catch(function(err)
                     {
                       console.log(err);
@@ -535,7 +594,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
             else{
                 entity = entity.toJSON();
                 entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
-                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+                req.app.get("socketio").to(id_c).emit("request", entity);
 
 	        Users.findById(saveResults.supplier, "email").lean().then(function(result){
 
@@ -544,17 +603,26 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
                  
                   var url = config.frontendUrl + "/page_rfq_single.html?convId=" + saveResults._id;
 
-                  sbj = "A request has been changed";
-                  body = `The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
-                          You can access to RFQ by clicking to this link:                            
-                           `;
-                  body += url + "\n\n";
+                  sbj = mailRequestChangedSbj["en"];
+                  body = mailRequestChangedBdy["en"];
+                  //sbj = "A request has been changed";
+                  //body = The supplier has updated yor request. You can accept it, refuse it or make a counteroffer.
+                  //        You can access to RFQ by clicking to this link:                            
+                  //         ;
+                  //body += url + "\n\n";
+
+                  var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+
+                  body = mailRequestActionLayout.replace("$$TEXT$$", body)
+                                                .replace("$$LINK$$", url);
+                  body = template.replace("$$BODY_TITLE$$", sbj).replace("$$BODY$$", body);
                            
-                  console.log("send to: " + result.email);
-                  email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                  //console.log("send to: " + result.email);
+                  //email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
+                  email.sendMail(result.email, sbj, undefined, body, undefined, "Cagliari Port 2020")
                     .then(function(result)
                     {
-                     console.log(result);
+                     //console.log(result);
                     }).catch(function(err)
                     {
                       console.log(err);
@@ -644,7 +712,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
                 entity = entity.toJSON();
                 entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
 
-                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+                req.app.get("socketio").to(id_c).emit("request", entity);
 
 
                 res.status(200).send(entity);
@@ -731,7 +799,7 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
                 entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
 
 
-                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+                req.app.get("socketio").to(id_c).emit("request", entity);
 
 
                 res.status(200).send(entity);
@@ -818,7 +886,7 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
 
                 entity.conversation={"_id":conv._id,"completed":conv.completed, "expire":conv.expired,"supplier":conv.supplier, "customer":conv.customer};
 
-                req.app.get("socketio").to(id_c+'_room').emit("request", entity);
+                req.app.get("socketio").to(id_c).emit("request", entity);
 
 
                 res.status(200).send(entity);

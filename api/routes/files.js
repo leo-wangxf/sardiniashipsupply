@@ -103,8 +103,12 @@ router.post('/files/actions/attachments',[tokenMiddleware,
         var query = {_id: require("mongoose").Types.ObjectId(userId)};
         var fileName = result.parameters.fileName;
         var update = {"$push" : {"attachments.files": {"id": fileId, "name" : fileName}}};
-
-        User.findOneAndUpdate(query, {"$addToSet": {"attachments": {"files": []}}}).exec();
+ 
+        try
+        {
+          User.findOneAndUpdate(query, {"$addToSet": {"attachments": {"files": []}}}).exec();
+        }
+        catch(er2){}
 
         return User.findOneAndUpdate(query, update, {safe: true, new: true}).lean().exec();
       }

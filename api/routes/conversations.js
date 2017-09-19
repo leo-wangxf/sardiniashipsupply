@@ -9,6 +9,24 @@ var ObjectId = require('mongoose').Types.ObjectId;
 var app = require("./../app");
 var email = require('../util/email');
 var config = require('../config/default.json');
+var fs = require('fs');
+
+var mailNewRfqObj = {};
+mailNewRfqObj["en"] = "You have a new RFQ"; 
+mailNewRfqObj["it"] = "Hai una nuova RFQ";
+
+var mailNewRfqSubject = {};
+mailNewRfqSubject["en"] = "Subject";
+mailNewRfqSubject["it"] = "Object";
+
+var mailNewRfqLink = {};
+mailNewRfqLink["en"] = "You can see the request by clicking this link ";
+mailNewRfqLink["it"] = "Puoi vedere la richiesta cliccando su questo link ";
+
+var mailNewRfqLayout = `
+  <p>$$SUBJECT$$: $$SBJ$$</p>
+  <p>$$LINK$$ <a href="$$URL$$">RFQ</a>                      
+`;
 
 router.get('/conversations',
     au.doku({  // json documentation
@@ -135,14 +153,24 @@ router.post('/conversations',
                 return res.boom.badImplementation('Someting strange'); // Error 500
             else
             {
-              var body = "You have a new RFQ\n Subject: " + req.body.subject + "\n";
+              //var body = "You have a new RFQ\n Subject: " + req.body.subject + "\n";
               var url = config.frontendUrl + "/page_rfq_single.html?convId=" + entities._id;
-              body += "You can see the request by clicking this link " + url;
+              //body += "You can see the request by clicking this link " + url;
 
-              console.log(req.body.supplier)
+              //console.log(req.body.supplier)
+               
+              var body = mailNewRfqLayout.replace("$$SUBJECT$$", mailNewRfqSubject["en"])
+                                         .replace("$$SBJ$$", req.body.subject)
+                                         .replace("$$LINK$$", mailNewRfqLink["en"])
+                                         .replace("$$URL$$", url); 
+
+              var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();  
+
+              body = template.replace("$$BODY_TITLE$$", mailNewRfqObj["en"]).replace("$$BODY$$", body);
                            
               Users.findById(req.body.supplier, "email").lean().then(function(result){
-                email.sendMail(result.email, "You have a new RFQ", body, undefined, undefined, "Cagliari Port 2020")
+                //email.sendMail(result.email, "You have a new RFQ", body, undefined, undefined, "Cagliari Port 2020")
+                email.sendMail(result.email, mailNewRfqObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                   .then(function(result)
                   {
                     console.log(result);

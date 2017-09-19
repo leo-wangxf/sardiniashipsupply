@@ -8,6 +8,22 @@ var router = express.Router();
 var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
 var email = require('../util/email');
+var fs = require('fs');
+
+var mailNewMsgObj = {};
+mailNewMsgObj["en"] = "You have a new message";
+mailNewMsgObj["it"] = "Hai un nuovo messaggio";
+
+var mailMsgAccepted = {}
+mailMsgAccepted["en"] = "Request accepted";
+mailMsgAccepted["it"] = "Richiesta accettata";
+
+
+var mailMsgConfirmed = {}
+mailMsgConfirmed["en"] = "Request confermata";
+mailMsgConfirmed["it"] = "Richiesta confermata";
+
+
 /* GET all messages  */
 
 router.get('/conversations/:id/messages',
@@ -151,11 +167,21 @@ router.post('/conversations/:id/messages',
               return Promise.reject("unknown user type");
             }
             var body = data.text;
+            if(data.text == "rfq.acceptedRequestMsg")
+              body = mailMsgAccepted["en"];
+
+            if(data.text == "rfq.confirmedRequestMsg")
+              body = mailMsgConfirmed["en"];
+
             console.log(data.text);
 
+            var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+            body = template.replace("$$BODY_TITLE$$", mailNewMsgObj["en"]).replace("$$BODY$$", body);
+
             Users.findById(uid, "email").lean().then(function(result){
-              console.log("send to: " + result.email);
-              email.sendMail(result.email, "You have a new message", body, undefined, undefined, "Cagliari Port 2020")
+              //console.log("send to: " + result.email);
+              //email.sendMail(result.email, "You have a new message", body, undefined, undefined, "Cagliari Port 2020")
+              email.sendMail(result.email, mailNewMsgObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                 .then(function(result)
                 {
                   console.log(result);
