@@ -10,6 +10,7 @@ var app = require("./../app");
 var email = require('../util/email');
 var config = require('../config/default.json');
 var fs = require('fs');
+var Messaging = require('../util/messaging');
 
 var mailNewRfqObj = {};
 mailNewRfqObj["en"] = "You have a new RFQ"; 
@@ -173,7 +174,6 @@ router.post('/conversations',
                 email.sendMail(result.email, mailNewRfqObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                   .then(function(result)
                   {
-                    console.log(result);
                   }).catch(function(err)
                   {
                     console.log(err);
@@ -209,20 +209,27 @@ router.get('/conversations/:id',
 
     }), function (req, res) {
         var id = req.params.id.toString();
+        var ent;
 
         var newVals = req.body; // body already parsed
 
         Conversation.findById(id, newVals).populate({path:'requests messages supplier customer', populate: [{ path: 'product',model:'Product',populate:[{path:'categories',model:'Category'}]},
             { path: 'sender',model:'User'} ]
         }).then(function (entities) {
+           ent = entities.toObject();
            // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
                 return res.boom.notFound('No entry with id ' + id); // Error 404
 
-             return res.send(entities);  // HTTP 200 ok
+            else
+              return Messaging.mergeMessagesTexts(ent.messages);
+        }).then(function(msg){
+             ent.messages = msg;
+             return res.send(ent);  // HTTP 200 ok
 
 
         }).catch(function (err) {
+            console.log(err);
             if (err.name === 'CastError')
                 res.boom.badData('Id malformed'); // Error 422
             else
