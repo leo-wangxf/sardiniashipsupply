@@ -115,7 +115,13 @@ function mergeMessagesTexts(messages)
   }
   else
   {
-    msgIdList.push(messages.msgId.toString());
+    try
+    {
+      msgIdList.push(messages.msgId.toString());
+    }
+    catch(ex)
+    {
+    }
   }
   
   return new Promise(function(resolve, reject)
@@ -126,7 +132,13 @@ function mergeMessagesTexts(messages)
       var msgText = {};
       for(var i in b)
       {
-        msgText[b[i]["_id"].toString()] = b[i]["text"].toString();
+        try
+        {          
+          msgText[b[i]["_id"].toString()] = b[i]["text"].toString();
+        }
+        catch(ex)
+        {
+        }
       }
      
       if(Array.isArray(messages))

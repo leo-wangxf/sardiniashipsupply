@@ -371,8 +371,203 @@ router.put('/users',
   }
 );
 
-/*
-router.post('/users/actions/password',
+
+router.post('/users/signin',
+  au.doku({  // json documentation
+    "description": 'Sign in inside platform',
+    "title": 'Sign in',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "SignIn",
+    "bodyFields": 
+    {
+      "email": 
+      {
+        "description": 'The email of the user who want access to the system',
+        "type": 'string', 
+        "required": true
+      },
+      "password": 
+      {
+        "description": 'The password of the user who want access to the system',
+        "type": 'string', 
+        "required": 'true'
+      }
+    }
+  }),
+  function (req, res) {
+
+    var email = req.body.email;
+    var password = req.body.password;
+   
+    uu.signIn(email, password).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+
+router.post('/users/signup',
+  au.doku({  // json documentation
+    "description": 'Register a new user inside platform',
+    "title": 'Sign up',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "SignUp",
+    "bodyFields": 
+    {
+      "name": 
+      {
+        "description": 'The name of the user who want register to  system',
+        "type": 'string', 
+        "required": true
+      },
+      "email": 
+      {
+        "description": 'The email of the user who want register to  system',
+        "type": 'string', 
+        "required": true
+      },
+      "password": 
+      {
+        "description": 'The password of the user who want access to  system',
+        "type": 'string', 
+        "required": 'true'
+      },
+      "type": 
+      {
+        "description": 'The type of the user who want register to  system (customer or supplier)',
+        "type": 'string', 
+        "required": true
+      },
+    }
+  }),
+  function (req, res) {
+
+    var email = req.body.email;
+    var password = req.body.password;
+    var name = req.body.name;
+    var type = req.body.type;
+   
+    uu.signUp(name, email, password, type).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+router.get('/users/profile/:uid',
+  au.doku({  // json documentation
+    "description": 'Get user profile info',
+    "title": 'Get user info',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "getProfile",
+    "params": 
+    {
+      "uid":
+      {
+        "description" : "The id of the user who want to retrieve information",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "headers" :
+    {
+      "Authorization" :
+      {
+        "description" : "The user token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var uid = req.params.uid    
+    var userToken = req.token;
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+      else
+      {
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        return uu.getProfile(userId, userToken);
+      }
+    }).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      console.log(err);
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+
+
+router.post('/users/actions/setpassword',
   au.doku({  // json documentation
     "description": "Change the own password",
     "title": "Set new password",
@@ -407,13 +602,9 @@ router.post('/users/actions/password',
   function (req, res) {
    
     var userToken = req.token;
+    var oldPassword = req.body.oldpassword;
+    var newPassword = req.body.newpassword;
     var userId;
-    var email;
-
-    if(userToken == undefined)
-    {
-      return res.boom.forbidden("Missing token");
-    }
 
     tu.decodeToken(userToken).then(function(result)
     {
@@ -424,62 +615,38 @@ router.post('/users/actions/password',
         err.statusCode = result.response.statusCode;
         throw err;
       }
-
-      userId = result.body.token._id;
-      email = result.body.token.email;
-
-      // controllo se la vecchia passowrd e' valida
-      return tu.loginUser(email, req.body.oldPassword);
-    }).then(function (result)
-    {
-      if(result.response.statusCode != 201)
-      {
-        var err = new Error();
-        err.statusCode = result.response.statusCode;
-
-        switch(result.response.statusCode)
-        {
-          case 403:
-            err.message = "You current password is wrong";
-            break;
-          default:
-            err.message = result.body.error_message;
-        }
-
-        throw err;
-      }
       else
       {
-        return tu.changePassword(userId, userToken, req.body.oldPassword, req.body.newPassword);
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        return uu.changePassword(userId, userToken, oldPassword, newPassword);
       }
     }).then(function(result)
     {
-      if(result.response.statusCode != 201)
-      {
-        var err = new Error();
-        err.statusCode = result.response.statusCode;
-        err.message = result.body.error_message;
-        throw err;
-      }
-      else
-      {
-        return res.send(result);
-      }
+      return res.status(result.response.statusCode).send(result.body);
     }).catch(function(err)
     {
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(err);
+        return res.status(err.statusCode).send(result.body);
       }
       else
       {
-        console.log(err);
         return res.boom.badImplementation(err); // Error 500
       }
     });
   }
 );
-*/
+
 
 
 router.get('/users/favorites',

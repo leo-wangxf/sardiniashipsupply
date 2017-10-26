@@ -1,4 +1,5 @@
 var Promise = require('bluebird');
+var config = require('../config/default.json');
 var request = require('request');
 var User = require('../models/users').User;
 var math = require('mathjs');
@@ -210,6 +211,186 @@ function addPriceValueRate(uid, price_value_rate)
 {
   return addRates(uid, undefined, undefined, undefined, undefined, price_value_rate);
 }
+
+
+
+function signIn(email, password)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/signin",
+    method: 'POST',
+    json: true,
+    body: {"username" : email, "password" : password},
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.userMsToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+
+function signUp(name, email, password, type)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/signup",
+    method: 'POST',
+    json: true,
+    body: {"user" : {"name" : name, "email" : email, "password": password, "type": type}},
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.userMsToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+function getProfile(userId, token)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/" + userId,
+    method: 'GET',
+    json: true,
+    headers:
+    {
+      'Authorization': 'Bearer ' + token,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.get(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+function changePassword(uid, token, oldPassword, newPassword)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/" + uid + "/actions/setpassword",
+    method: 'POST',
+    json: true,
+    body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
+    headers:
+    {
+      'Authorization': 'Bearer ' + token,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+exports.signIn = signIn;
+exports.signUp = signUp;
+exports.getProfile = getProfile;
+exports.changePassword = changePassword;
 
 exports.addRates  = addRates;
 exports.addProductRate = addProductRate;

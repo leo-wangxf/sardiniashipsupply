@@ -139,52 +139,8 @@ function loginUser(username, password)
 }
 
 
-function changePassword(uid, token, oldPassword, newPassword)
-{
-  var options =
-  {
-    url: config.userMsUrl + "/users/" + uid + "/actions/setpassword",
-    method: 'POST',
-    json: true,
-    body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
-    headers:
-    {
-      'Authorization': 'Bearer ' + token,
-      'content-type': 'application/json'
-    }
-  };
-
-  return new Promise(function(resolve, reject)
-  {
-    request.post(options, function(error, response, body)
-    {
-      if(error)
-      {
-        const decodeError = new Error();
-        decodeError.message = error.message;
-        decodeError.stack = error.stack;
-        return reject(decodeError);
-      }
-
-      var r = {};
-      try
-      {
-        r.body = JSON.parse(body);
-      }
-      catch(err)
-      {
-        r.body = body;
-      }
-
-      r.response = response;
-      return resolve(r);
-    });
-  });
-}
-
-
 
 exports.decodeToken  = decodeToken;
 exports.editUser  = editUser;
 exports.loginUser = loginUser;
-exports.changePassword = changePassword;
+
