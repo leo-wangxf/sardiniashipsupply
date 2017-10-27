@@ -8,6 +8,7 @@ var bearerToken = require('express-bearer-token');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var sys = require('./routes/sys');
 
 var categories = require('./routes/categories');
 var products = require('./routes/products');
@@ -88,6 +89,7 @@ var tokenMiddleware = require('./util/middlewares').tokenMiddleware;
 
 var prefix = '/api/v1';
 app.set("apiprefix", prefix);
+app.use(prefix, sys);
 app.use(prefix, users);
 app.use(prefix, files);
 
