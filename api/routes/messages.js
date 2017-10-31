@@ -135,8 +135,17 @@ router.post('/conversations/:id/messages',
             message: 'no conversation found for message creation, having id ' + id,
             errorCode: 404
           });
-          else                 
-          return Messaging.sendMessage(id, req.body.sender, req.body.text);
+          else 
+          {
+            let aux = {};
+            if(req.body.automatic)
+              aux.automatic = req.body.automatic;
+
+            if(req.body.link)
+              aux.link = req.body.link;
+
+            return Messaging.sendMessage(id, req.body.sender, req.body.text, aux);
+          }
         }).then(function(result)
           {
             if(result.response.statusCode == 201)
@@ -212,7 +221,7 @@ router.post('/conversations/:id/messages',
           return Messaging.mergeMessagesTexts(data);
         }).then(function(msg){
 
-          req.app.get("socketio").to(id).emit("message",msg);
+          //req.app.get("socketio").to(id).emit("message",msg);
 
           return res.status(201).send(msg);
 

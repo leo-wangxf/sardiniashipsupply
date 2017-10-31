@@ -3,18 +3,22 @@ var Promise = require('bluebird');
 var request = require('request');
 var _ = require('underscore')._;
 
-function sendMessage(room, sender, text)
+function sendMessage(room, sender, text, aux)
 {
+  let b = {};
+  b.text = text;
+  b.sender = sender;
+  b.room = room;
+
+  if(aux)
+    b.aux = aux;
+
   var options =
   {
     url: config.messagingMsUrl + "/message", 
     method: 'POST',
     json: true,
-    body: {
-      "text" : text,
-      "sender" : sender,
-      "room" : room
-    },
+    body: b,
     headers:
     {
       'Authorization': 'Bearer ' + config.messagingMsToken
