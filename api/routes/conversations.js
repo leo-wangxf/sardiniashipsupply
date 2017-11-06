@@ -154,6 +154,12 @@ router.post('/conversations',
                 return res.boom.badImplementation('Someting strange'); // Error 500
             else
             {
+              let o = entities.toObject();
+              Messaging.addRoom(o._id.toString(), [o.customer.toString(), o.supplier.toString()]).then(function(r){             
+              }).catch(function(err)
+              {
+                console.err(err);
+              });
               //var body = "You have a new RFQ\n Subject: " + req.body.subject + "\n";
               var url = config.frontendUrl + "/page_rfq_single.html?convId=" + entities._id;
               //body += "You can see the request by clicking this link " + url;

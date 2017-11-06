@@ -52,6 +52,56 @@ function sendMessage(room, sender, text, aux)
   });
 }
 
+
+function addRoom(name, members)
+{
+  let b = {};
+  b.name = name;
+  b.members = members;
+
+
+  var options =
+  {
+    url: config.messagingMsUrl + "/room", 
+    method: 'POST',
+    json: true,
+    body: b,
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.messagingMsToken
+    }
+  }
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+
+
 function getMessages(ids)
 {
   var s = "";
@@ -175,4 +225,5 @@ function mergeMessagesTexts(messages)
 
 exports.sendMessage  = sendMessage;
 exports.getMessage  = getMessages;
+exports.addRoom  = addRoom;
 exports.mergeMessagesTexts  = mergeMessagesTexts;
