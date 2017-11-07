@@ -11,6 +11,8 @@
   "messagingMsUrl": "http://seidue.crs4.it/api/messaging/v1",
   "messagingMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiTWVzc2FnaW5nIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODIzODY1MDY1MzI4fQ.eQD079_fxwWDQ9g0iMYlwp0CHD83H-1AAiLlPEU2_LU",
 
+  "trendsMsUrl": "http://seidue.crs4.it/api/trends/v1",
+ 
   "emailFromAddress" : "cport2020@gmail.com",
   "emailUsername": "cport2020@gmail.com",
   "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",

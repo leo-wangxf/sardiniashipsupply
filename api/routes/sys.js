@@ -15,9 +15,10 @@ router.get('/sys/urls',
   }),
   function (req, res) {
     let urls = {};
-    urls.authMs = config.authMsUrl;
-    urls.uploadMs = config.uploadMsUrl;
-    urls.messagingMs = config.messagingMsUrl;
+    urls.authMsUrl = config.authMsUrl;
+    urls.uploadMsUrl = config.uploadMsUrl;
+    urls.messagingMsUrl = config.messagingMsUrl;
+    urls.trendsMsUrl = config.trendsMsUrl;
     
     res.header("Content-Type",'application/json');
     return res.end(JSON.stringify(urls));
