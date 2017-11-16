@@ -12,6 +12,9 @@
   "messagingMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiTWVzc2FnaW5nIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODIzODY1MDY1MzI4fQ.eQD079_fxwWDQ9g0iMYlwp0CHD83H-1AAiLlPEU2_LU",
 
   "trendsMsUrl": "http://seidue.crs4.it/api/trends/v1",
+
+  "mailerMsUrl": "http://smartapi.crs4.it/api/mailer/v1/",
+  "mailerMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiY21jLW1haWxlciIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgyNTgzNDEyNDI5OX0.Ns_IZSeIqroB8Rl7vEvthlsXxEA5lsmkWKMSEgkCTCE",
  
   "emailFromAddress" : "cport2020@gmail.com",
   "emailUsername": "cport2020@gmail.com",

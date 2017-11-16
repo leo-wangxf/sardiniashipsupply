@@ -4,7 +4,90 @@ var config = require('../config/default.json');
 var Promise = require('bluebird');
 var request = require('request');
 
+
 function sendMail(to, subject, bodyText, bodyHtml, from, fromName) 
+{
+  var b = {
+    "to": [to],
+    "subject": subject,
+    "from" : {}
+  }
+
+  if(bodyText) 
+    b.textBody  = bodyText;
+
+  /*
+  if(bodyHtml)
+    b.htmlBody = bodyHtml.replace(/"/g, '\\"');
+  */
+
+  if(bodyHtml)
+    b.htmlBody = bodyHtml;
+
+
+
+  if(from)
+  {
+    b.from.address = from;
+  }
+  else
+  {
+    b.from.address = "cport2020@gmail.com"
+  }
+
+  if(fromName)
+  {
+    b.from.name = fromName;
+  }
+  else
+  {
+    b.from.name = "Sardinia Ship Supply";
+  }
+
+
+  // Object of options.
+  var options = {
+    url: config.mailerMsUrl + 'email',
+    method: 'POST',
+    json: true,
+    body :  b,
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.mailerMsToken
+    }
+  };
+
+  //console.log(options);
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};      
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+function sendMailOld(to, subject, bodyText, bodyHtml, from, fromName) 
 {
 
   // Make sure to add your username and api_key below.

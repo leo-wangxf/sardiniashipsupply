@@ -178,7 +178,8 @@ router.post('/conversations/:id/messages',
 
           }).then(function (results) {
             return Message.findById(newmsg._id).populate('sender').lean();
-
+          }).then(function(data) {
+            return Messaging.mergeMessagesTexts(data);
           }).then(function (data) {
             dataMsg = data;
             var uid;
@@ -210,6 +211,7 @@ router.post('/conversations/:id/messages',
             email.sendMail(result.email, mailNewMsgObj["en"], undefined, body, undefined, "Cagliari Port 2020")
             .then(function(result)
               {
+                //console.log(result);
               }).catch(function(err)
                 {
                   console.log(err);
