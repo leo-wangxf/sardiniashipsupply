@@ -13,6 +13,9 @@
 
   "trendsMsUrl": "your_trend_service_url",
 
+  "mailerMsUrl": "your_mailer_service_url",
+  "mailerMsToken": "your_mailer_service_token",
+
   "emailFromAddress" : "cport2020@gmail.com",
   "emailUsername": "cport2020@gmail.com",
   "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
