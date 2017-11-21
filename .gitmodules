@@ -4,3 +4,6 @@
 [submodule "webui6.2"]
 	path = webui6.2
 	url = ../webui6.2.git
+[submodule "messagingms"]
+	path = messagingms
+	url = ../messagingms.git
