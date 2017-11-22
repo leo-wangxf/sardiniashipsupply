@@ -1,24 +1,27 @@
 {
-  "authMsUrl": "your_auth_service_url",
-  "authMsToken": "your_auth_service_token",
+  "production":
+  {
+    "authMsUrl": "your_auth_service_url",
+    "authMsToken": "your_auth_service_token",
 
-  "userMsUrl": "your_user_service_url",
-  "userMsToken": "your_user_service_token",
+    "userMsUrl": "your_user_service_url",
+    "userMsToken": "your_user_service_token",
 
-  "uploadMsUrl": "your_upload_service_url",
-  "uploadMsToken": "your_upload_service_token",
+    "uploadMsUrl": "your_upload_service_url",
+    "uploadMsToken": "your_upload_service_token",
 
-  "messagingMsUrl": "your_messaging_service_url",
-  "messagingMsToken": "your_messaging_service_token",
+    "messagingMsUrl": "your_messaging_service_url",
+    "messagingMsToken": "your_messaging_service_token",
 
-  "trendsMsUrl": "your_trend_service_url",
+    "trendsMsUrl": "your_trend_service_url",
 
-  "mailerMsUrl": "your_mailer_service_url",
-  "mailerMsToken": "your_mailer_service_token",
+    "mailerMsUrl": "your_mailer_service_url",
+    "mailerMsToken": "your_mailer_service_token",
 
-  "emailFromAddress" : "cport2020@gmail.com",
-  "emailUsername": "cport2020@gmail.com",
-  "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
+    "emailFromAddress" : "cport2020@gmail.com",
+    "emailUsername": "cport2020@gmail.com",
+    "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
 
-  "frontendUrl": "your_website_home_url"
+    "frontendUrl": "your_website_home_url"
+  }
 }
