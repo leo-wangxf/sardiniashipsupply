@@ -7,7 +7,7 @@ var _ = require('underscore')._;
 var router = express.Router();
 var au = require('audoku');
 var email = require('../util/email');
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
 var Users = require('../models/users').User;
 var fs = require('fs');
 

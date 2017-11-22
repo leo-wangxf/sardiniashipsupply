@@ -1,24 +1,27 @@
 {
-  "authMsUrl": "http://seidue.crs4.it/api/auth/v1",
-  "authMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODAyMTgzNTQyNzcxfQ.-6MEJ4zoFBx7Qa3JvQnP3JogVidFKlPzzTfoBSIUYew",
+  "production":
+  {
+    "authMsUrl": "http://seidue.crs4.it/api/auth/v1",
+    "authMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXV0aG1zIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODAyMTgzNTQyNzcxfQ.-6MEJ4zoFBx7Qa3JvQnP3JogVidFKlPzzTfoBSIUYew",
 
-  "userMsUrl": "http://seidue.crs4.it:/api/user/v1",
-  "userMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXBwIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODAyMTgxNTY2NzIzfQ.I9tAMVI6mPuxur8r9CVEO83UpD2nKL8Ek4O-y6diZKE",
+    "userMsUrl": "http://seidue.crs4.it:/api/user/v1",
+    "userMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiYXBwIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODAyMTgxNTY2NzIzfQ.I9tAMVI6mPuxur8r9CVEO83UpD2nKL8Ek4O-y6diZKE",
   
-  "uploadMsUrl": "http://seidue.crs4.it/api/upload/v1/file",
-  "uploadMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoidXBsb2FkMiIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgwMjU5OTE5ODg2OX0.d5x1M1Rk5e-2OgSE3qAXJE8CUA10noI4FEki4v_fzfQ",
+    "uploadMsUrl": "http://seidue.crs4.it/api/upload/v1/file",
+    "uploadMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoidXBsb2FkMiIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgwMjU5OTE5ODg2OX0.d5x1M1Rk5e-2OgSE3qAXJE8CUA10noI4FEki4v_fzfQ",
 
-  "messagingMsUrl": "http://seidue.crs4.it/api/messaging/v1",
-  "messagingMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiTWVzc2FnaW5nIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODIzODY1MDY1MzI4fQ.eQD079_fxwWDQ9g0iMYlwp0CHD83H-1AAiLlPEU2_LU",
+    "messagingMsUrl": "http://seidue.crs4.it/api/messaging/v1",
+    "messagingMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiTWVzc2FnaW5nIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxODIzODY1MDY1MzI4fQ.eQD079_fxwWDQ9g0iMYlwp0CHD83H-1AAiLlPEU2_LU",
 
-  "trendsMsUrl": "http://seidue.crs4.it/api/trends/v1",
+    "trendsMsUrl": "http://seidue.crs4.it/api/trends/v1",
 
-  "mailerMsUrl": "http://smartapi.crs4.it/api/mailer/v1/",
-  "mailerMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiY21jLW1haWxlciIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgyNTgzNDEyNDI5OX0.Ns_IZSeIqroB8Rl7vEvthlsXxEA5lsmkWKMSEgkCTCE",
+    "mailerMsUrl": "http://smartapi.crs4.it/api/mailer/v1/",
+    "mailerMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiY21jLW1haWxlciIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgyNTgzNDEyNDI5OX0.Ns_IZSeIqroB8Rl7vEvthlsXxEA5lsmkWKMSEgkCTCE",
  
-  "emailFromAddress" : "cport2020@gmail.com",
-  "emailUsername": "cport2020@gmail.com",
-  "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
+    "emailFromAddress" : "cport2020@gmail.com",
+    "emailUsername": "cport2020@gmail.com",
+    "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
 
-  "frontendUrl": "http://seidue.crs4.it:3010"
+    "frontendUrl": "http://seidue.crs4.it:3010"
+  }
 }

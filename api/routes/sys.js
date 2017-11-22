@@ -1,9 +1,8 @@
 var express = require('express');
 var au = require('audoku');
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
 var router = express.Router();
 var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
-
 
 router.get('/sys/urls',
   au.doku({  // json documentation

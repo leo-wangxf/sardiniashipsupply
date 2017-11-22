@@ -1,4 +1,4 @@
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
 var Promise = require('bluebird');
 var request = require('request');
 

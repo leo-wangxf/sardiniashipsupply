@@ -1,5 +1,5 @@
 var Promise = require('bluebird');
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
 var request = require('request');
 var User = require('../models/users').User;
 var math = require('mathjs');

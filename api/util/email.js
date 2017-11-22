@@ -1,6 +1,6 @@
 var querystring = require('querystring');
 var https = require('https');
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
 var Promise = require('bluebird');
 var request = require('request');
 

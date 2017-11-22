@@ -8,7 +8,8 @@ var au = require('audoku');
 var ObjectId = require('mongoose').Types.ObjectId;
 var app = require("./../app");
 var email = require('../util/email');
-var config = require('../config/default.json');
+var config = require('propertiesmanager').conf;
+
 var fs = require('fs');
 var Messaging = require('../util/messaging');
 
