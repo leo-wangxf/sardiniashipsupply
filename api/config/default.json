@@ -22,6 +22,8 @@
     "emailUsername": "cport2020@gmail.com",
     "emailApiKey": "75f96754-50af-4ac2-9886-0616961b0ce9",
 
+    "AccessControlAllowOrigin" : "*",
+
     "frontendUrl": "http://seidue.crs4.it:3010"
   }
 }
