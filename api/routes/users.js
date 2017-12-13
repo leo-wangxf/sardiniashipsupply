@@ -8,6 +8,9 @@ var User = require('../models/users').User;
 var Category = require('../models/categories').Category;
 var tu = require('../util/token');
 var uu = require('../util/users');
+var fu = require('../util/files');
+var config = require('propertiesmanager').conf;
+var eu= require('../util/email');
 
 var multer = require('multer');
 var fs = require('fs');
@@ -18,6 +21,25 @@ var conf = {
   uploadQuota: 100 * 1024 * 1024,
   uploadFileSizeLimit: 10 * 1024 * 1024
 };
+
+
+mailResetPasswordTitle = {};
+mailResetPasswordTitle["en"] = "Reset Password";
+mailResetPasswordTitle["it"] = "Ripristino Password";
+
+mailResetPasswordBody = {};
+mailResetPasswordBody["en"] = `Dear $$EMAIL$$, <br> 
+  We have received a request to reset the password for your account. <br>
+  To change your password, please click on the following link: <br>
+  $$LINK$$  <br>
+  If you did not make this request, you can ignore this message.`;
+
+mailResetPasswordBody["it"] = `Gentile $$EMAIL$$, <br> 
+  Abbiamo ricevuto una richiesta per ripristinare la password del tuo account. <br>
+  Per impostre una nuova password accedi alla seguente pagina: <br>
+  $$LINK$$  <br>
+  Se non sei stato tu ad effettuare questa richiesta pui ignorare questo messaggio.`;
+
 
 
 fs.mkdirParentSync = function(dirPath, mode) {
@@ -202,6 +224,103 @@ router.get('/users/supplier/:supId',
 
 
 
+router.post('/users/actions/logo',
+  au.doku({  // json documentation
+    "description": 'Upload a user logo ',
+    "title": 'Upload Logo',
+    "group": "users",
+    "version": "1.0.0",
+    "name": "PostLogo",
+    "params": 
+    {
+    }
+  }),
+  function(req, res) { 
+    res.setHeader("Content-Type", "application/json");
+
+    var userToken = req.token;
+    var userVals;
+    var oldLogo;
+    var userId;
+    var logoId;
+
+    if(userToken === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid == true)
+      {
+        userId = result.body.token._id;
+        var userType = result.body.token.type;
+
+        if(userType != "customer" && userType != "supplier")
+        {
+          return res.boom.forbidden("Only customers and suppliers can use this function");
+        }
+
+        userVals = req.body.user;
+        return uu.getProfile(userId, userToken);        
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+    }).then(function(result)
+    {
+      fu.deleteFile(result.body.logo)
+
+      return fu.uploadFile(req, ["image"]);
+    }).then(function(result)
+    {
+
+      if(result.response.statusCode == 200)
+      {
+        logoId = result.body.filecode;
+        return tu.editUser(userId, userToken, {"user" :{"logo" : logoId}});
+      }
+      else
+      {
+        var msg = "";
+        if(result.body.message != undefined)
+        {
+          msg = result.body.message;
+        }
+        var err = new Error();
+        err.message = msg;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+    }).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      console.log(err);
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 
 
 router.put('/users',
@@ -228,12 +347,6 @@ router.put('/users',
       "user.address": 
       {
         "description": 'The user\'s address (only for suppliers)',
-        "type": 'string', 
-        "required": false
-      },
-      "user.logo": 
-      {
-        "description": 'The url of the user\'s logo',
         "type": 'string', 
         "required": false
       },
@@ -317,8 +430,7 @@ router.put('/users',
           name: Joi.string().min(3),
           address: Joi.string().min(3),
           phone: Joi.number(),
-          references: Joi.object().keys({name: Joi.string(), surname: Joi.string()}),
-          logo: Joi.string().uri()
+          references: Joi.object().keys({name: Joi.string(), surname: Joi.string()})
         };
 
         if(userType === "customer")
@@ -564,6 +676,154 @@ router.get('/users/profile/:uid',
     });
   }
 );
+
+router.post('/users/actions/resetpassword',
+  au.doku({  // json documentation
+    "description": "Change the password with a reset token",
+    "title": "Set new password wit a reset token",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "ResetPassword",
+    "bodyFields": 
+    {
+      "password": 
+      {
+        "description" : 'The new user\'s password to save',
+        "type": 'string', 
+        "required": true
+      },
+      "resetToken": 
+      {
+        "description" : 'Token used to update password',
+        "type": 'string', 
+        "required": true
+      },
+      "email": 
+      {
+        "description" : 'Email address of the user.',
+        "type": 'string', 
+        "required": false
+      }
+    }
+  }),
+  function (req, res) {
+    //var userToken = req.token;
+    var email = req.body.email
+    var password = req.body.password;
+    var resetToken = req.body.resetToken;
+
+    uu.resetPassword(email, password, resetToken).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+
+
+
+router.post('/users/actions/askresetpassword',
+  au.doku({  // json documentation
+    "description": "Send an email with the link to reset the password",
+    "title": "Ask reset password",
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "askResetPassword",
+    "bodyFields": 
+    {
+      "email": 
+      {
+        "description" : 'Email of the user who need to reset pasword',
+        "type": 'string', 
+        "required": true
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var email = req.body.email;
+    var newPassword = req.body.newpassword;
+    var userId;
+
+    User.findOne({"email": email}).lean().exec().then(function(result)
+    {
+      if( !result || result.length == 0)
+      {
+        var err = new Error();
+        err.message = "This email address isn't registered on our system";
+        err.statusCode = 404;
+        throw err;
+      }
+      
+      return uu.getResetPasswordToken(email);
+    }).then(function(result)
+    {
+      var rToken = result.body.reset_token;
+      var link = config.frontendUrl + "/page_reset_password.html?token=" + rToken + "&email=" + email;
+
+      mTitle = mailResetPasswordTitle["en"];
+      mBody = mailResetPasswordBody["en"].replace("$$EMAIL$$", email).replace("$$LINK$$", link);
+
+      console.log(link);
+
+      var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
+      var body = template.replace("$$BODY_TITLE$$", mTitle).replace("$$BODY$$", mBody);
+     
+
+      return eu.sendMail(email, mTitle, undefined, body, undefined, "Cagliari Port 2020");
+    }).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        console.log(result.body);
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      return res.send({"success": true}); 
+    }).catch(function(err)
+    {
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err.message);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
 
 
 

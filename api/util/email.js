@@ -74,7 +74,7 @@ function sendMail(to, subject, bodyText, bodyHtml, from, fromName)
       var r = {};      
       try
       {
-        r.body = JSON.parse(body);
+        r.body = JSON.parse(body);      
       }
       catch(err)
       {

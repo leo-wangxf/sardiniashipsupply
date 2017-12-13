@@ -14,7 +14,7 @@ var joiUserSchema = Joi.object({
     name : Joi.string().required(),
     address : Joi.string().required(),
     type : Joi.string(),
-    logo : Joi.string().uri(),
+    logo : Joi.string(),
     phone: Joi.number(),
     description: Joi.string(),
     web: Joi.string().uri(),

@@ -345,6 +345,51 @@ function getProfile(userId, token)
   });
 }
 
+
+function resetPassword(email, password, token)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/" + email + "/actions/setpassword",
+    method: 'POST',
+    json: true,
+    body: {"newpassword": password, "reset_token": token},
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.userMsToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
 function changePassword(uid, token, oldPassword, newPassword)
 {
   var options =
@@ -387,10 +432,59 @@ function changePassword(uid, token, oldPassword, newPassword)
     });
   });
 }
+
+
+
+function getResetPasswordToken(uid)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/" + uid + "/actions/resetpassword",
+    method: 'POST',
+    json: true,
+    headers:
+    {
+      'Authorization': 'Bearer ' + config.userMsToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+
+
+
+exports.getResetPasswordToken = getResetPasswordToken;
 exports.signIn = signIn;
 exports.signUp = signUp;
 exports.getProfile = getProfile;
 exports.changePassword = changePassword;
+exports.resetPassword = resetPassword;
 
 exports.addRates  = addRates;
 exports.addProductRate = addProductRate;
