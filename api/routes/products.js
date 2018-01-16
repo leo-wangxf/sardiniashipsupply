@@ -212,6 +212,10 @@ router.get('/products',
                 description: 'id of the category',
                 type: 'string', required: false
             },
+            cat_type: {
+                description: 'type of the category',
+                type: 'integer', required: false
+            },
             supplierId: {
                 description: 'id of the supplier',
                 type: 'string', required: false
@@ -243,9 +247,8 @@ router.get('/products',
         }
     }),
     function (req, res) {
-
-        var query = _.extend({}, req.query);
         
+        var query = _.extend({}, req.query);
         
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
@@ -302,6 +305,7 @@ router.get('/products',
             param.supplierId = req.query.supplierId;
         }
         
+        
         // categories
         if (query.id_category && mongoose.Types.ObjectId.isValid(query.id_category))
         {
@@ -310,6 +314,8 @@ router.get('/products',
             param.categories = {$in: arr_param};
             delete(query.id_category);
         }
+        
+        
         
         // tags
         if (req.query.tags)
@@ -323,19 +329,54 @@ router.get('/products',
             
             param.tags = {$in: arr_tags};
         }
+
         
-        
-        
-        
-        return Product.paginate(
+        if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories == 'undefined')
+        {
+           var Category = require('../models/categories').Category;
+
+            Category.find({"type": req.query.cat_type}, '_id').lean().then(function (result) {
+                param.categories = {'$in': result}; 
+                
+                
+                return Product.paginate(
+                    param,
+                    option)
+                .then(function(result){
+                 //console.log(JSON.stringify(param));
+                    res.send(result);
+                 }).catch(function (err) {
+                    console.log(err);    
+                    if (err) return res.boom.badImplementation(err); // Error 500
+                        else return res.boom.badImplementation(); // Error 500
+            });
+
+            }).catch(function (err) {
+                if (err) return res.boom.badImplementation(err); // Error 500
+                else return res.boom.badImplementation(); // Error 500
+            });
+            
+            
+        }
+        else
+        {
+            return Product.paginate(
                 param,
                 option)
             .then(function(result){
-             res.send(result);
+             //console.log(JSON.stringify(result));
+                res.send(result);
              }).catch(function (err) {
-                    if (err) return res.boom.badImplementation(err); // Error 500
+                console.log(err);    
+                if (err) return res.boom.badImplementation(err); // Error 500
                     else return res.boom.badImplementation(); // Error 500
         });
+        }
+
+        
+        
+        
+        
         
   
   /*
@@ -462,6 +503,11 @@ router.get('/products/supplier',
                 description: 'id of the category (search into array)',
                 type: 'string', required: false
             },
+            cat_type: {
+                description: 'type of the category',
+                type: 'integer', required: false
+            },
+            
             supplierId: {
                 description: 'id of the supplier',
                 type: 'string', required: false
@@ -521,6 +567,73 @@ if (query.tags)
 }
 
 
+if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories == 'undefined')
+        {
+            console.log('--------------------------------------------');
+            
+            var Category = require('../models/categories').Category;
+
+            Category.find({"type": req.query.cat_type}, '_id').lean().then(function (result) {
+                //param.categories = {'$in': result};
+                
+                let cat  = [];
+                
+                result.forEach(element => {
+                    cat.push(element._id);
+                }); 
+
+                param.categories = {'$in': cat};
+
+                    
+                Product.aggregate(                                                                      
+                    {$match: param},
+                    { $group : {_id: {supplierId: "$supplierId"}
+                    , count : { $sum : 1 } 
+                    // , max : {$max: { $meta: "textScore" }}
+                    } } 
+                                    
+                ).then(function (result){
+                    var suppliersIds = _.map(result, function (el) {
+                            return el._id.supplierId+'';
+                            });
+   
+    
+                                return User.paginate(
+                                            {
+                                                _id: {$in: suppliersIds}
+                                            },
+                                            {
+                                                page: req.query.page,
+                                                limit: req.query.limit,
+                                                sort:{
+                                                    'rates.overall_rate': -1,        
+                                                    name: 1
+                                                            
+                                                    }
+                                            });
+                            }).then(function(result){
+                                res.send(result);
+                                    }).catch(function (err) {
+                                                if (err) return res.boom.badImplementation(err); // Error 500
+                                                else return res.boom.badImplementation(); // Error 500
+                                    });
+
+
+
+
+                
+
+            }).catch(function (err) {
+                if (err) return res.boom.badImplementation(err); // Error 500
+                else return res.boom.badImplementation(); // Error 500
+            });
+             
+}
+
+else
+{
+
+
 Product.aggregate(                                                                      
                     {$match: param},
                     { $group : {_id: {supplierId: "$supplierId"}
@@ -530,9 +643,8 @@ Product.aggregate(
                                     
                 )
 .then(function (result){
-   
     
-    var suppliersIds = _.map(result, function (el) {
+   var suppliersIds = _.map(result, function (el) {
         return el._id.supplierId+'';
         });
    
@@ -556,7 +668,7 @@ Product.aggregate(
                     if (err) return res.boom.badImplementation(err); // Error 500
                     else return res.boom.badImplementation(); // Error 500
         });
-        
+    }        
 
 
 });

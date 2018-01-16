@@ -18,6 +18,10 @@ router.get('/categories',
         name: 'GetCategories',
         group: 'Categories',
         fields: {
+            type: {
+                description: 'category types [1: products, 2: services]',
+                type: 'numeric', required: false
+            },
             page: {
                 description: 'The current page for pagination',
                 type: 'integer', required: false
@@ -33,7 +37,7 @@ router.get('/categories',
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
 
-        Category.paginate(query, {page: req.query.page, limit: req.query.limit}).then(function (entities) {
+        Category.paginate(query, {type: req.query.type, page: req.query.page, limit: req.query.limit}).then(function (entities) {
             if (entities.total === 0)
                 return res.boom.notFound('No Categories found for query ' + JSON.stringify(query)); // Error 404
             else
@@ -112,6 +116,10 @@ router.get('/categories/drop',
                 description: 'Name of the category',
                 type: 'string', required: false
             },
+            type: {
+                description: 'category types [1: products, 2: services]',
+                type: 'numeric', required: false
+            },
             liv: {
                 description: 'Number of level',
                 type: 'numeric', required: false
@@ -129,13 +137,20 @@ router.get('/categories/drop',
         var elem = {};
         var option = {};
         
-        elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '": 1, "description.'+ req.query.lang + '": 1, "css": 1}');
+        elem = JSON.parse('{"_id": 1, "name.'+ req.query.lang + '": 1, "description.'+ req.query.lang + '": 1, "css": 1, "type": 1}');
         
         if (req.query.name)
         {
             var name = new RegExp(req.query.name, "i");
             var str = 'name.'+ req.query.lang;
             param[str] = name; 
+        };
+
+        if (req.query.type)
+        {
+            var type = parseInt(req.query.type);
+            var str = 'type';
+            param[str] = type; 
         };
 
         if (req.query.liv)

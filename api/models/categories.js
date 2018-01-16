@@ -16,7 +16,8 @@ var joiCategorySchema = Joi.object({
     unspsc : Joi.object(),
     aida : Joi.object(),
     parent: Joi.objectId(),
-    css: Joi.object()
+    css: Joi.object(),
+    type: Joi.number()
 });
 
 var CategorySchema = new Schema(Joigoose.convert(joiCategorySchema),{'strict':'throw'});
