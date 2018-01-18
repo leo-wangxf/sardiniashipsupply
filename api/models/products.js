@@ -22,11 +22,11 @@ var joiProductSchema = Joi.object({
     tags: Joi.array().items(Joi.string()),
     price:Joi.number().default(0),
     deliveryIn:Joi.number(),
-    minNum:Joi.number().default(0),
-    maxNum:Joi.number().default(0),
-    unit: Joi.string().required(),
-    availability:Joi.number().default(0),
-    languaage: Joi.string(),
+    minNum:Joi.number().default(0).optional(),
+    maxNum:Joi.number().default(0).optional(),
+    unit: Joi.string().optional(),
+    availability:Joi.number().default(0).optional(),
+    language: Joi.string(),
     translation: Joi.array().items(Joi.object()),
     rates: Joi.object()
 });
