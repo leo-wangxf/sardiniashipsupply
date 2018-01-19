@@ -11,19 +11,30 @@ var email = require('../util/email');
 var Messaging = require('../util/messaging');
 var fs = require('fs');
 
+mailMsg = {};
+mailMsg["en"] = {};
+mailMsg["it"] = {};
+
+mailMsg["en"]["rfq.confirmedRequestMsg"] = "The customer has confirmed the Request";
+mailMsg["it"]["rfq.confirmedRequestMsg"] = "Il cliente ha confermato la Richiesta";
+
+mailMsg["en"]["rfq.acceptedRequestMsg"] = "The supplier has accepted the Request";
+mailMsg["it"]["rfq.acceptedRequestMsg"] = "Il fornitore ha accettato la Richiesta";
+
+mailMsg["en"]["rfq.rejectedRequestMsg"] = "The supplier has rejected the Request";
+mailMsg["it"]["rfq.rejectedRequestMsg"] = "Il fornitore ha rifiutato la Richiesta";
+
+mailMsg["en"]["rfq.gaveupRequestMsg"] = "The customer has gave up the Request";
+mailMsg["it"]["rfq.gaveupRequestMsg"] = "Il cliente ha annullato la Richiesta";
+
+mailMsg["en"]["rfq.modifiedRequestMsg"] = "The customer has modified the Request";
+mailMsg["it"]["rfq.modifiedRequestMsg"] = "Il cliente ha modificato la Richiesta";
+
+
+
 var mailNewMsgObj = {};
 mailNewMsgObj["en"] = "You have a new message";
 mailNewMsgObj["it"] = "Hai un nuovo messaggio";
-
-var mailMsgAccepted = {}
-mailMsgAccepted["en"] = "Request accepted";
-mailMsgAccepted["it"] = "Richiesta accettata";
-
-
-var mailMsgConfirmed = {}
-mailMsgConfirmed["en"] = "Request confermata";
-mailMsgConfirmed["it"] = "Richiesta confermata";
-
 
 /* GET all messages  */
 
@@ -196,11 +207,11 @@ router.post('/conversations/:id/messages',
             return Promise.reject("unknown user type");
           }
           var body = data.text;
-          if(data.text == "rfq.acceptedRequestMsg")
-            body = mailMsgAccepted["en"];
+          if(data.text.startsWith("rfq.") && mailMsg["en"][data.text] != undefined)
+          {
+            body = mailMsg["en"][data.text];
+          }
 
-          if(data.text == "rfq.confirmedRequestMsg")
-            body = mailMsgConfirmed["en"];
 
           var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
           body = template.replace("$$BODY_TITLE$$", mailNewMsgObj["en"]).replace("$$BODY$$", body);
