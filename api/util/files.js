@@ -177,10 +177,17 @@ function uploadFile(req, allowedMime)
         return reject(decodeError);
       }
       var r = {};
-      r.body = JSON.parse(body);
-      r.response = response;
-      r.parameters = parameters;
-      return resolve(r);
+      try
+      {
+        r.body = JSON.parse(body);
+        r.response = response;
+        r.parameters = parameters;
+        return resolve(r);
+      }
+      catch(error)
+      {
+        return error;
+      }
     });
 
     var fd = r.form();

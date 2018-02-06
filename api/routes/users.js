@@ -262,7 +262,8 @@ router.post('/users/actions/logo',
         }
 
         userVals = req.body.user;
-        return uu.getProfile(userId, userToken);        
+        return User.findOne({_id: require("mongoose").Types.ObjectId(userId)}).lean().exec();
+        //return uu.getProfile(userId, userToken);        
       }
       else
       {
@@ -273,7 +274,8 @@ router.post('/users/actions/logo',
       }
     }).then(function(result)
     {
-      fu.deleteFile(result.body.logo)
+      //fu.deleteFile(result.body.logo)
+      fu.deleteFile(result.logo)
 
       return fu.uploadFile(req, ["image"]);
     }).then(function(result)
@@ -282,7 +284,9 @@ router.post('/users/actions/logo',
       if(result.response.statusCode == 200)
       {
         logoId = result.body.filecode;
-        return tu.editUser(userId, userToken, {"user" :{"logo" : logoId}});
+        //return tu.editUser(userId, userToken, {"user" :{"logo" : logoId}});
+        var query = {_id: require("mongoose").Types.ObjectId(userId)};
+        return User.findOneAndUpdate(query, {"logo" : logoId}, {safe:true, new:true, upsert:true}).lean().exec();
       }
       else
       {
@@ -298,7 +302,7 @@ router.post('/users/actions/logo',
       }
     }).then(function(result)
     {
-      return res.status(result.response.statusCode).send(result.body);
+      return res.status(200).send(result);
     }).catch(function(err)
     {
       console.log(err);
@@ -457,12 +461,15 @@ router.put('/users',
       }
     }).then(function(done)
     {
-      return tu.editUser(userId, userToken, req.body);
+      var query = {"_id": require("mongoose").Types.ObjectId(userId)};
+      return User.findOneAndUpdate(query, req.body.user).exec();
+      //return tu.editUser(userId, userToken, req.body);
     }).then(function(result)
     {
-      return res.status(result.response.statusCode).send(result.body);
+      return res.status(200).send(result);
     }).catch(function(err)
     {
+      console.log(err);
       try
       {
         if(err.cause.details[0].type)
@@ -579,15 +586,49 @@ router.post('/users/signup',
     var password = req.body.password;
     var name = req.body.name;
     var type = req.body.type;
+
+    var obj = {
+      "email": email,
+      "type": type,
+      "name": name
+    }
+
+    var umsRet;
    
-    uu.signUp(name, email, password, type).then(function(result)
+    uu.signUp(email, password, type).then(function(result)
     {
-      return res.status(result.response.statusCode).send(result.body);
+      umsRet = result.body;
+      //==========================================================
+      if(result.response.statusCode == 201)
+      {
+        obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+        obj["id"] = obj["_id"];        
+        return User.create(obj);
+      }
+      else
+      {
+        var err = new Error();
+        err.result = result;
+        throw err;
+
+        //return res.status(result.response.statusCode).send(result.body);        
+      }
+    }).then(function(result)
+    {
+      console.log(result);
+      console.log(umsRet);
+      return res.status(201).send(umsRet);      
     }).catch(function(err)
     {
+      console.log(err);
       try
       {
-        if(err.cause.details[0].type)
+        if(err.result)
+        {
+          return res.status(err.result.response.statusCode).send(err.result.body);        
+        }
+
+        if(err.cause && err.cause.details[0].type)
         {
           return res.boom.badRequest(err.cause.details[0].message);
         }
@@ -649,11 +690,13 @@ router.get('/users/profile/:uid',
         userId = result.body.token._id;
         var userType = result.body.token.type;
 
-        return uu.getProfile(userId, userToken);
+        return User.findOne({_id: require("mongoose").Types.ObjectId(uid)}).lean().exec();
+        //return uu.getProfile(userId, userToken);
       }
     }).then(function(result)
     {
-      return res.status(result.response.statusCode).send(result.body);
+      //return res.status(result.response.statusCode).send(result.body);
+      return res.send(result);
     }).catch(function(err)
     {
       console.log(err);

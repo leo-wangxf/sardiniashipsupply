@@ -259,18 +259,18 @@ function signIn(email, password)
 
 
 
-function signUp(name, email, password, type)
+function signUp(email, password, type)
 {
   var options =
   {
     url: config.userMsUrl + "/users/signup",
     method: 'POST',
     json: true,
-    body: {"user" : {"name" : name, "email" : email, "password": password, "type": type}},
+    body: {"user" : {"email" : email, "password": password, "type": type}},
     headers:
     {
       'Authorization': 'Bearer ' + config.userMsToken,
-      'content-type': 'application/json'
+      'Content-type': 'application/json'
     }
   };
 
@@ -280,6 +280,7 @@ function signUp(name, email, password, type)
     {
       if(error)
       {
+        console.log(error);
         const decodeError = new Error();
         decodeError.message = error.message;
         decodeError.stack = error.stack;
