@@ -16,6 +16,7 @@ var conversations = require('./routes/conversations');
 var messages = require('./routes/messages');
 var requests = require('./routes/requests');
 var evaluations = require('./routes/evaluations');
+var admin = require('./routes/admin');
 var files = require('./routes/files');
 var config = require('propertiesmanager').conf;
 
@@ -31,6 +32,13 @@ var configs = {
 
 
     },
+    /*
+    production: {
+        dbHost: "seidue.crs4.it",
+        dbPort: "3996",
+        dbName: "port_broker"
+    }
+    */
     production: {
         dbHost: "seidue.crs4.it",
         dbPort: "3996",
@@ -101,7 +109,7 @@ app.use(prefix, files);
 app.use(prefix,  categories);
 app.use(prefix, products);
 app.use(prefix, evaluations);
-//app.use(prefix, test);
+app.use(prefix, admin);
 app.use(prefix, tokenMiddleware, messages);
 app.use(prefix, tokenMiddleware, requests);
 app.use(prefix, tokenMiddleware, conversations);

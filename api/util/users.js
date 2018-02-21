@@ -303,6 +303,49 @@ function signUp(email, password, type)
   });
 }
 
+function register(email, password, type, token)
+{
+  var options =
+  {
+    url: config.userMsUrl + "/users/",
+    method: 'POST',
+    json: true,
+    body: {"user" : {"email" : email, "password": password, "type": type}},
+    headers:
+    {
+      'Authorization': 'Bearer ' + token,
+      'Content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.post(options, function(error, response, body)
+    {
+      if(error)
+      {
+        console.log(error);
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
 
 function getProfile(userId, token)
 {
@@ -482,6 +525,7 @@ function getResetPasswordToken(uid)
 
 exports.getResetPasswordToken = getResetPasswordToken;
 exports.signIn = signIn;
+exports.register = register;
 exports.signUp = signUp;
 exports.getProfile = getProfile;
 exports.changePassword = changePassword;

@@ -268,7 +268,15 @@ router.post('/users/actions/logo',
       else
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -316,7 +324,7 @@ router.post('/users/actions/logo',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -455,7 +463,15 @@ router.put('/users',
       else
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -480,7 +496,7 @@ router.put('/users',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -534,7 +550,7 @@ router.post('/users/signin',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -636,7 +652,7 @@ router.post('/users/signup',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -681,10 +697,18 @@ router.get('/users/profile/:uid',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
         err.statusCode = result.response.statusCode;
         throw err;
-      }
+      }     
       else
       {
         userId = result.body.token._id;
@@ -710,7 +734,7 @@ router.get('/users/profile/:uid',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -770,7 +794,7 @@ router.post('/users/actions/resetpassword',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -838,7 +862,15 @@ router.post('/users/actions/askresetpassword',
       {
         console.log(result.body);
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -914,7 +946,15 @@ router.post('/users/actions/setpassword',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+       
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -940,7 +980,7 @@ router.post('/users/actions/setpassword',
 
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -1003,7 +1043,15 @@ router.get('/users/favorites',
       else
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+       
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1032,7 +1080,7 @@ router.get('/users/favorites',
       console.log(err);
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -1085,7 +1133,15 @@ router.post('/users/actions/favorites',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = result.body.error_message;
+        }
+        else
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1250,7 +1306,15 @@ router.delete('/users/actions/favorites/:supId',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1348,7 +1412,15 @@ router.get('/users/categories',
       else
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1376,7 +1448,7 @@ router.get('/users/categories',
       console.log(err);
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -1429,7 +1501,15 @@ router.post('/users/actions/categories',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1594,7 +1674,15 @@ router.delete('/users/actions/categories/:catId',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1691,7 +1779,15 @@ router.get('/users/certifications',
       else
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1713,7 +1809,7 @@ router.get('/users/certifications',
       console.log(err);
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
@@ -1785,7 +1881,15 @@ router.post('/users/actions/certifications',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1887,7 +1991,15 @@ router.delete('/users/actions/certifications/:name',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -1998,7 +2110,15 @@ router.post('/users/actions/attachment',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
@@ -2205,7 +2325,15 @@ router.delete('/users/actions/attachment/:file',
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
-        err.message = result.body.error_message;
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
         err.statusCode = result.response.statusCode;
         throw err;
       }
