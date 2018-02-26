@@ -5,6 +5,7 @@ var _ = require('underscore')._;
 var au = require('audoku');
 var Promise = require('bluebird');
 var User = require('../models/users').User;
+var Product = require('../models/products').Product;
 var tu = require('../util/token');
 var uu = require('../util/users');
 
@@ -12,6 +13,11 @@ var multer = require('multer');
 var fs = require('fs');
 var path = require('path');
 
+
+// creo una copia di joi in modo da poterla promisificare 
+// // senza intaccare quella usata negli altri file
+var Joi = _.extend({}, require('joi'));
+Joi.validate = Promise.promisify(Joi.validate, Joi);
 
 router.get('/admin/users',
   au.doku({
@@ -473,10 +479,15 @@ router.post('/admin/users/:id/actions/enable',
       });
     });
   });
-/*
-router.put('/users',
-  au.doku({
+
+
+router.put('/admin/users',
+  au.doku({  // json documentation
     "descritpion" : "Edit the profile of specified user",
+    "title": 'Update an user profile',
+    "group": "Admin",
+    "version": "1.0.0",
+    "name": "AdminUpdateProfile",
     "headers":
     {
       "Authorization":
@@ -488,86 +499,89 @@ router.put('/users',
     },
     "bodyFields":
     {
-      "userId":
+      "uid": 
       {
-        "description": "The id of the user you want to edit",
+        "description": "the id of the account you want to edit",
         "type": "string",
-        "required" : true
+        "required": true
       },
-      "name": 
+      "user": 
+      {
+        "description": 'The object that contains the user information',
+        "type": 'object', 
+        "required": true
+      },
+      "user.name": 
       {
         "description": 'The user name',
         "type": 'string', 
         "required": false
       },
-      "address": 
+      "user.address": 
       {
         "description": 'The user\'s address (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "logo": 
-      {
-        "description": 'The url of the user\'s logo (only for suppliers)',
-        "type": 'string', 
-        "required": false
-      },
-      "phone": 
+      "user.phone": 
       {
         "description": 'The user\' phone number',
         "type": 'integer', 
         "required": false
       },
-      "description": 
+      "user.description": 
       {
         "description": 'The business description (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "web": 
+      "user.web": 
       {
         "description": 'URL of user\'s website (only for suppliers)',
         "type": 'string', 
         "required": false
       },
-      "favoriteSupplier":
+      "user.favoriteSupplier":
       {
         "description": 'The list of the user\'s favorite supplier (only for customers)',
         // TODO tipo list al posto di string
         "type": 'string', 
         "required": false
       },
-      "certifications":
+      "user.references.name":
       {
-        "description": 'The list of the user\'s certifications (only for suppliers)',
-        // TODO tipo object al posto di string
-        "type": 'string', 
+        "decription": "The first name of the account's referent",
+        "type": "string",
         "required": false
       },
-      "categories":
+      "user.references.surname":
       {
-        "description": 'categories provided by the user (only for suppliers)',
-        // TODO tipo list al posto di string
-        "type": 'string', 
+        "description": "The last name of the account's referent",
+        "type": "string",
         "required": false
       },
-      "pIva":
+      "user.pIva":
       {
         "description": 'The user\'s VAT identification number (only for suppliers)',
         "type": 'string', 
         "required": false
-      },
-      "type":
+      }
+    },
+    "headers" :
+    {
+      "Authorization" :
       {
-        "description": 'The user\'s type (customer, supplier, admin)',
-        "type": 'string', 
-        "required": false
+        "description" : "The user token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
       }
     }
   }),
   function(req, res)
   {
+    var userId = req.body.uid;
     var token = req.token;
+
     if(token === undefined)
     {
       return res.boom.forbidden("Missing token");
@@ -585,61 +599,191 @@ router.put('/users',
         }
       }
 
-      var userId = req.body.user.id;
       var query = 
       {
         id: userId
       }
 
-      return User.find(query).limit(1).lean().exec();
-    }).then(function result)
+      return User.findOne(query).lean().exec();
+    }).then(function(result)
     {
 
       if(result.length == 0)
       {
         throw new Error("This user does not exists");
       }
+      var uType = result.type; 
 
-      
-      var schemaOpt = 
+
+      var schemaOpt =
       {
-        name: Joi.string().alphanum().min(3),
+        name: Joi.string().min(3),
         address: Joi.string().min(3),
         phone: Joi.number(),
-
-        favoriteSuppliers: Joi.array().items(Joi.string()),
-        logo: Joi.string().uri(),
-        description: Joi.string(),
-        web: Joi.string().uri(),
-        categories: Joi.array().items(Joi.number()),
-        pIva: Joi.number()
+        references: Joi.object().keys({name: Joi.string(), surname: Joi.string()})
       };
 
-      
 
-      var opt = 
+      if(uType === "customer")
       {
-        page: req.query.page,
-        limit: req.query.limit
-      };
+        schemaOpt.favoriteSuppliers = Joi.array().items(Joi.string());
+      }
+      else if(uType === "supplier")
+      {
+        schemaOpt.description = Joi.string();
+        schemaOpt.web = Joi.string().uri();
+        schemaOpt.pIva = Joi.number();
+      }
 
-      return User.paginate({}, opt);
+      var schema = Joi.object().keys(schemaOpt);
+      return Joi.validate(req.body.user, schema);
     }).then(function(result)
     {
-      res.send(result.docs);
+      var query = {"_id": require("mongoose").Types.ObjectId(userId)};
+      return User.findOneAndUpdate(query, req.body.user).exec();
+    }).then(function(result)
+    {
+      return res.status(200).send(result);
     }).catch(function(err)
     {
+      console.log(err);
       if(err.statusCode)
       {
-        return res.status(err.statusCode).send(result.body);
+        return res.status(err.statusCode).send(err.message);
       }
       else
       {
-        return res.boom.badImlementation(err);
+        return res.boom.badImplementation(err);
       }
     });
   });
-*/
+
+// DELETE
+router.delete('/admin/products/:id',
+  au.doku({  // json documentation
+    title: 'Delete a product by id',
+    version: '1.0.0',
+    name: 'AdminDeleteProduct',
+    group: 'Admin',
+    description: 'Delete a product by id',
+    params: {
+      id: {type: 'String', required: true, description: 'The product identifier'}
+    }
+  }),
+  function (req, res) 
+  {
+    var id = req.params.id;
+
+    var token = req.token;
+
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+
+      return Product.findOneAndRemove({_id: id});
+    }).then(function (entities) 
+    {     
+      if (_.isEmpty(entities))
+        res.boom.notFound('No entry with id ' + id); // Error 404
+      else
+        res.send(entities);  // HTTP 200 ok
+    }).catch(function (err) {
+      console.log(err);
+      if (err.name === 'ValidationError')
+        res.boom.badData(err.message); // Error 422
+      else if (err.name === 'CastError')
+        res.boom.badData('Id malformed'); // Error 422
+      else
+        res.boom.badImplementation(err);// Error 500
+    });
+  });
+
+
+// UPDATE
+router.put('/admin/products/:id',
+  au.doku({  // json documentation
+    title: 'Update a product by id',
+    version: '1.0.0',
+    name: 'AdminUpdateProduct',
+    group: 'Admin',
+    description: 'Update a product by id',
+    params: {
+      id: {type: 'String', required: true, description: 'The product identifier'}
+    },
+    bodyFields: {
+      name: {type: 'String', required: true, description: 'Name of product'},
+      description: {type: 'String', required: true, description: 'Description of product'},
+      deliveryIn: {type: 'integer', required: true, description: 'Number of days required for delivery '},
+      unit: {type: 'String', required: true, description: 'Unit of measurament of the product'},
+      supplierId: {type: 'ObjectId', required: true, description: 'Owner of the product [supplier Id]'},
+      translation: {type: 'Array', required: true, description: 'List of information in other languages '},     
+      availability: {type: 'Integer', required: true, description: 'Availability of products'},     
+      maxNum: {type: 'Integer', required: true, description: 'Maximum amount that can be ordered'},     
+      minNum: {type: 'Integer', required: true, description: 'Minimum amount that can be ordered'},     
+      price: {type: 'Float', required: true, description: 'Price per unity'},     
+      categories: {type: 'Array', required: true, description: 'Product categories'},
+      images: {type: 'Array', required: false, description: 'Product images'},
+      tags: {type: 'Array', required: false, description: 'Product tags'}
+    }
+  }),
+  function (req, res) 
+  {
+    if (_.isEmpty(req.body))
+      return res.boom.badData('Empty body'); // Error 422
+
+    var id = req.params.id;
+
+    var newVals = req.body; // body already parsed
+
+    var token = req.token;
+
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+
+      return Product.findOneAndUpdate({_id: id}, newVals).then(function (entities) 
+      {
+        if (_.isEmpty(entities))
+          res.boom.notFound('No entry with id ' + id); // Error 404
+        else
+          res.send(entities);  // HTTP 200 ok
+        }).catch(function (err) 
+        {
+          if (err.name === 'ValidationError')
+            res.boom.badData(err.message); // Error 422
+          else if (err.name === 'CastError')
+            res.boom.badData('Id malformed'); // Error 422
+          else
+            res.boom.badImplementation(err);// Error 500
+        });
+    });
+  });
 module.exports = router;
 
 
