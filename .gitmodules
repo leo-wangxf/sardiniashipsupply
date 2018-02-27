@@ -4,3 +4,6 @@
 [submodule "messagingms"]
 	path = messagingms
 	url = ../messagingms.git
+[submodule "trendsms"]
+	path = trendsms
+	url = ../trendsms.git
