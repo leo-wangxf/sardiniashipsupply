@@ -8,6 +8,7 @@ var User = require('../models/users').User;
 var Product = require('../models/products').Product;
 var tu = require('../util/token');
 var uu = require('../util/users');
+var _ = require('underscore')._;
 
 var multer = require('multer');
 var fs = require('fs');
@@ -21,7 +22,7 @@ Joi.validate = Promise.promisify(Joi.validate, Joi);
 
 router.get('/admin/users',
   au.doku({
-    "descritpion" : "Return the list of all users",
+    "descritpion" : "Returns the list of users that meet the criteria ",
     "fields":
     {
       "page":
@@ -35,7 +36,19 @@ router.get('/admin/users',
         "description": 'The current limit for pagination',
         "type": 'integer', 
         "required": false
-      }
+      },
+      "type": 
+      {
+        "description": 'Search criteria to limit user type (customer, supplier, admin)',
+        "type": 'string', 
+        "required": false
+      },
+      "email": 
+      {
+        "description": 'Search criteria to limit user email address. Can be partial',
+        "type": 'string', 
+        "required": false
+      },
     },
     "headers":
     {
@@ -79,11 +92,21 @@ router.get('/admin/users',
         page: req.query.page,
         limit: req.query.limit
       };
+    
+      var query = {};
 
-      return User.paginate({}, opt);
+      if(req.query.email)
+        query.email = { "$regex": req.query.email, "$options": "i" }
+
+      if(req.query.type)
+        query.type = req.query.type
+
+
+      //return User.paginate({"email": { "$regex": email, "$options": "i" }}, opt);
+      return User.paginate(query, opt);
     }).then(function(result)
     {
-      res.send(result.docs);
+      res.send(result);
     }).catch(function(err)
     {
       if(err.statusCode)
@@ -92,10 +115,186 @@ router.get('/admin/users',
       }
       else
       {
-        return res.boom.badImlementation(err);
+        return res.boom.badImplementation(err);
       }
     });
   });
+
+
+router.get('/admin/users/:uid',
+  au.doku({
+    "descritpion" : "Return the profile of the specified user",
+    "params":
+    {
+      "id":
+      {
+        "description": 'The id of the user to get',
+        "type": 'string',
+        "required": true
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description": "The admin token preceded by the word 'Bearer '",
+        "type": "string",
+        "required": true
+      }
+    }
+  }),
+  function(req, res)
+  {
+    var uid = req.params.uid.toString();
+    var token = req.token;
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        return err;
+      }
+
+
+      //var query = {"_id": require("mongoose").Types.ObjectId(uid)};
+      return User.findById(uid);
+    }).then(function(result)
+    {
+      if (_.isEmpty(result))
+        res.boom.notFound('No entry with uid ' + uid); // Error 404
+      else
+        res.send(result);  // HTTP 200 ok
+
+      //res.send(result.docs);
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err);
+      }
+    });
+  });
+
+
+router.get('/admin/users/actions/email/:email',
+  au.doku({
+    "descritpion" : "Return the profiles of the users that contains the specified string into email address",
+    "params":
+    {
+      "email":
+      {
+        "description": 'The string to search inside email addresses',
+        "type": 'string',
+        "required": true
+      }
+    },
+    "fields":
+    {
+      "page":
+      {
+        "description": 'The current page for pagination',
+        "type": 'integer', 
+        "required": false
+      },
+      "limit": 
+      {
+        "description": 'The current limit for pagination',
+        "type": 'integer', 
+        "required": false
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description": "The admin token preceded by the word 'Bearer '",
+        "type": "string",
+        "required": true
+      }
+    }
+  }),
+  function(req, res)
+  {
+    var email;
+    if(req.params.email)
+      email = req.params.email.toString();
+    else
+      return res.boom.badRequest("Missing email string");
+
+    var token = req.token;
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+      else
+      {
+        var err = new Error();
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        return err;
+      }
+      var opt = 
+      {
+        page: req.query.page,
+        limit: req.query.limit
+      };
+
+
+      //var query = {"_id": require("mongoose").Types.ObjectId(uid)};
+      return User.paginate({"email": { "$regex": email, "$options": "i" }}, opt);
+    }).then(function(result)
+    {
+      if (_.isEmpty(result))
+        res.boom.notFound('No entry with uid ' + uid); // Error 404
+      else
+        res.send(result);  // HTTP 200 ok
+
+      //res.send(result.docs);
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(result.body);
+      }
+      else
+      {
+        return res.boom.badImplementation(err);
+      }
+    });
+  });
+
 
 router.post('/admin/users',
   au.doku({
@@ -143,6 +342,9 @@ router.post('/admin/users',
     var password = req.body.password;
     var name = req.body.name;
     var type = req.body.type;
+
+    if(!name || name.trim() == "")
+      return res.boom.badRequest("Missing name");
 
     var obj = {
       "email": email,
