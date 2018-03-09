@@ -682,6 +682,89 @@ router.post('/admin/users/:id/actions/enable',
     });
   });
 
+router.post('/admin/users/:uid/actions/setpassword',
+  au.doku({  // json documentation
+    "description": "Change the user's password",
+    "title": "Set new password",
+    "group": "AdminUsers",
+    "version": "1.0.0",
+    "name": "AdminPostPassword",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description": "The admin token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    },
+    "bodyFields": 
+    {
+      "newPassword": 
+      {
+        "description" : 'The new user\'s password',
+        "type": 'string', 
+        "required": true
+      }
+    }
+  }),
+  function (req, res) {
+   
+    var userToken = req.token;
+    var newPassword = req.body.newpassword;
+    var userId = req.params.uid;
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+       
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+      else
+      {
+        return uu.getResetPasswordToken(userId);
+      }
+    }).then(function(result)
+    {
+      var rToken = result.body.reset_token;
+
+      //return uu.changePassword(userId, userToken, undefined, newPassword);
+      return uu.resetPassword(userId, newPassword, rToken);
+      
+    }).then(function(result)
+    {
+      return res.status(result.response.statusCode).send(result.body);
+    }).catch(function(err)
+    {
+      console.log(err);
+      try
+      {
+        if(err.cause.details[0].type)
+        {
+          return res.boom.badRequest(err.cause.details[0].message);
+        }
+      }catch(e2){console.log(e2)};
+
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err.message);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 
 router.put('/admin/users',
   au.doku({  // json documentation

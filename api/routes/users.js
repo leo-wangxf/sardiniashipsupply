@@ -747,7 +747,7 @@ router.get('/users/profile/:uid',
 router.post('/users/actions/resetpassword',
   au.doku({  // json documentation
     "description": "Change the password with a reset token",
-    "title": "Set new password wit a reset token",
+    "title": "Set new password with a reset token",
     "group": "Users",
     "version": "1.0.0",
     "name": "ResetPassword",
