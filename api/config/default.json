@@ -1,6 +1,11 @@
 {
   "production":
   {
+    "dbHost":"seidue.crs4.it",
+    "dbPort":"3996",
+    "dbName":"port_broker",
+
+
     "authMsUrl": "http://seidue.crs4.it/api/auth/v1",
     "authMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiY21jLWF1dGgiLCJlbmFibGVkIjp0cnVlLCJleHAiOjE4Mjg1MzI4NDkzMTd9.YlJKkf1Mf4k47x4eYclcqqp98oYuSuNlSGSQ5MZWTJY",
 

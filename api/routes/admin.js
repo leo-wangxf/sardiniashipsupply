@@ -997,6 +997,65 @@ router.delete('/admin/products/:id',
   });
 
 
+// GET
+router.get('/admin/products',
+  au.doku({  // json documentation
+    title: 'Get products by supplier',
+    version: '1.0.0',
+    name: 'AdminGetProducts',
+    group: 'Admin',
+    description: 'Get the list of products provided by a supplier',
+    params: {
+      sid: {type: 'String', required: true, description: 'The supplier id'}
+    }
+  }),
+  function (req, res) 
+  {
+    var sid = req.query.page;
+
+    if(sid === undefined)
+    {
+      return res.boom.badData("Missing supplier id");
+    }
+
+    var token = req.token;
+
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+
+      return Product.find({"supplierId": require("mongoose").Types.ObjectId(sid)});
+    }).then(function (entities) 
+    {     
+      if (_.isEmpty(entities))
+        res.boom.notFound('No entry with id ' + sid); // Error 404
+      else
+        res.send(entities);  // HTTP 200 ok
+    }).catch(function (err) {
+      console.log(err);
+      if (err.name === 'ValidationError')
+        res.boom.badData(err.message); // Error 422
+      else if (err.name === 'CastError')
+        res.boom.badData('Id malformed'); // Error 422
+      else
+        res.boom.badImplementation(err);// Error 500
+    });
+  });
+
+
 // UPDATE
 router.put('/admin/products/:id',
   au.doku({  // json documentation

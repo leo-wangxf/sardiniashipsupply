@@ -1,6 +1,10 @@
 {
   "production":
   {
+    "dbHost":"your_db_host",
+    "dbPort":"your_db_port",
+    "dbName":"your_db_name",
+
     "authMsUrl": "your_auth_service_url",
     "authMsToken": "your_auth_service_token",
 

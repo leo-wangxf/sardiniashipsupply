@@ -39,10 +39,11 @@ var configs = {
         dbName: "port_broker"
     }
     */
+
     production: {
-        dbHost: "seidue.crs4.it",
-        dbPort: "3996",
-        dbName: "port_broker"
+        dbHost: config.dbHost,
+        dbPort: config.dbPort,
+        dbName: config.dbName
     }
 };
 
