@@ -29,6 +29,13 @@
 
     "AccessControlAllowOrigin" : "*",
 
-    "frontendUrl": "http://seidue.crs4.it:3010"
+    "frontendUrl": "http://seidue.crs4.it:3010",
+
+    "socketBaseUrl": "seidue.crs4.it",
+    "socketPath": "/socket",
+
+    "messagingMsSocketBaseUrl": "seidue.crs4.it",
+    "messagingMsSocketPath": "/socket/messaging"
+
   }
 }

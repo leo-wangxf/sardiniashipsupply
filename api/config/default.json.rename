@@ -28,6 +28,12 @@
 
     "AccessControlAllowOrigin" : "*",
 
-    "frontendUrl": "your_website_home_url"
+    "frontendUrl": "your_website_home_url",
+
+    "socketBaseUrl": "your_socket_base_url",
+    "socketPath": "your_socket_path",
+
+    "messagingMsSocketBaseUrl": "your_messaging_ms_socket_base_url",
+    "messagingMsSocketPath": "your_messaging_ms_socket_path"
   }
 }

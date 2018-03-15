@@ -18,6 +18,12 @@ router.get('/sys/urls',
     urls.uploadMsUrl = config.uploadMsUrl;
     urls.messagingMsUrl = config.messagingMsUrl;
     urls.trendsMsUrl = config.trendsMsUrl;
+
+    urls.socketBaseUrl = config.socketBaseUrl;
+    urls.socketPath = config.socketPath;
+
+    urls.messagingMsSocketBaseUrl = config.messagingMsSocketBaseUrl;
+    urls.messagingMsSocketPath = config.messagingMsSocketPath;
     
     res.header("Content-Type",'application/json');
     return res.end(JSON.stringify(urls));

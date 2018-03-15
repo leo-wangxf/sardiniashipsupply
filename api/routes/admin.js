@@ -1011,7 +1011,7 @@ router.get('/admin/products',
   }),
   function (req, res) 
   {
-    var sid = req.query.page;
+    var sid = req.query.sid;
 
     if(sid === undefined)
     {
@@ -1037,7 +1037,7 @@ router.get('/admin/products',
         }
       }
 
-      return Product.find({"supplierId": require("mongoose").Types.ObjectId(sid)});
+      return Product.paginate({"supplierId": require("mongoose").Types.ObjectId(sid)});
     }).then(function (entities) 
     {     
       if (_.isEmpty(entities))
