@@ -9,6 +9,7 @@ var Product = require('../models/products').Product;
 var tu = require('../util/token');
 var uu = require('../util/users');
 var _ = require('underscore')._;
+var fu = require('../util/files');
 
 var multer = require('multer');
 var fs = require('fs');
@@ -1011,6 +1012,7 @@ router.get('/admin/products',
   }),
   function (req, res) 
   {
+    res.setHeader("content-type","application/json");
     var sid = req.query.sid;
 
     if(sid === undefined)
@@ -1043,15 +1045,7 @@ router.get('/admin/products',
       if (_.isEmpty(entities))
         res.boom.notFound('No entry with id ' + sid); // Error 404
       else
-        res.send(entities);  // HTTP 200 ok
-    }).catch(function (err) {
-      console.log(err);
-      if (err.name === 'ValidationError')
-        res.boom.badData(err.message); // Error 422
-      else if (err.name === 'CastError')
-        res.boom.badData('Id malformed'); // Error 422
-      else
-        res.boom.badImplementation(err);// Error 500
+        res.status(200).json(entities);  // HTTP 200 ok }).catch(function (err) {
     });
   });
 
@@ -1128,6 +1122,67 @@ router.put('/admin/products/:id',
         });
     });
   });
+
+// DELETE image
+router.delete('/admin/images/:iid',
+  au.doku({  // json documentation
+    title: 'Remove an image',
+    version: '1.0.0',
+    name: 'AdminDeleteImage',
+    group: 'Admin',
+    description: 'Delete an images by id',
+    params: {
+        iid: {type: 'String', required: true, description: 'The image identifier'}
+    }
+  }),
+  function (req, res) {
+    var iid = req.params.iid;
+
+    var token = req.token;
+
+    if(token === undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(token).then(function(result)
+    {
+      if(result.response.statusCode == 200 && result.body.valid === true)
+      {
+        var userType = result.body.token.type;
+
+        if(userType !== "admin")
+        {
+          return res.boom.forbidden("You are not authorized to perform that operation");
+        }
+      }
+
+      return fu.deleteFile(iid);
+    }).then(function(result) {
+      if(result.response.statusCode == 200)
+      {
+        return res.end(result.body);
+      }
+      else
+      {
+        var err = new Error("");
+        err.message = result.body.error_message;
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+    }).catch(function (err) {
+      console.log(err);
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
 module.exports = router;
 
 
