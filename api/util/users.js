@@ -218,13 +218,15 @@ function signIn(email, password)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/signin",
+    url: config.authMsUrl + "/authuser/signin",
+    //url: config.userMsUrl + "/users/signin",
     method: 'POST',
     json: true,
     body: {"username" : email, "password" : password},
     headers:
     {
-      'Authorization': 'Bearer ' + config.userMsToken,
+      //'Authorization': 'Bearer ' + config.userMsToken,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -263,13 +265,15 @@ function signUp(email, password, type)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/signup",
+    //url: config.userMsUrl + "/users/signup",
+    url: config.authMsUrl + "/authuser/signup",
     method: 'POST',
     json: true,
     body: {"user" : {"email" : email, "password": password, "type": type}},
     headers:
     {
-      'Authorization': 'Bearer ' + config.userMsToken,
+      //'Authorization': 'Bearer ' + config.userMsToken,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'Content-type': 'application/json'
     }
   };
@@ -303,17 +307,19 @@ function signUp(email, password, type)
   });
 }
 
-function register(email, password, type, token)
+function register(email, password, type)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/",
+    //url: config.userMsUrl + "/users/",
+    url: config.authMsUrl + "/authuser/signup",
     method: 'POST',
     json: true,
     body: {"user" : {"email" : email, "password": password, "type": type}},
     headers:
     {
-      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'Content-type': 'application/json'
     }
   };
@@ -347,6 +353,7 @@ function register(email, password, type, token)
   });
 }
 
+/*
 function getProfile(userId, token)
 {
   var options =
@@ -388,19 +395,21 @@ function getProfile(userId, token)
     });
   });
 }
+*/
 
-
-function resetPassword(email, password, token)
+function resetPassword(uid, password, token)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + email + "/actions/setpassword",
+    //url: config.userMsUrl + "/users/" + email + "/actions/setpassword",
+    url: config.authMsUrl + "/authuser/" + uid + "/actions/setpassword",
     method: 'POST',
     json: true,
     body: {"newpassword": password, "reset_token": token},
     headers:
     {
-      'Authorization': 'Bearer ' + config.userMsToken,
+      //'Authorization': 'Bearer ' + config.userMsToken,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -438,13 +447,15 @@ function changePassword(uid, token, oldPassword, newPassword)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + uid + "/actions/setpassword",
+    //url: config.userMsUrl + "/users/" + uid + "/actions/setpassword",
+    url: config.authMsUrl + "/authuser/" + uid + "/actions/setpassword",
     method: 'POST',
     json: true,
     body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
     headers:
     {
-      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -483,12 +494,14 @@ function getResetPasswordToken(uid)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + uid + "/actions/resetpassword",
+    //url: config.userMsUrl + "/users/" + uid + "/actions/resetpassword",
+    url: config.authMsUrl + "/authuser/" + uid + "/actions/resetpassword",
     method: 'POST',
     json: true,
     headers:
     {
-      'Authorization': 'Bearer ' + config.userMsToken,
+      //'Authorization': 'Bearer ' + config.userMsToken,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -522,12 +535,56 @@ function getResetPasswordToken(uid)
 }
 
 
+function deleteUser(uid)
+{
+  var options =
+  {
+    //url: config.userMsUrl + "/users/" + uid,
+    url: config.authMsUrl + "/authuser/" + uid,
+    method: 'DELETE',
+    json: true,
+    headers:
+    {
+      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + config.authMsToken,
+      'content-type': 'application/json'
+    }
+  };
+
+  return new Promise(function(resolve, reject)
+  {
+    request.delete(options, function(error, response, body)
+    {
+      if(error)
+      {
+        const decodeError = new Error();
+        decodeError.message = error.message;
+        decodeError.stack = error.stack;
+        return reject(decodeError);
+      }
+
+      var r = {};
+      try
+      {
+        r.body = JSON.parse(body);
+      }
+      catch(err)
+      {
+        r.body = body;
+      }
+
+      r.response = response;
+      return resolve(r);
+    });
+  });
+}
+exports.deleteUser = deleteUser;
 
 exports.getResetPasswordToken = getResetPasswordToken;
 exports.signIn = signIn;
 exports.register = register;
 exports.signUp = signUp;
-exports.getProfile = getProfile;
+//exports.getProfile = getProfile;
 exports.changePassword = changePassword;
 exports.resetPassword = resetPassword;
 

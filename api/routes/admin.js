@@ -381,13 +381,13 @@ router.post('/admin/users',
         return err;
       }
 
-      uu.register(email, password, type, token).then(function(result)
+      uu.register(email, password, type).then(function(result)
       {
         umsRet = result.body;
 
         if(result.response.statusCode == 201)
         {
-          obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+          obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
           obj["id"] = obj["_id"];        
           return User.create(obj);
         }
@@ -483,10 +483,10 @@ router.delete('/admin/users/:id',
         return err;
       }
 
-      tu.deleteUser(id, token).then(function(result)
+      uu.deleteUser(id).then(function(result)
       {
         resDel = result.body;
-        if(result.response.statusCode == 204)
+        if(result.response.statusCode == 200)
         {
           return User.findOneAndRemove({_id: id});
         }
@@ -582,7 +582,7 @@ router.post('/admin/users/:id/actions/disable',
         return err;
       }
 
-      tu.disableUser(id, token).then(function(result)
+      tu.disableUser(id).then(function(result)
       {
         return res.status(result.response.statusCode).send(result.body);
       }).catch(function(err)
@@ -658,7 +658,7 @@ router.post('/admin/users/:id/actions/enable',
         return err;
       }
 
-      tu.enableUser(id, token).then(function(result)
+      tu.enableUser(id).then(function(result)
       {
         return res.status(result.response.statusCode).send(result.body);
       }).catch(function(err)

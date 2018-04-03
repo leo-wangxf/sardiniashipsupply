@@ -111,11 +111,6 @@ app.use(prefix,  categories);
 app.use(prefix, products);
 app.use(prefix, evaluations);
 app.use(prefix, admin);
-app.use(prefix, tokenMiddleware, messages);
-app.use(prefix, tokenMiddleware, requests);
-app.use(prefix, tokenMiddleware, conversations);
-
-
 
 
 if (app.get("env") !== 'development') {
@@ -176,6 +171,9 @@ if (app.get("env") !== 'development') {
     });
 }
 
+app.use(prefix, tokenMiddleware, messages);
+app.use(prefix, tokenMiddleware, requests);
+app.use(prefix, tokenMiddleware, conversations);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     var err = new Error('Not Found');

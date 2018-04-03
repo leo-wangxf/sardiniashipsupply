@@ -540,22 +540,8 @@ router.post('/users/signin',
       return res.status(result.response.statusCode).send(result.body);
     }).catch(function(err)
     {
-      try
-      {
-        if(err.cause.details[0].type)
-        {
-          return res.boom.badRequest(err.cause.details[0].message);
-        }
-      }catch(e2){console.log(e2)};
-
-      if(err.statusCode)
-      {
-        return res.status(err.statusCode).send(err.message);
-      }
-      else
-      {
-        return res.boom.badImplementation(err); // Error 500
-      }
+      console.log(err);
+      return res.boom.badRequest(err);
     });
   }
 );
@@ -617,7 +603,8 @@ router.post('/users/signup',
       //==========================================================
       if(result.response.statusCode == 201)
       {
-        obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+        //obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+        obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
         obj["id"] = obj["_id"];        
         return User.create(obj);
       }
@@ -631,8 +618,6 @@ router.post('/users/signup',
       }
     }).then(function(result)
     {
-      console.log(result);
-      console.log(umsRet);
       return res.status(201).send(umsRet);      
     }).catch(function(err)
     {
@@ -694,6 +679,7 @@ router.get('/users/profile/:uid',
 
     tu.decodeToken(userToken).then(function(result)
     {
+
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         var err = new Error();
@@ -724,22 +710,9 @@ router.get('/users/profile/:uid',
     }).catch(function(err)
     {
       console.log(err);
-      try
-      {
-        if(err.cause.details[0].type)
-        {
-          return res.boom.badRequest(err.cause.details[0].message);
-        }
-      }catch(e2){console.log(e2)};
 
-      if(err.statusCode)
-      {
-        return res.status(err.statusCode).send(err.message);
-      }
-      else
-      {
-        return res.boom.badImplementation(err); // Error 500
-      }
+      return res.boom.badImplementation(err); // Error 500
+      
     });
   }
 );
@@ -779,27 +752,39 @@ router.post('/users/actions/resetpassword',
     var password = req.body.password;
     var resetToken = req.body.resetToken;
 
-    uu.resetPassword(email, password, resetToken).then(function(result)
+    User.findOne({"email": email}).lean().exec().then(function(result)
     {
-      return res.status(result.response.statusCode).send(result.body);
-    }).catch(function(err)
-    {
-      try
+      if( !result || result.length == 0)
       {
-        if(err.cause.details[0].type)
-        {
-          return res.boom.badRequest(err.cause.details[0].message);
-        }
-      }catch(e2){console.log(e2)};
+        var err = new Error();
+        err.message = "This email address isn't registered on our system";
+        err.statusCode = 404;
+        throw err;
+      }
+      userId = result._id;
 
-      if(err.statusCode)
+      uu.resetPassword(result._id, password, resetToken).then(function(result)
       {
-        return res.status(err.statusCode).send(err.message);
-      }
-      else
+        return res.status(result.response.statusCode).send(result.body);
+      }).catch(function(err)
       {
-        return res.boom.badImplementation(err); // Error 500
-      }
+        try
+        {
+          if(err.cause.details[0].type)
+          {
+            return res.boom.badRequest(err.cause.details[0].message);
+          }
+        }catch(e2){console.log(e2)};
+
+        if(err.statusCode)
+        {
+          return res.status(err.statusCode).send(err.message);
+        }
+        else
+        {
+          return res.boom.badImplementation(err); // Error 500
+        }
+      });
     });
   }
 );
@@ -839,10 +824,12 @@ router.post('/users/actions/askresetpassword',
         err.statusCode = 404;
         throw err;
       }
-      
-      return uu.getResetPasswordToken(email);
+      userId = result._id;
+
+      return uu.getResetPasswordToken(userId);
     }).then(function(result)
     {
+      console.log(result);
       var rToken = result.body.reset_token;
       var link = config.frontendUrl + "/page_reset_password.html?token=" + rToken + "&email=" + email;
 

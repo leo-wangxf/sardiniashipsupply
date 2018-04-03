@@ -52,6 +52,7 @@ function decodeToken(token)
   });
 }
 
+/*
 function editUser(uid, token, body)
 {
   var options =
@@ -94,7 +95,9 @@ function editUser(uid, token, body)
     });
   });
 }
+*/
 
+/*
 function loginUser(username, password)
 {
   var options =
@@ -137,62 +140,24 @@ function loginUser(username, password)
     });
   });
 }
+*/
 
 
-function deleteUser(uid, token)
+
+
+
+function disableUser(uid)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + uid,
-    method: 'DELETE',
-    json: true,
-    headers:
-    {
-      'Authorization': 'Bearer ' + token,
-      'content-type': 'application/json'
-    }
-  };
-
-  return new Promise(function(resolve, reject)
-  {
-    request.delete(options, function(error, response, body)
-    {
-      if(error)
-      {
-        const decodeError = new Error();
-        decodeError.message = error.message;
-        decodeError.stack = error.stack;
-        return reject(decodeError);
-      }
-
-      var r = {};
-      try
-      {
-        r.body = JSON.parse(body);
-      }
-      catch(err)
-      {
-        r.body = body;
-      }
-
-      r.response = response;
-      return resolve(r);
-    });
-  });
-}
-
-
-
-function disableUser(uid, token)
-{
-  var options =
-  {
-    url: config.userMsUrl + "/users/" + uid + "/actions/disable",
+    //url: config.userMsUrl + "/users/" + uid + "/actions/disable",
+    url: config.authMsUrl + "/authuser/" + uid + "/actions/disable",
     method: 'POST',
     json: true,
     headers:
     {
-      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -225,16 +190,18 @@ function disableUser(uid, token)
   });
 }
 
-function enableUser(uid, token)
+function enableUser(uid)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + uid + "/actions/enable",
+    //url: config.userMsUrl + "/users/" + uid + "/actions/enable",
+    url: config.authMsUrl + "/authuser/" + uid + "/actions/enable",
     method: 'POST',
     json: true,
     headers:
     {
-      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -269,9 +236,8 @@ function enableUser(uid, token)
 
 
 exports.decodeToken  = decodeToken;
-exports.editUser  = editUser;
-exports.loginUser = loginUser;
-exports.deleteUser = deleteUser;
+//exports.editUser  = editUser;
+//exports.loginUser = loginUser;
 exports.disableUser = disableUser;
 exports.enableUser = enableUser;
 
