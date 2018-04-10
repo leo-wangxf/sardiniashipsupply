@@ -1,6 +1,7 @@
 var express = require('express');
 var Users = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
+var Evaluation = require('../models/evaluations').Evaluation;
 //var util = require('util');
 var _ = require('underscore')._;
 var router = express.Router();
@@ -232,9 +233,15 @@ router.get('/conversations/:id',
               return Messaging.mergeMessagesTexts(ent.messages);
         }).then(function(msg){
              ent.messages = msg;
+             return ent; 
+        }).then(function(e)
+          {              
+            return Evaluation.findOne({conversationId:ObjectId(id)}).exec();
+          }).then(function(entity){
+            if(_.isEmpty(entity)){
+              ent.evaluated = false;
+            } else ent.evalutated = true;
              return res.send(ent);  // HTTP 200 ok
-
-
         }).catch(function (err) {
             console.log(err);
             if (err.name === 'CastError')
