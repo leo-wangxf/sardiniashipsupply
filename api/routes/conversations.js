@@ -240,7 +240,7 @@ router.get('/conversations/:id',
           }).then(function(entity){
             if(_.isEmpty(entity)){
               ent.evaluated = false;
-            } else ent.evalutated = true;
+            } else ent.evaluated = true;
              return res.send(ent);  // HTTP 200 ok
         }).catch(function (err) {
             console.log(err);
