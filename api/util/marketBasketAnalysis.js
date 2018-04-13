@@ -13,6 +13,17 @@ var Apriori = require('apriori');
 function apriori()
 {
   var transactions = [];
+  /*Conversations.aggregate(
+  [{
+    $group:
+    {
+      "_id": {
+                customer: "$customer", day:{$dayOfYear:"$dateIn"}, 
+                year:{$year:"$dateIn"}
+              },
+      "products": {$push:{request: "$requests", dateIn: "$dateIn"}}
+    }
+  }]).then(function(results){*/
   Conversations.aggregate(
   [{
     $group:
@@ -25,11 +36,11 @@ function apriori()
     }
   }]).then(function(results){
 
-
+    console.log(results);
     for(var i in results)
     {
       var transaction = [];
-      
+      if (results[i]._id.year== 2018){
       for(var j in results[i].products)
       {
         transaction = transaction.concat(results[i].products[j].request);
@@ -38,10 +49,11 @@ function apriori()
       transactions.push(transaction);
 
     }
+    }
     //console.log(transactions);
 
-    var minSupport = 0.00005;
-    var minConfidence = 0.0000000005;
+    var minSupport = 0.00000000000005;
+    var minConfidence = 0.0000000000005;
     var debugMode = false;
 
     var analysisResult = new Apriori.Algorithm(minSupport, minConfidence, debugMode).analyze(transactions);

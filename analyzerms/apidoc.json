@@ -1,0 +1,15 @@
+{
+  "name": "Cagliari Port 2020 Messaging API",
+  "title": "Caport2020MessagingAPI",
+  "version": "0.1.0",
+  "description": "APIs to handle Cagliari Port 2020 real-time messaging",
+  "url": "http://smartapi.crs4.it/api/messaging/v1",
+  "header": {
+    "title": "API Overview",
+    "filename": "header.md"
+  },
+  "footer": {
+    "title": "Maintained by CRS4",
+    "filename": "footer.md"
+  }
+}

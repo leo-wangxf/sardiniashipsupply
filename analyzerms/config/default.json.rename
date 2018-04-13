@@ -1,0 +1,21 @@
+{
+  "dev": {
+    "dbHost":"your_db_host",
+    "dbPort":"27017",
+    "dbName":"messages",
+    "enableCors":true,
+    "authUrl":"your_auth_service_url",
+    "auth_token":"your_auth_service_token",
+    "decodedTokenFieldName": "messagingdms"
+    },
+
+  "production": {
+    "dbHost":"your_db_host",
+    "dbPort":"27017",
+    "dbName":"messages",
+    "enableCors":true,
+    "authUrl":"your_auth_service_url",
+    "auth_token":"your_auth_service_token",
+    "decodedTokenFieldName": "messagingdms"
+  }
+}

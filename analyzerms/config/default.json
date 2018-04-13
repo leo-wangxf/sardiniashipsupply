@@ -1,0 +1,26 @@
+{
+  "dev": {
+    "dbHost":"seidue.crs4.it",
+    "dbPort":"3996",
+    "dbName":"port_analyzer",
+    "dbS3Host":"seidue.crs4.it",
+    "dbS3Port":"3996",
+    "dbS3Name":"port_broker",
+    "enableCors":true,
+    "authProtocol":"http",
+    "authUrl":"http://seidue.crs4.it/api/auth/v1",
+    "auth_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiQW5hbHl6ZXIiLCJlbmFibGVkIjp0cnVlLCJleHAiOjE4MzkyNDQ0ODUxMTZ9.BFXBcK7VJhjOhGfkIdgehrRAGblPzZ2tYHsrAQos35U"
+  },
+  "production": {
+    "dbHost":"seidue.crs4.it",
+    "dbPort":"3996",
+    "dbName":"port_analyzer",
+    "dbS3Host":"seidue.crs4.it",
+    "dbS3Port":"3996",
+    "dbS3Name":"port_broker",
+    "enableCors":true,
+    "authProtocol":"http",
+    "authUrl":"http://seidue.crs4.it/api/auth/v1",
+    "auth_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiQW5hbHl6ZXIiLCJlbmFibGVkIjp0cnVlLCJleHAiOjE4MzkyNDQ0ODUxMTZ9.BFXBcK7VJhjOhGfkIdgehrRAGblPzZ2tYHsrAQos35U"
+  }
+}

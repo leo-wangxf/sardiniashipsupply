@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+var debug = require('debug')('CP2020 analyzer microservice');
+var db = require("../models/db");
+//var _ = require('underscore')._;
+//var config = require('propertiesmanager').conf;
+
+db.connect(function(err){
+  if(err){
+    console.log("Unable to connect to DB, err:" +err);
+  }
+  else{
+    console.log("Connected to DB");
+  }
+
+});
+
+db.connectS3(function(err){
+  if(err){
+    console.log("Unable to connect to DB S3, err:" +err);
+  }
+  else{
+    console.log("Connected to DB S3");
+  }
+
+});
+
+process.on('SIGINT', function(code) {
+    console.log("Exiting App...");
+    db.disconnect(function(err,result){
+
+        if(err){
+            console.log('Unable to disconnect from database');
+        }
+
+        else{
+            console.log('Disconnected from database');
+       }
+
+       db.disconnectS3(function(err,result){
+
+           if(err){
+                 console.log('Unable to disconnect from database');
+           }
+
+          else{
+                 console.log('Disconnected from database');
+          }
+
+         process.exit(0);
+      });
+    });
+});
+
+
+
+
+var app = require('../app');
+app.set('port', process.env.PORT || 3010);
+var server;
+
+if (process.env.ENABLEHTTPS ){
+    app.set('port', 443);
+    //How to run Express over HTTPS
+    var https = require('https');
+    var fs = require('fs');
+
+    var options = {
+        key : fs.readFileSync('keys/key.pem'),
+        cert : fs.readFileSync('keys/key-cert.pem')
+    }
+    server = https.createServer(options, app).listen(app.get('port'), function() {
+        debug('Express server listening on port ' + server.address().port);
+        console.log('Express server HTTPS listening on port ' + server.address().port);
+    });
+}else {
+
+    server = app.listen(app.get('port'), function () {
+        console.log('Express server listening on port ' + server.address().port);
+        debug('Express server listening on port ' + server.address().port);
+    });
+}
+
+
+

@@ -1,0 +1,42 @@
+{
+  "name": "analyzer-ms",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "author": "",
+  "dependencies": {
+    "apriori": "^1.0.7",
+    "async": "^2.5.0",
+    "bluebird": "^3.5.1",
+    "body-parser": "~1.15.1",
+    "debug": "~2.2.0",
+    "express": "^4.13.4",
+    "express-boom": "^1.0.0",
+    "joi": "^10.0.1",
+    "joi-objectid": "^2.0.0",
+    "joigoose": "^1.5.7",
+    "minimist": "^1.2.0",
+    "mongoose": "^4.5.5",
+    "mongoose-paginate": "^5.0.0",
+    "morgan": "~1.7.0",
+    "propertiesmanager": "^1.0.4",
+    "request": "^2.83.0",
+    "socket.io": "^1.5.1",
+    "tokenmanager": "^1.0.24",
+    "underscore": "^1.8.3"
+  },
+  "description": "Per avviare l'applicazione:",
+  "main": "app.js",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/cp2020/messagingms.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/cp2020/messagingms/issues"
+  },
+  "homepage": "https://gitlab.com/cp2020/messagingms#README"
+}
