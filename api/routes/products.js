@@ -136,7 +136,7 @@ router.put('/products/:id',[tokenMiddleware,
 
 
         //Product.findByIdAndUpdate(id, newVals).then(function (entities) {
-        Product.findOneAndUpdate({_id: id, supplierId:  supId}, newVals).then(function (entities) {
+        Product.findOneAndUpdate({_id: id, supplierId:  supId}, newVals, {"new": true}).then(function (entities) {
 
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404

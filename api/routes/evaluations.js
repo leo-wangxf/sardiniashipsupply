@@ -135,6 +135,7 @@ router.post('/evaluations', [tokenMiddleware,
     })],
     function (req, res) {
 	console.log('\nINSIDE EVALUATION POST\n');
+        var evl;
 
         if (_.isEmpty(req.body))
             return res.boom.badData("Empty body"); // Error 422
@@ -171,6 +172,7 @@ router.post('/evaluations', [tokenMiddleware,
 	       params['to'] = conv.supplier;
 	       console.log('\n\nparams to create evaluations are:' + params);
                Evaluation.create(params).then(function (entities) {
+                 evl = entities;
 		       return utilUser.addRates(conv.supplier, {"product_rate" : req.body["product_rate"], "delivery_rate" : 
 			       req.body["delivery_rate"], "overall_rate" : req.body["overall_rate"], 
 			       "customer_service_rate": req.body["customer_service_rate"],
@@ -184,7 +186,7 @@ router.post('/evaluations', [tokenMiddleware,
                    console.log('in entities from is ' + entities['from']);
                    console.log('in entities conversation id is ' + entities['conversationId']);
 		   
-                   return res.status(201).send(entities);  // HTTP 201, evaluation successfully created
+                   return res.status(201).send(evl);  // HTTP 201, evaluation successfully created
 	       }
                }).catch(function (err) {
 	           console.log('server side error name is ' + err.name);

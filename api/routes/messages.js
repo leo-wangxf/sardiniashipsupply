@@ -219,7 +219,7 @@ router.post('/conversations/:id/messages',
           Users.findById(uid, "email").lean().then(function(result){
             //console.log("send to: " + result.email);
             //email.sendMail(result.email, "You have a new message", body, undefined, undefined, "Cagliari Port 2020")
-            email.sendMail(result.email, mailNewMsgObj["en"], undefined, body, undefined, "Cagliari Port 2020")
+            email.sendMail(result.email, mailNewMsgObj["en"], undefined, body, undefined, "Cagliari Port 2020")            
             .then(function(result)
               {
                 //console.log(result);

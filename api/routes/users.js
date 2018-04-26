@@ -647,7 +647,7 @@ router.post('/users/signup',
   }
 );
 
-router.get('/users/profile/:uid',
+router.get('/users/profile/',
   au.doku({  // json documentation
     "description": 'Get user profile info',
     "title": 'Get user info',
@@ -656,12 +656,6 @@ router.get('/users/profile/:uid',
     "name": "getProfile",
     "params": 
     {
-      "uid":
-      {
-        "description" : "The id of the user who want to retrieve information",
-        "type" : "string",
-        "required" : true
-      }
     },
     "headers" :
     {
@@ -674,8 +668,7 @@ router.get('/users/profile/:uid',
     }
   }),
   function (req, res) {
-    var uid = req.params.uid    
-    var userToken = req.token;
+    var userToken = req.token;    
 
     tu.decodeToken(userToken).then(function(result)
     {
@@ -700,7 +693,7 @@ router.get('/users/profile/:uid',
         userId = result.body.token._id;
         var userType = result.body.token.type;
 
-        return User.findOne({_id: require("mongoose").Types.ObjectId(uid)}).lean().exec();
+        return User.findOne({_id: require("mongoose").Types.ObjectId(userId)}).lean().exec();
         //return uu.getProfile(userId, userToken);
       }
     }).then(function(result)
@@ -1233,7 +1226,7 @@ router.post('/users/actions/favorites',
       }
       else
       {
-        return res.send(result);
+        return res.send(result.favoriteSupplier);
       }
     }).catch(function(err)
     {
@@ -1332,7 +1325,7 @@ router.delete('/users/actions/favorites/:supId',
       }
       else
       {
-        return res.send(result);
+        return res.send(result.favoriteSupplier);
       }
     }).catch(function(err)
     {

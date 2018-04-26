@@ -53,7 +53,7 @@ exports.connect = function connect(callback)
 
 exports.disconnect = function disconnect(callback)
 {
-	conn_ms.close(callback);
+	connections.ms.close(callback);
 }; 
 
 var dbS3Url = conf.dbS3Host + ':' + conf.dbS3Port + '/' + conf.dbS3Name; 
@@ -99,7 +99,7 @@ exports.connectS3 = function connect(callback)
 
 exports.disconnectS3 = function disconnect(callback)
 {
-	conn_S3.close(callback);
+	connections.S3.close(callback);
 }; 
 
 exports.connections = connections;

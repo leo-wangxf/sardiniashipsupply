@@ -122,9 +122,7 @@ router.post('/files/actions/attachments',[tokenMiddleware,
      
     }).then(function(result)
     {
-      //console.log(result);
-
-      return res.end(result.body);
+      return res.send(result.attachments);
     }).catch(function(err)
     {
       console.log(err);
@@ -303,8 +301,10 @@ router.delete('/files/actions/attachment/:fid',[tokenMiddleware,
 
     var supId = require("mongoose").Types.ObjectId(req.user.id);
     var update = {"$pull" : {"attachments.files": {"id": fid}}};
+    var ge;
 
-    User.findOneAndUpdate({_id: supId, "attachments.files":{$elemMatch: {id: fid}}}, update).lean().exec().then(function (entities) {
+    User.findOneAndUpdate({_id: supId, "attachments.files":{$elemMatch: {id: fid}}}, update, {"new": true}).lean().exec().then(function (entities) {
+      ge =  entities;
       if (_.isEmpty(entities))
       {
         var err = new Error("");
@@ -317,7 +317,7 @@ router.delete('/files/actions/attachment/:fid',[tokenMiddleware,
     }).then(function(result) {
       if(result.response.statusCode == 200)
       {
-        return res.end(result.body);
+        return res.send(ge.attachments);
       }
       else
       {
