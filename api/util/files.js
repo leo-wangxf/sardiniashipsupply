@@ -40,7 +40,7 @@ function getFile(fid, tag)
   });
 }
 
-function deleteFile(iid)
+function deleteFile(iid, token)
 {
   var options =
   {
@@ -48,7 +48,8 @@ function deleteFile(iid)
     methods: 'DELETE', 
     headers:
     {
-      'Authorization': 'Bearer ' + config.uploadMsToken
+      'Authorization': 'Bearer ' + token
+      //'Authorization': 'Bearer ' + config.uploadMsToken
     }
   }
 
@@ -79,7 +80,7 @@ function deleteFile(iid)
 }
 
 
-function uploadFile_old(req, res)
+function uploadFile_old(req, res, token)
 {
   var options =
   {
@@ -87,7 +88,8 @@ function uploadFile_old(req, res)
     method: "POST",
     headers:
     {
-      'Authorization': 'Bearer ' + config.uploadMsToken,
+      //'Authorization': 'Bearer ' + config.uploadMsToken,
+      'Authorization': 'Bearer ' + token,
       "transfer-encoding": "chunked"
     }
   }
@@ -149,7 +151,7 @@ function uploadFile_old(req, res)
 }
 
 
-function uploadFile(req, allowedMime)
+function uploadFile(req, allowedMime, token)
 {
   var options =
   {
@@ -157,7 +159,8 @@ function uploadFile(req, allowedMime)
     method: "POST",
     headers:
     {
-      'Authorization': 'Bearer ' + config.uploadMsToken,
+      //'Authorization': 'Bearer ' + config.uploadMsToken,
+      'Authorization': 'Bearer ' + token,
       "transfer-encoding": "chunked"
     }
   }

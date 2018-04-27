@@ -86,6 +86,7 @@ router.post('/files/actions/attachments',[tokenMiddleware,
   })],
   function(req, res) {
     res.setHeader("Content-Type", "application/json");
+    var userToken = req.token;
 
     var userType = req.user.type;
 
@@ -94,7 +95,7 @@ router.post('/files/actions/attachments',[tokenMiddleware,
       return res.boom.forbidden("Only suppliers can use this function");
     }
 
-    fu.uploadFile(req, ["application/pdf", "application/x-pdf"]).then(function(result)
+    fu.uploadFile(req, ["application/pdf", "application/x-pdf"], userToken).then(function(result)
     {
       if(result.response.statusCode == 200)
       {
@@ -193,9 +194,10 @@ router.post('/files',[tokenMiddleware,
     }
   })],
   function(req, res) { 
+    var userToken = req.token;
     res.setHeader("Content-Type", "application/json");
 
-    fu.uploadFile(req, ["image"]).then(function(result)
+    fu.uploadFile(req, ["image"], userToken).then(function(result)
     {
       if(result.response.statusCode == 200)
       {
@@ -247,6 +249,7 @@ router.delete('/files/actions/imageproduct/:iid/:pid',[tokenMiddleware,
     var iid = req.params.iid;
 
     var supId = require("mongoose").Types.ObjectId(req.user.id);
+    var userToken = req.token;
 
     //Product.findByIdAndUpdate(id, newVals).then(function (entities) {
     Product.find({_id: pid, supplierId:  supId, images:{$elemMatch: {imageId: iid}}}).limit(1).lean().exec().then(function (entities) {
@@ -258,7 +261,7 @@ router.delete('/files/actions/imageproduct/:iid/:pid',[tokenMiddleware,
         throw err;
       }
 
-      return fu.deleteFile(iid);
+      return fu.deleteFile(iid, userToken);
     }).then(function(result) {
       if(result.response.statusCode == 200)
       {
