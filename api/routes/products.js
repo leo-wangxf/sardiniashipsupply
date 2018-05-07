@@ -7,6 +7,7 @@ var router = express.Router();
 var au = require('audoku');
 var mongoose = require('mongoose');
 var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
+var fu = require('../util/files');
 
 // INSERT PRODUCT
 
@@ -170,6 +171,7 @@ router.delete('/products/:id',[tokenMiddleware,
     function (req, res) {
 
         var id = req.params.id;
+        var userToken = req.token;
 
         var supId = require("mongoose").Types.ObjectId(req.user.id);
 
@@ -179,7 +181,20 @@ router.delete('/products/:id',[tokenMiddleware,
             if (_.isEmpty(entities))
                 res.boom.notFound('No entry with id ' + id); // Error 404
             else
+            {
+                try
+                {
+                  for(var p in entities.images)
+                  {
+                    fu.deleteFile(entities.images[p].imageId, userToken);
+                  }
+                }
+                catch(err)
+                {
+                }
+                
                 res.send(entities);  // HTTP 200 ok
+            }
         }).catch(function (err) {
             if (err.name === 'ValidationError')
                 res.boom.badData(err.message); // Error 422
