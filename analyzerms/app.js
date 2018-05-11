@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const boom = require('express-boom');
 const app = express();
 const marketBasketAnalysis = require('./routes/marketBasketAnalysis');
+const ahp = require('./routes/ahp');
 const config = require('propertiesmanager').conf;
 const db = require("./models/db");
 
@@ -36,6 +37,7 @@ if (app.get('env') === 'dev' || app.get('env') === 'test' ) {
 //routes
 app.use('/doc', express.static('doc',{root:'doc'}));
 app.use('/', marketBasketAnalysis);
+app.use('/', ahp);
 
 
 // catch 404 and forward to error handler
