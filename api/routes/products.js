@@ -186,7 +186,13 @@ router.delete('/products/:id',[tokenMiddleware,
                 {
                   for(var p in entities.images)
                   {
-                    fu.deleteFile(entities.images[p].imageId, userToken);
+                    if(entities.images[p].imageId == undefined)
+                    {
+                    }
+                    else
+                    {
+                      fu.deleteFile(entities.images[p].imageId, userToken);
+                    }
                   }
                 }
                 catch(err)
