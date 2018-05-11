@@ -285,7 +285,7 @@ router.post('/users/actions/logo',
       //fu.deleteFile(result.body.logo)
       fu.deleteFile(result.logo)
 
-      return fu.uploadFile(req, ["image"]);
+      return fu.uploadFile(req, ["image"], userToken);
     }).then(function(result)
     {
 
