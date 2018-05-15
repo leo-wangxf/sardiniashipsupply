@@ -618,7 +618,12 @@ if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories 
                             return el._id.supplierId+'';
                             });
    
-    
+                            var sort_criteria = [["rates.ahprank", -1],
+                                                 ["bayesian_overall_rate", -1],    
+                                                 ["name", 1]]    
+                            /*var sort_criteria = {"rates.overall_rate": -1,
+                                                 name:1
+                                                }*/    
                                 return User.paginate(
                                             {
                                                 _id: {$in: suppliersIds}
@@ -626,11 +631,8 @@ if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories 
                                             {
                                                 page: req.query.page,
                                                 limit: req.query.limit,
-                                                sort:{
-                                                    'rates.overall_rate': -1,        
-                                                    name: 1
+                                                sort: sort_criteria
                                                             
-                                                    }
                                             });
                             }).then(function(result){
                                 res.send(result);
@@ -670,6 +672,9 @@ Product.aggregate(
         });
    
     
+       var sort_criteria = [["rates.ahprank", -1],
+                            ["bayesian_overall_rate", -1],    
+                            ["name", 1]]    
     return User.paginate(
                 {
                     _id: {$in: suppliersIds}
@@ -677,11 +682,7 @@ Product.aggregate(
                 {
                     page: req.query.page,
                     limit: req.query.limit,
-                    sort:{
-                        'rates.overall_rate': -1,        
-                        name: 1
-                                 
-                         }
+                    sort: sort_criteria
                 });
 }).then(function(result){
       res.send(result);
