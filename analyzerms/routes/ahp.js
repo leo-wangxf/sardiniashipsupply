@@ -152,6 +152,9 @@ router.post('/ahp', [security.authWrap], (req, res, next) => {
     for(let key in analyticContext){
       console.log(`${key}: `, analyticContext[key], '\n');
     }*/
+    for(var id in output.rankedScoreMap){
+       User.findByIdAndUpdate(id, {$set : {"rates.ahprank":output.rankedScoreMap[id]}},{new:true}).exec();
+    }
 
 
     return res.status(200).send("{STATUS: 'OK'}"); // HTTP 201 created

@@ -95,22 +95,25 @@ router.post('/files/actions/attachments',[tokenMiddleware,
       return res.boom.forbidden("Only suppliers can use this function");
     }
 
-    fu.uploadFile(req, ["application/pdf", "application/x-pdf"], userToken).then(function(result)
+    var userId = req.user.id;
+    var query = {_id: require("mongoose").Types.ObjectId(userId)};
+
+    // for back-compatibility
+    User.findOneAndUpdate(query, {"$addToSet": {"attachments": {"files": []}}}).exec().catch(function(err){
+      return;
+    }).then(function(d)
+    {
+      return fu.uploadFile(req, ["application/pdf", "application/x-pdf"], userToken)
+    }).then(function(result)
     {
       if(result.response.statusCode == 200)
       {
         var fileId = result.body["filecode"];
-        var userId = req.user.id;
-        var query = {_id: require("mongoose").Types.ObjectId(userId)};
+
+
         var fileName = result.parameters.fileName;
         var update = {"$push" : {"attachments.files": {"id": fileId, "name" : fileName}}};
  
-        try
-        {
-          User.findOneAndUpdate(query, {"$addToSet": {"attachments": {"files": []}}}).exec();
-        }
-        catch(er2){}
-
         return User.findOneAndUpdate(query, update, {safe: true, new: true}).lean().exec();
       }
       else
@@ -301,12 +304,13 @@ router.delete('/files/actions/attachment/:fid',[tokenMiddleware,
   })],
   function (req, res) {
     var fid = req.params.fid;
+    var userToken = req.token
 
     var supId = require("mongoose").Types.ObjectId(req.user.id);
     var update = {"$pull" : {"attachments.files": {"id": fid}}};
     var ge;
 
-    User.findOneAndUpdate({_id: supId, "attachments.files":{$elemMatch: {id: fid}}}, update, {"new": true}).lean().exec().then(function (entities) {
+    User.findOneAndUpdate({_id: supId, "attachments.files":{$elemMatch: {id: fid}}}, update, {"new": true}).then(function (entities) {
       ge =  entities;
       if (_.isEmpty(entities))
       {
@@ -316,7 +320,7 @@ router.delete('/files/actions/attachment/:fid',[tokenMiddleware,
         throw err;
       }
 
-      return fu.deleteFile(fid);
+      return fu.deleteFile(fid, userToken);
     }).then(function(result) {
       if(result.response.statusCode == 200)
       {
