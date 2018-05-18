@@ -200,7 +200,7 @@ router.post('/files',[tokenMiddleware,
     var userToken = req.token;
     res.setHeader("Content-Type", "application/json");
 
-    fu.uploadFile(req, ["image"], userToken).then(function(result)
+    fu.uploadFile(req, ["image"], userToken, 2).then(function(result)
     {
       if(result.response.statusCode == 200)
       {
