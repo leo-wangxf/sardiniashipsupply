@@ -606,14 +606,14 @@ if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories 
                 param.categories = {'$in': cat};
 
                     
-                Product.aggregate(                                                                      
+                Product.aggregate([                                                                      
                     {$match: param},
                     { $group : {_id: {supplierId: "$supplierId"}
                     , count : { $sum : 1 } 
                     // , max : {$max: { $meta: "textScore" }}
                     } } 
                                     
-                ).then(function (result){
+                ]).then(function (result){
                     var suppliersIds = _.map(result, function (el) {
                             return el._id.supplierId+'';
                             });
@@ -657,14 +657,14 @@ else
 {
 
 
-Product.aggregate(                                                                      
+Product.aggregate([                                                                      
                     {$match: param},
                     { $group : {_id: {supplierId: "$supplierId"}
                     , count : { $sum : 1 } 
                     // , max : {$max: { $meta: "textScore" }}
                     } } 
                                     
-                )
+                ])
 .then(function (result){
     
    var suppliersIds = _.map(result, function (el) {

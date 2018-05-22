@@ -411,11 +411,11 @@ router.get('/users/supplier/:id/evaluations/avg_overall_rate', [tokenMiddleware,
 	var uid = req.params.id.toString(); // id of the supplier
 	var suppid = mongoose.Types.ObjectId(uid); // id of the supplier
 
-        Evaluation.aggregate( {$match:{to:suppid}}, 
+        Evaluation.aggregate([ {$match:{to:suppid}}, 
 
 		{$group:{_id:"$to"
 		, count:{$avg:"$overall_rate"}}}
-	)
+	])
 	.exec().then(function(average_overall_rate) {
 		console.log(average_overall_rate);
 		if (_.isEmpty(average_overall_rate)) {

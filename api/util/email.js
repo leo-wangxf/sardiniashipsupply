@@ -45,6 +45,9 @@ function sendMail(to, subject, bodyText, bodyHtml, from, fromName)
   }
 
 
+  if(!config.mailerMsUrl.endsWith("/"))
+    config.mailerMsUrl += "/";
+
   // Object of options.
   var options = {
     url: config.mailerMsUrl + 'email',
