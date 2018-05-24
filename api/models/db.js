@@ -5,7 +5,7 @@ var debug = require('debug')('models:db');
 
 var conf = app.get("conf");
 
-var dbUrl = conf.dbHost + ':' + conf.dbPort + '/' + conf.dbName;
+var dbUrl = "mongodb://" + conf.dbHost + ':' + conf.dbPort + '/' + conf.dbName;
 
 var options = {
     server: {socketOptions: {keepAlive: 1, connectTimeoutMS: 30000}}
