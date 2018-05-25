@@ -18,7 +18,7 @@ var joiProductSchema = Joi.object({
     description: Joi.string().required(),
     supplierId: Joi.objectId().meta({type: 'ObjectId', ref: 'User'}),
     categories: Joi.array().items(Joi.objectId().meta({type: 'ObjectId', ref: 'Category'}).min(1).max(4)),  
-    images:Joi.array().items(Joi.object()),
+    images:Joi.array().items({imageId:Joi.string().required()}),
     tags: Joi.array().items(Joi.string()),
     price:Joi.number().default(0),
     deliveryIn:Joi.number(),
@@ -27,7 +27,7 @@ var joiProductSchema = Joi.object({
     unit: Joi.string().optional(),
     availability:Joi.number().default(0).optional(),
     language: Joi.string(),
-    translation: Joi.array().items(Joi.object()),
+    translation: Joi.array().items({language:Joi.string(), name:Joi.string().empty(''), description:Joi.string().empty('')}),
     rates: Joi.object()
 });
 
