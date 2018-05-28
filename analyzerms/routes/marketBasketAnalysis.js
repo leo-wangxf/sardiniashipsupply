@@ -116,7 +116,7 @@ router.post('/marketBasketAnalysis', [security.authWrap], (req, res, next) => {
     //console.log(JSON.stringify(analysisResult.frequentItemSets));
     associationRules = analysisResult.associationRules; 
     
-    return MBA.update({"valid": true}, {"valid": false});
+    return MBA.update({"valid": true}, {"valid": false}, {multi: true});
   }).then(function(results){
     for(var i in associationRules)
     {
