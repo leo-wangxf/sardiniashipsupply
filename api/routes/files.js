@@ -48,6 +48,11 @@ router.get('/files/:fid',
     {
       if(result.response.statusCode == 200)
       {
+        if(result.response.headers["content-type"])
+        {                                          
+          res.set("content-type", result.response.headers["content-type"]);
+        }
+
         return res.end(new Buffer(result.body, 'binary' ));
       }
       else

@@ -306,14 +306,56 @@ function uploadFile(req, allowedMime, token, expectedFiles)
     {   
       if(part.filename)
       {
-        if(allowedMime == undefined)
+        magic(part, function (err, mime, output) 
+        {            
+          if (err) return reject(err);
+
+          options.headers["content-type"] = mime;
+
+          var allowed = false;
+
+          if(allowedMime)
           {
-            fd2.append(part.name, part, {filename: part.filename});            
+            for(var i in allowedMime)
+            {  
+              if(allowedMime[i].indexOf("/") > -1)
+              {                
+              // check if strings are equals (ignore case)
+                var re = new RegExp("^" + allowedMime[i] + "$", "i");
+                console.log(mime.type);
+                if(re.test(mime.type))
+                {
+                  allowed = true;
+                  break;
+                }             
+              }
+              else
+              { 
+                // check if  mime.type starts with allowedMime[i] (ignore case)
+                // fastest method
+                var re = new RegExp("^" + allowedMime[i], "i");
+                if(re.test(mime.type))
+                {
+                  allowed = true;
+                  break;
+                }
+              }
+            }          
+          }
+          else
+          {
+            allowed = true;
+          }
+
+          if(allowed)
+          {
+            fd2.append(part.name, output, {filename: part.filename});
             parameters.fileName = part.filename;
             count++;
             
+
             if(! expectedFiles || (count === expectedFiles))
-            { 
+            {   
               //options.formData = fd2;
               var r = request.post(options, function(error, response, body)
               {
@@ -339,88 +381,16 @@ function uploadFile(req, allowedMime, token, expectedFiles)
               });
               r._form = fd2;
             }  
+
           }
-        else
-        {
-          magic(part, function (err, mime, output) 
+          else
           {
-            if (err) return reject(err);
-
-            var allowed = false;
-
-            
-            for(var i in allowedMime)
-            { 
-              if(allowedMime[i].indexOf("/") > -1)
-              {                
-                // check if strings are equals (ignore case)
-                var re = new RegExp("^" + allowedMime[i] + "$", "i");
-                console.log(mime.type);
-                if(re.test(mime.type))
-                {
-                  allowed = true;
-                  break;
-                }             
-              }
-              else
-              { 
-                // check if  mime.type starts with allowedMime[i] (ignore case)
-                // fastest method
-                var re = new RegExp("^" + allowedMime[i], "i");
-                if(re.test(mime.type))
-                {
-                  allowed = true;
-                  break;
-                }
-              }
-            }
-
-            if(allowed)
-            {
-              fd2.append(part.name, output, {filename: part.filename});
-              parameters.fileName = part.filename;
-              count++;
-              
-
-              if(! expectedFiles || (count === expectedFiles))
-              {   
-                //options.formData = fd2;
-                var r = request.post(options, function(error, response, body)
-                {
-                  if(error)
-                  {
-                    const decodeError = new Error();
-                    decodeError.message = error.message;
-                    decodeError.stack = error.stack;
-                    return reject(decodeError);
-                  }
-                  var rs = {};
-                  try
-                  {
-                    rs.body = JSON.parse(body);
-                    rs.response = response;
-                    rs.parameters = parameters;
-                    return resolve(rs);
-                  }
-                  catch(error)
-                  {
-                    return error;
-                  }
-                });
-                r._form = fd2;
-              }  
-
-            }
-            else
-            {
-              const decodeError = new Error();
-              decodeError.statusCode = 400
-              decodeError.message = "Mime type " + mime.type + " is not allowed";
-              return reject(decodeError);
-            }
-          });
-        }
-        
+            const decodeError = new Error();
+            decodeError.statusCode = 400
+            decodeError.message = "Mime type " + mime.type + " is not allowed";
+            return reject(decodeError);
+          }
+        });
       }
     });
 
