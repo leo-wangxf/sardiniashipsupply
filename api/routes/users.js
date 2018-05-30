@@ -441,7 +441,7 @@ router.put('/users',
         {
           name: Joi.string().min(3),
           address: Joi.string().min(3),
-          phone: Joi.number(),
+          phone: Joi.string(),
           references: Joi.object().keys({name: Joi.string(), surname: Joi.string()})
         };
 
