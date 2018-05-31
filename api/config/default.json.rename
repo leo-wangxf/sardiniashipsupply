@@ -35,5 +35,9 @@
 
     "messagingMsSocketBaseUrl": "your_messaging_ms_socket_base_url",
     "messagingMsSocketPath": "your_messaging_ms_socket_path"
+
+    "analyzerMsUrl": "your_analyzer_service_url",
+    "analyzerMsToken": "your_analyzer_service_token",
+
   }
 }

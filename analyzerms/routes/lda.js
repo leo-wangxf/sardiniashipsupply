@@ -7,8 +7,8 @@ const version = require('../package.json').version;
 const config = require('propertiesmanager').conf;
 const security = require('../middleware/security');
 const _ = require('underscore')._;
-const TOPICS = 2;
-const TERMS = 5;
+const TOPICS = 1;
+const TERMS = 10;
 
 var auth = require('tokenmanager');
 var authField = config.decodedTokenFieldName;
@@ -97,6 +97,49 @@ router.post('/lda', [security.authWrap], (req, res, next) => {
    
 
 
+
+
+
+/**
+ * @api {get} /marketBasketAnalysis  TO BE CHANGED
+ * @apiGroup MarketBAsketAnalysis
+ *
+ * @apiDescription Return a products association (if it exists) 
+ *
+ * @apiParamExample {json} Request-Example:
+ * HTTP/1.1 POST request
+ *
+ *
+ *
+ * @apiSuccess (200) {Object} body A Json containing the stored message.
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "filecode": "ABCDEFG1234",
+ *       "failed": ["chunk1", "chunk2"]
+ *     }
+ */
+
+router.get('/lda', [security.authWrap], (req, res, next) => {
+
+  var id = req[authField]['_id'];
+  //id = "5b0c0cc58e90c319a11b5af4";
+
+
+  LDA.find({"valid": true, "supplier": {$all: require('mongoose').Types.ObjectId(id)}}, "-_id").then(function(result)
+  {
+    if (_.isEmpty(result))
+      res.boom.notFound('Topics DO NOT exist'); // Error 404
+    else
+      res.send(result);
+  }).catch(function(err){
+    console.log(err);
+      res.boom.notFound('Topics DO NOT exist'); // Error 404
+  });
+
+});
+
+
 /**
  * @api {get} /marketBasketAnalysis  TO BE CHANGED
  * @apiGroup MarketBAsketAnalysis
@@ -129,9 +172,5 @@ router.get('/lda/:id', [security.authWrap], (req, res, next) => {
   });
 
 });
-
-
-
-
 
 module.exports = router;

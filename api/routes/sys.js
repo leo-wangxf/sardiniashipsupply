@@ -18,6 +18,7 @@ router.get('/sys/urls',
     urls.uploadMsUrl = config.uploadMsUrl;
     urls.messagingMsUrl = config.messagingMsUrl;
     urls.trendsMsUrl = config.trendsMsUrl;
+    urls.analyzerMsUrl = config.analyzerMsUrl;
 
     urls.socketBaseUrl = config.socketBaseUrl;
     urls.socketPath = config.socketPath;
@@ -25,6 +26,8 @@ router.get('/sys/urls',
     urls.messagingMsSocketBaseUrl = config.messagingMsSocketBaseUrl;
     urls.messagingMsSocketPath = config.messagingMsSocketPath;
     
+    if (!urls.analyzerMsUrl.endsWith('/')) urls.analyzerMsUrl += '/';
+
     res.header("Content-Type",'application/json');
     return res.end(JSON.stringify(urls));
   }

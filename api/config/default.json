@@ -22,6 +22,10 @@
 
     "mailerMsUrl": "http://smartapi.crs4.it/api/mailer/v1/",
     "mailerMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiY21jLW1haWxlciIsImVuYWJsZWQiOnRydWUsImV4cCI6MTgyNTgzNDEyNDI5OX0.Ns_IZSeIqroB8Rl7vEvthlsXxEA5lsmkWKMSEgkCTCE",
+    
+    "analyzerMsUrl": "http://seidue.crs4.it/api/analyzer/v1",
+    "analyzerMsToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2RlIjoibXMiLCJpc3MiOiJub3QgdXNlZCBmbyBtcyIsImVtYWlsIjoibm90IHVzZWQgZm8gbXMiLCJ0eXBlIjoiQW5hbHl6ZXIiLCJlbmFibGVkIjp0cnVlLCJleHAiOjE4NDMzMDc0MTM0ODl9.3dA8HzgMxekjpQEzzG8doSaCUOcZna-Cvuyx6GvPdNg",
+
  
     "emailFromAddress" : "cport2020@gmail.com",
     "emailUsername": "cport2020@gmail.com",
