@@ -146,18 +146,18 @@ function loginUser(username, password)
 
 
 
-function disableUser(uid)
+function disableUser(uid, token)
 {
   var options =
   {
-    //url: config.userMsUrl + "/users/" + uid + "/actions/disable",
-    url: config.authMsUrl + "/authuser/" + uid + "/actions/disable",
+    url: config.userMsUrl + "/users/" + uid + "/actions/disable",
+    //url: config.authMsUrl + "/authuser/" + uid + "/actions/disable",
     method: 'POST',
     json: true,
     headers:
     {
-      //'Authorization': 'Bearer ' + token,
-      'Authorization': 'Bearer ' + config.authMsToken,
+      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };
@@ -190,18 +190,18 @@ function disableUser(uid)
   });
 }
 
-function enableUser(uid)
+function enableUser(uid, token)
 {
   var options =
   {
-    //url: config.userMsUrl + "/users/" + uid + "/actions/enable",
-    url: config.authMsUrl + "/authuser/" + uid + "/actions/enable",
+    url: config.userMsUrl + "/users/" + uid + "/actions/enable",
+    //url: config.authMsUrl + "/authuser/" + uid + "/actions/enable",
     method: 'POST',
     json: true,
     headers:
     {
-      //'Authorization': 'Bearer ' + token,
-      'Authorization': 'Bearer ' + config.authMsToken,
+      'Authorization': 'Bearer ' + token,
+      //'Authorization': 'Bearer ' + config.authMsToken,
       'content-type': 'application/json'
     }
   };

@@ -16,6 +16,8 @@ var joiUserSchema = Joi.object({
     type : Joi.string(),
     logo : Joi.string(),
     phone: Joi.string(),
+    phoneVerified: Joi.boolean().default(false).required(),
+    phoneVerificationCode: Joi.string(),
     description: Joi.string(),
     web: Joi.string().uri(),
     email : Joi.string().email(),
@@ -37,6 +39,7 @@ var joiUserSchema = Joi.object({
 
 var UserSchema = new Schema(Joigoose.convert(joiUserSchema));
 UserSchema.plugin(mongoosePaginate);
+
 
 var User = mongoose.model('User', UserSchema);
 

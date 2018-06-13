@@ -10,7 +10,8 @@ var tu = require('../util/token');
 var uu = require('../util/users');
 var fu = require('../util/files');
 var config = require('propertiesmanager').conf;
-var eu= require('../util/email');
+var eu = require('../util/email');
+var strUtil = require('../util/string');
 
 var multer = require('multer');
 var fs = require('fs');
@@ -477,8 +478,17 @@ router.put('/users',
       }
     }).then(function(done)
     {
+      return User.findById(userId).exec();
+
+    }).then(function(doc)
+    {
+      var opt = req.body.user;
+      if(("" + doc.phone) != ("" + opt.phone))
+      {
+        opt.phoneVerified = false;
+      }
       var query = {"_id": require("mongoose").Types.ObjectId(userId)};
-      return User.findOneAndUpdate(query, req.body.user).exec();
+      return User.findOneAndUpdate(query, opt).exec();
       //return tu.editUser(userId, userToken, req.body);
     }).then(function(result)
     {
@@ -603,8 +613,8 @@ router.post('/users/signup',
       //==========================================================
       if(result.response.statusCode == 201)
       {
-        //obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
-        obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
+        obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+        //obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
         obj["id"] = obj["_id"];        
         return User.create(obj);
       }
@@ -844,7 +854,7 @@ router.post('/users/actions/askresetpassword',
         var err = new Error();
         if(result.body.valid == false)
         {
-          err.message = "User account isn't valid. Please contact an administrator.";
+          err.message = "An error has occurred during email sending. Please try again.";
         }
         else
         {
@@ -2366,6 +2376,211 @@ router.delete('/users/actions/attachment/:file',
     });
   }
 );
+
+
+router.post('/users/actions/phone/verification',
+  au.doku({  // json documentation
+    "description": "Send a code via SMS to user's phone to verify its number",
+    "title": 'Send a phone verification code',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "phoneVerification",
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var userToken = req.token;
+
+    var r ={}
+    var code;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      return User.findById(userId);
+    }).then(function(doc)
+    {
+      var email = doc.email;
+
+      // un -> uppercase + numbers
+      code = strUtil.randomString(5, "un");
+
+      User.findOneAndUpdate({"email": doc.email}, {"$set": {"phoneVerificationCode": code}}).exec();
+
+      // TODO send SMS
+      return eu.sendMail(email, "Please verify your telephone number", undefined, "This is your verification code<br>" + code, undefined, "Cagliari Port 2020");
+
+    }).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        console.log(result.body);
+        var err = new Error();
+        if(result.body.valid == false)
+        {
+          err.message = "An error has occurred during SMS sending. Please try again.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      return res.send({"success": true}); 
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
+
+router.post('/users/actions/phone/verify',
+  au.doku({  // json documentation
+    "description": "Check a verification code to enable a phone number",
+    "title": 'Verify phone number',
+    "group": "Users",
+    "version": "1.0.0",
+    "name": "phoneVerify",
+    "bodyFields": 
+    {
+      "verificationCode": 
+      {
+        "description" : 'The verification code to verify',
+        "type": 'string', 
+        "required": true
+      }
+    },
+    "headers":
+    {
+      "Authorization":
+      {
+        "description" : "The supplier token preceded by the word 'Bearer '",
+        "type" : "string",
+        "required" : true
+      }
+    }
+  }),
+  function (req, res) {
+    var userToken = req.token;
+
+    var r ={}
+    var vCode = req.body.verificationCode;
+
+    if(userToken == undefined)
+    {
+      return res.boom.forbidden("Missing token");
+    }
+
+    tu.decodeToken(userToken).then(function(result)
+    {
+      if(!(result.response.statusCode == 200 && result.body.valid == true))
+      {
+        var err = new Error();
+        if(result.body.valid == false)
+        {
+          err.message = "User account isn't valid. Please contact an administrator.";
+        }
+        else
+        {
+          err.message = result.body.error_message;
+        }
+        
+        err.statusCode = result.response.statusCode;
+        throw err;
+      }
+
+      userId = result.body.token._id;
+      var userType = result.body.token.type;
+
+      return User.findById(userId);
+    }).then(function(doc)
+    {
+      var email = doc.email;
+      var verificationCode = doc.phoneVerificationCode;
+      var verified = doc.phoneVerified;
+
+      if(verified == true)
+      {
+        var err = new Error();
+        err.message = "Your phone number is already verified";
+        err.statusCode = 200;
+        throw err;
+      }
+
+      console.log(verificationCode);
+      console.log(vCode);
+      if(verificationCode != vCode)
+      {
+        var err = new Error();
+        err.message = "Your verification code is wrong";
+        err.statusCode = 403;
+        throw err;
+      }
+
+      User.findOneAndUpdate({"email": doc.email}, {"$set": {"phoneVerified": true}}).exec();
+
+      // TODO send SMS
+
+    }).then(function(result)
+    {      
+      return res.send({"success": true}); 
+    }).catch(function(err)
+    {
+      if(err.statusCode)
+      {
+        return res.status(err.statusCode).send(err);
+      }
+      else
+      {
+        console.log(err);
+        return res.boom.badImplementation(err); // Error 500
+      }
+    });
+  }
+);
+
 
 /* GET users listing. */
 /*
