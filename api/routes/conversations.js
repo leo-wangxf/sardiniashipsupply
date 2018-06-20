@@ -64,8 +64,6 @@ router.get('/conversations',
         }
     }),
     function (req, res) {
-          console.log("=================GET Conversation =====================");
-
         //console.dir( req.app.locals.settings.socketio.emit("data",{"d":"a"}));
 
         var query = _.extend({}, req.query);
@@ -221,7 +219,16 @@ router.get('/conversations/:id',
 
         var newVals = req.body; // body already parsed
 
-        Conversation.findById(id, newVals).populate({path:'requests messages supplier customer', populate: [{ path: 'product',model:'Product',populate:[{path:'categories',model:'Category'}]},
+        var query = {"_id":  ObjectId(id)};
+
+        if(req.user.type == "customer")
+          query["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          query["supplier"] == "supplier";
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        Conversation.findOne(query).populate({path:'requests messages supplier customer', populate: [{ path: 'product',model:'Product',populate:[{path:'categories',model:'Category'}]},
             { path: 'sender',model:'User'} ]
         }).then(function (entities) {
            ent = entities.toObject();
@@ -252,7 +259,7 @@ router.get('/conversations/:id',
     }
 );
 
-
+/*
 router.delete('/conversations/:id',
     au.doku({
         // json documentation
@@ -280,6 +287,9 @@ router.delete('/conversations/:id',
         });
 
     });
+*/
+
+
 
 
 router.post('/conversations/:id/actions/close',
@@ -296,10 +306,23 @@ router.post('/conversations/:id/actions/close',
     }),
 
     function (req, res) {
-
         var id = req.params.id.toString();
+        var queryC = {"_id":  ObjectId(id)};
+
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] == "supplier";
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        queryC["completed:"] = {$eq: false};
+
+
+
+
         var query = {"completed":true, "dateEnd": new Date()};
-        Conversation.findOneAndUpdate({_id: id, completed: {$eq: false}}, query, {new: true}).
+        Conversation.findOneAndUpdate(queryC, query, {new: true}).
         then(function (entities) {
             if (_.isEmpty(entities)) {
 
