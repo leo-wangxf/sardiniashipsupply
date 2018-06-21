@@ -18,6 +18,7 @@ var joiMessageSchema = Joi.object({
     //text: Joi.string().required(),
     automatic: Joi.boolean().default(false).required(),
     attachments: Joi.array().items(Joi.string()),
+    isRead: Joi.boolean().default(false).required(),
     link:{url: Joi.string().optional(), info: Joi.string().valid(['accepted','pending', 'rejected']).optional()},
 });
 

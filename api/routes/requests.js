@@ -10,6 +10,7 @@ var email = require('../util/email');
 var config = require('propertiesmanager').conf;
 var Users = require('../models/users').User;
 var fs = require('fs');
+var ObjectId = require('mongoose').Types.ObjectId;
 
 var mailNewRequestObj = {};
 
@@ -78,7 +79,15 @@ router.get('/conversations/:id/requests',
 
         var id = req.params.id.toString();
 
-        Conversation.findById(id, "requests").then(function (entities) {
+        var queryC = {"_id":  ObjectId(id)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        Conversation.findOne(queryC, "requests").then(function (entities) {
             if (_.isEmpty(entities))
                 return Promise.reject({
                     name: 'ItemNotFound',
@@ -147,9 +156,17 @@ router.post('/conversations/:id/requests',
 
         var id = req.params.id.toString();
 
+        var queryC = {"_id":  ObjectId(id)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
         var saveResults;
         var newreq;
-        Conversation.findById(id, "dateValidity requests supplier subject").then(function (results) {
+        Conversation.findOne(queryC, "dateValidity requests supplier subject").then(function (results) {
             saveResults = results;
             if (_.isEmpty(results))
                 return Promise.reject({
@@ -200,7 +217,8 @@ router.post('/conversations/:id/requests',
               var template = fs.readFileSync(__dirname + '/../util/template/email.html').toString();
 
               body = template.replace("$$BODY_TITLE$$", mailNewRequestObj["en"]).replace("$$BODY$$", body);
-              
+             
+               /* 
               //email.sendMail(result.email, sbj, body, undefined, undefined, "Cagliari Port 2020")
               email.sendMail(result.email, mailNewRequestObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                 .then(function(result)
@@ -210,9 +228,13 @@ router.post('/conversations/:id/requests',
                 {
                   console.log(err);
                 });
+              */
             }).catch(function(err){           
               console.log(err);
             });
+
+
+
             //*/
             res.status(201).send(newreq);  // HTTP 201 created
 
@@ -232,7 +254,9 @@ router.post('/conversations/:id/requests',
         });
 
     });
+
 /* GET a request   */
+/*
 router.get('/requests/:id',
     au.doku({  // json documentation
         title: 'Get a request by id',
@@ -273,9 +297,10 @@ router.get('/requests/:id',
 
     }
 );
-
+*/
 
 /* DELETE a request in a conversation */
+/*
 router.delete('/conversations/:id_c/requests/:id_r',
     au.doku({
         // json documentation
@@ -297,9 +322,9 @@ router.delete('/conversations/:id_c/requests/:id_r',
 
         //if(Conversation.isExpired(id_c)) return res.boom.('Empty body'); // Error 422;
 
-        /*  if (_.isEmpty(req.body))
-         return res.boom.badData('Empty body'); // Error 422
-         */
+        ///  if (_.isEmpty(req.body))
+        //return res.boom.badData('Empty body'); // Error 422
+        ///
         // var id = req.params.id.toString();
 
         var saveResults;
@@ -354,7 +379,7 @@ router.delete('/conversations/:id_c/requests/:id_r',
         });
 
     })
-
+*/
 
 router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
     au.doku({
@@ -391,13 +416,23 @@ router.post('/conversations/:id_c/requests/:id_r/actions/suppaccept',
                     query["quantity"] = fieldsToChange[v];
                     edited = true;
                     continue;
-
             }
         }
 
         query["status"] = "acceptedByS";
 
-        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+
+        var queryC = {"_id":  ObjectId(id_c)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+
+
+        Conversation.findOne(queryC).populate("customer supplier").then(function (results) {
             saveResults = results;
 
             if (_.isEmpty(results)) {
@@ -559,7 +594,16 @@ router.post('/conversations/:id_c/requests/:id/actions/custmodify',
         query["status"] = "pending";
         var conv;
 
-        Conversation.findById(id_c).populate("supplier customer").then(function (results) {
+        var queryC = {"_id":  ObjectId(id_c)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+
+        Conversation.findOne(queryC).populate("supplier customer").then(function (results) {
             saveResults = results;
             if (_.isEmpty(results)) {
 
@@ -667,7 +711,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custaccept',
         var id_c = req.params['id_c'].toString();
         var conv;
 
-        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+        var queryC = {"_id":  ObjectId(id_c)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        Conversation.findOne(queryC).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({
@@ -752,7 +804,15 @@ router.post('/conversations/:id_c/requests/:id/actions/custreject',
         var id_c = req.params['id_c'].toString();
         var conv;
 
-        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+        var queryC = {"_id":  ObjectId(id_c)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        Conversation.findOne(queryC).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
                 return Promise.reject({
                     name: 'ItemNotFound',
@@ -838,7 +898,16 @@ router.post('/conversations/:id_c/requests/:id/actions/suppreject',
         var id_c = req.params['id_c'].toString();
         var conv;
 
-        Conversation.findById(id_c).populate("customer supplier").then(function (results) {
+        var queryC = {"_id":  ObjectId(id_c)};
+        if(req.user.type == "customer")
+          queryC["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          queryC["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+
+        Conversation.findOne(queryC).populate("customer supplier").then(function (results) {
             if (_.isEmpty(results)) {
 
                 return Promise.reject({

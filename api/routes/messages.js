@@ -41,20 +41,20 @@ mailNewMsgObj["it"] = "Hai un nuovo messaggio";
 router.get('/conversations/:id/messages',
     au.doku({  // json documentation
       description: 'Get all the messages defined in db',
-    title: 'Get messages',
-    version: '1.0.0',
-    name: 'GetMessages',
-    group: 'Messages',
-    fields: {
-      page: {
-        description: 'The current page for pagination',
-    type: 'integer', required: false
-      },
-    limit: {
-      description: 'The current limit for pagination',
-    type: 'integer', required: false
-    }
-    }
+      title: 'Get messages',
+      version: '1.0.0',
+      name: 'GetMessages',
+      group: 'Messages',
+      fields: {
+        page: {
+          description: 'The current page for pagination',
+          type: 'integer', required: false
+        },
+        limit: {
+          description: 'The current limit for pagination',
+          type: 'integer', required: false
+        }
+      }
     }),
     function (req, res) {
       // console.log("GET Messages");
@@ -66,10 +66,19 @@ router.get('/conversations/:id/messages',
 
       // var allowedFields = ["type"];
 
+      var id = req.params.id.toString();
+      var queryC = {"_id":  ObjectId(id)};
+
+      if(req.user.type == "customer")
+        queryC["customer"] = ObjectId(req.user.id);
+      else if(req.user.type == "supplier")
+        queryC["supplier"] = ObjectId(req.user.id);
+      else
+        return res.boom.forbidden('Invalid user type');
       
       var messages;
-      var id = req.params.id.toString();
-      Conversation.findById(id, "messages").then(function (entities) {
+
+      Conversation.findOne(queryC, "messages").then(function (entities) {
         if (_.isEmpty(entities))
         return Promise.reject({
           name:'ItemNotFound',
@@ -136,8 +145,18 @@ router.post('/conversations/:id/messages',
       var saveResults;
       var newmsg;
       var dataMsg
+
+      var queryC = {"_id":  ObjectId(id)};
+
+      if(req.user.type == "customer")
+        queryC["customer"] = ObjectId(req.user.id);
+      else if(req.user.type == "supplier")
+        queryC["supplier"] = ObjectId(req.user.id);
+      else
+        return res.boom.forbidden('Invalid user type');
+
      
-      Conversation.findById(id,"messages customer supplier")
+      Conversation.findOne(queryC,"messages customer supplier")
         .then(function (results) {
           saveResults = results;
           if (_.isEmpty(results))
@@ -251,6 +270,8 @@ router.post('/conversations/:id/messages',
 
     });
 /* GET a message   */
+
+/*
 router.get('/messages/:id',
     au.doku({  // json documentation
       title: 'Get a message by id',
@@ -298,7 +319,7 @@ router.get('/messages/:id',
 
 }
 );
-
+*/
 
 var putCallback = function (req, res) {
 
@@ -333,7 +354,7 @@ var putCallback = function (req, res) {
 
 };
 
-
+/*
 router.put('/messages/:id',
     au.doku({  // json documentation
       title: 'Update a message by id',
@@ -375,9 +396,10 @@ router.patch('/messages/:id',
     }
     }), putCallback
     );
-
+*/
 
 /* DELETE a message in a conversation */
+/*
 router.delete('/conversations/:id_c/messages/:id_m',
     au.doku({
       // json documentation
@@ -396,9 +418,9 @@ router.delete('/conversations/:id_c/messages/:id_m',
       var idC = req.params.id_c.toString();
       var idM = req.params.id_m.toString();
 
-      /*  if (_.isEmpty(req.body))
-          return res.boom.badData('Empty body'); // Error 422
-          */
+      //  if (_.isEmpty(req.body))
+      //    return res.boom.badData('Empty body'); // Error 422
+      //    
       // var id = req.params.id.toString();
 
       var saveResults;
@@ -449,6 +471,6 @@ router.delete('/conversations/:id_c/messages/:id_m',
       });
 
     });
-
+*/
 
 module.exports = router;

@@ -82,16 +82,25 @@ router.get('/conversations',
                     query['dateIn'] = timeQuery ;
                     continue;
                 }
+                
                 else if (v === "by_uid") {
-                    var s = {'supplier': new ObjectId(query[v])};
-                    var c = {'customer': new ObjectId(query[v])};
-                    query['$or'] = [s,c];
+                    //var s = {'supplier': new ObjectId(query[v])};
+                    //var c = {'customer': new ObjectId(query[v])};
+                    //query['$or'] = [s,c];
                     delete query[v];
                     continue;
                 }
                 query[v] = req.query[v];
 
             }
+        if(req.user.type == "customer")
+          query["customer"] = ObjectId(req.user.id)
+        else if(req.user.type == "supplier")
+          query["supplier"] = ObjectId(req.user.id);
+        else
+          return res.boom.forbidden('Invalid user type');
+
+        console.log(query);
 
         Conversation.paginate(query, {page: req.query.page, limit: req.query.limit, new: true,
           populate:'requests messages supplier customer',
@@ -224,20 +233,21 @@ router.get('/conversations/:id',
         if(req.user.type == "customer")
           query["customer"] = ObjectId(req.user.id)
         else if(req.user.type == "supplier")
-          query["supplier"] == "supplier";
+          query["supplier"] = ObjectId(req.user.id);
         else
           return res.boom.forbidden('Invalid user type');
 
         Conversation.findOne(query).populate({path:'requests messages supplier customer', populate: [{ path: 'product',model:'Product',populate:[{path:'categories',model:'Category'}]},
             { path: 'sender',model:'User'} ]
         }).then(function (entities) {
-           ent = entities.toObject();
            // console.dir(entities._doc.messages);
             if (_.isEmpty(entities))
                 return res.boom.notFound('No entry with id ' + id); // Error 404
-
             else
+            {
+              ent = entities.toObject();
               return Messaging.mergeMessagesTexts(ent.messages);
+            }
         }).then(function(msg){
              ent.messages = msg;
              return ent; 
@@ -290,8 +300,6 @@ router.delete('/conversations/:id',
 */
 
 
-
-
 router.post('/conversations/:id/actions/close',
     au.doku({
         // json documentation
@@ -312,13 +320,11 @@ router.post('/conversations/:id/actions/close',
         if(req.user.type == "customer")
           queryC["customer"] = ObjectId(req.user.id)
         else if(req.user.type == "supplier")
-          queryC["supplier"] == "supplier";
+          queryC["supplier"] = ObjectId(req.user.id);
         else
           return res.boom.forbidden('Invalid user type');
 
         queryC["completed:"] = {$eq: false};
-
-
 
 
         var query = {"completed":true, "dateEnd": new Date()};
