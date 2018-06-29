@@ -1,6 +1,7 @@
 var express = require('express');
 var Users = require('../models/users').User;
 var Conversation = require('../models/conversations').Conversation;
+var Message = require('../models/messages').Message;
 var Evaluation = require('../models/evaluations').Evaluation;
 //var util = require('util');
 var _ = require('underscore')._;
@@ -225,6 +226,7 @@ router.get('/conversations/:id',
     }), function (req, res) {
         var id = req.params.id.toString();
         var ent;
+        var msgArr;
 
         var newVals = req.body; // body already parsed
 
@@ -246,6 +248,7 @@ router.get('/conversations/:id',
             else
             {
               ent = entities.toObject();
+              msgArr = entities.messages;
               return Messaging.mergeMessagesTexts(ent.messages);
             }
         }).then(function(msg){
@@ -258,6 +261,11 @@ router.get('/conversations/:id',
             if(_.isEmpty(entity)){
               ent.evaluated = false;
             } else ent.evaluated = true;
+
+            if(msgArr)
+              return Message.update({"_id": {"$in" :msgArr}, "isRead" : false, "sender": {"$ne": ObjectId(req.user.id)}}, {"isRead": true}, {multi: true}).exec();          
+            else return;
+          }).then(function(r){
              return res.send(ent);  // HTTP 200 ok
         }).catch(function (err) {
             console.log(err);
