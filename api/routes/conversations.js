@@ -185,7 +185,15 @@ router.post('/conversations',
 
               body = template.replace("$$BODY_TITLE$$", mailNewRfqObj["en"]).replace("$$BODY$$", body);
                            
-              Users.findById(req.body.supplier, "email").lean().then(function(result){
+              Users.findById(req.body.supplier, "email phone phoneVerified").lean().then(function(result){
+
+                if(result.phone && result.phoneVerified == true)
+                {
+                  // SEND SMS
+                }
+                
+
+                              
                 //email.sendMail(result.email, "You have a new RFQ", body, undefined, undefined, "Cagliari Port 2020")
                 email.sendMail(result.email, mailNewRfqObj["en"], undefined, body, undefined, "Cagliari Port 2020")
                   .then(function(result)

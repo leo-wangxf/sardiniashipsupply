@@ -39,7 +39,10 @@
     "socketPath": "/socket",
 
     "messagingMsSocketBaseUrl": "seidue.crs4.it",
-    "messagingMsSocketPath": "/socket/messaging"
+    "messagingMsSocketPath": "/socket/messaging",
+
+    "smsUsername": "miousername",
+    "smsPassword": "miapassword"
 
   }
 }

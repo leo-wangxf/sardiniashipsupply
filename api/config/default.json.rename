@@ -37,7 +37,9 @@
     "messagingMsSocketPath": "your_messaging_ms_socket_path",
 
     "analyzerMsUrl": "your_analyzer_service_url",
-    "analyzerMsToken": "your_analyzer_service_token"
+    "analyzerMsToken": "your_analyzer_service_token",
+    "smsUsername": "your_sms_service_username",
+    "smsPassword": "your_sms_service_password"
 
   }
 }
