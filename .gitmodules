@@ -7,3 +7,6 @@
 [submodule "trendsms"]
 	path = trendsms
 	url = ../trendsms.git
+[submodule "analyzerms"]
+	path = analyzerms
+	url = ../analyzerms.git
