@@ -11,8 +11,6 @@ var uu = require('../util/users');
 var _ = require('underscore')._;
 var fu = require('../util/files');
 
-var multer = require('multer');
-var fs = require('fs');
 var path = require('path');
 
 

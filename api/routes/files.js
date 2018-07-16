@@ -4,7 +4,6 @@ var router = express.Router();
 var _ = require('underscore')._;
 var au = require('audoku');
 var Promise = require('bluebird');
-var multer = require('multer');
 //var tu = require('../util/token');
 var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
 var fu = require('../util/files');
@@ -225,7 +224,6 @@ router.post('/files',[tokenMiddleware,
       }
     }).catch(function(err)
     {
-      console.log(err);
       if(err.statusCode)
       {
         return res.status(err.statusCode).send(err);

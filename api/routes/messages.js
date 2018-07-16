@@ -36,6 +36,9 @@ var mailNewMsgObj = {};
 mailNewMsgObj["en"] = "You have a new message";
 mailNewMsgObj["it"] = "Hai un nuovo messaggio";
 
+
+var queueConMsg = {};
+
 /* GET all messages  */
 
 router.get('/conversations/:id/messages',
@@ -238,6 +241,30 @@ router.post('/conversations/:id/messages',
           Users.findById(uid, "email").lean().then(function(result){
             //console.log("send to: " + result.email);
             //email.sendMail(result.email, "You have a new message", body, undefined, undefined, "Cagliari Port 2020")
+           /* 
+            const minutes = 5;
+            var now = new Date();
+            var d = new Date(now.getTime() + minutes * 60000);
+
+            if(queueConMsg[id])
+            {
+              queueConMsg[id].push({"id": newmessage._id, "date": newmessage.dateIn, "text": data.text, "email": result.email}
+            }            
+            else
+            {
+              queueConMsg[id] = [];
+              queueConMsg[id].push({"id": newmessage._id, "date": newmessage.dateIn, "text": data.text, "email": result.email}
+
+              var j = schedule.scheduleJob('*//*5 ****', function(){
+
+
+                // xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                Message.findById
+
+              });
+            }
+            */
+           
             email.sendMail(result.email, mailNewMsgObj["en"], undefined, body, undefined, "Cagliari Port 2020")            
             .then(function(result)
               {
@@ -471,6 +498,53 @@ router.delete('/conversations/:id_c/messages/:id_m',
       });
 
     });
+*/
+
+/*
+function queueConMsgConsume()
+{
+
+  // 5 minutes
+  var delay = 1000 * 60 * 5;
+  var now = new Date();
+  for(var qc in queueConMsg)
+  {    
+    var removeUntil = -1;
+    messages = {};
+    for(var i = 0; i < qc.length; i++)
+    {
+      var q = queueConMsg[i];
+      if(now - new Date(q.date) < delay)
+      {
+        removeUntil = i;
+        if(messages[q.email] == undefined)
+          messages[q.email] = "";
+
+        Message.findById(q.id).lean().then(function(result){
+          if(result.isRead == false)
+          {
+            messages[q.email] + "\n" + q.text;
+            Message.update({"_id": result._id}, {"isRead": true}, {multi: true}).exec();
+          }
+        });
+
+      }
+    }
+    if(removeUntil == q.length - 1)
+    {
+      delete qc;
+    }    
+    else if(removeUntil >= 0)
+    {
+      qc.splice(0, removeUntil + 1);
+    }
+
+    for(var address in Object.keys(messages))
+    {
+      email.sendMail(address, mailNewMsgObj["en"], undefined, messages[address], undefined, "Cagliari Port 2020")            
+    }
+  }
+}
 */
 
 module.exports = router;

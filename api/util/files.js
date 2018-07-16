@@ -293,17 +293,33 @@ function uploadFile(req, allowedMime, token, expectedFiles)
   return new Promise(function(resolve, reject)
   {
 
+
     form.on('error', function(error) 
     {
       const decodeError = new Error();
       decodeError.message = error.message;
       decodeError.stack = error.stack;
       return reject(decodeError);
-    }); 
+    });
 
+    form.on("close", function(){
+      console.log("+++++++++++++ CLOSE");
+    });
 
     form.on('part', function(part) 
-    {   
+    { 
+      console.log(part.name); 
+      console.log("================="); 
+      part.on('error', function(error){
+        const decodeError = new Error();
+        decodeError.message = error;
+        if(error && error.stack)
+          decodeError.stack = error.stack;
+
+        //return Promise.reject(decodeError);
+        return reject(decodeError);
+      });
+
       if(part.filename)
       {
         magic(part, function (err, mime, output) 

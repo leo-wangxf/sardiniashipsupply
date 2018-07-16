@@ -13,7 +13,6 @@ var config = require('propertiesmanager').conf;
 var eu = require('../util/email');
 var strUtil = require('../util/string');
 
-var multer = require('multer');
 var fs = require('fs');
 var path = require('path');
 
@@ -34,63 +33,11 @@ mailResetPasswordBody["it"] = `Gentile $$EMAIL$$, <br>
   $$LINK$$  <br>
   Se non sei stato tu ad effettuare questa richiesta pui ignorare questo messaggio.`;
 
-
-
-fs.mkdirParentSync = function(dirPath, mode) {
-  //Call the standard fs.mkdir
-  try
-  {
-    fs.mkdirSync(dirPath, mode)
-  }
-  catch(error)
-  {
-    //When it fail in this way, do the custom steps
-    if (error && error.code === 'ENOENT') 
-    {
-      //Create all the parents recursively
-      fs.mkdirParentSync(path.dirname(dirPath), mode);
-      //And then the directory
-      fs.mkdirParentSync(dirPath, mode);
-    }
-  };
-};
-
-
-
-
 // creo una copia di joi in modo da poterla promisificare 
 // senza intaccare quella usata negli altri file
 var Joi = _.extend({}, require('joi'));
 Joi.validate = Promise.promisify(Joi.validate, Joi);
 
-// Private
-function du(dir)
-{
-  var total = 0;
-  try
-  {
-    var files;
-    try
-    {
-      files = fs.readdirSync(dir);
-    }
-    catch(err2)
-    {
-      fs.mkdirParentSync(dir);
-      files = fs.readdirSync(dir);
-    }
-
-    for(var i in files)
-    {
-      total += fs.statSync(path.join(dir, files[i])).size
-    }
-  }
-  catch(err)
-  {
-    console.log(err);
-  }
-  return total;
-}
 
 
 router.get('/users',
