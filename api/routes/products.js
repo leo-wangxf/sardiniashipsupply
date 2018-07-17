@@ -550,7 +550,6 @@ router.get('/products/supplier',
     function (req, res) {
 
     
-
     var query = _.extend({}, req.query);
     if (query.hasOwnProperty('page')) delete query.page;
     if (query.hasOwnProperty('limit')) delete query.limit;
@@ -590,7 +589,6 @@ if (query.tags)
 
 if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories == 'undefined')
         {
-            console.log('--------------------------------------------');
             
             var Category = require('../models/categories').Category;
 
@@ -604,7 +602,6 @@ if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories 
                 }); 
 
                 param.categories = {'$in': cat};
-
                     
                 Product.aggregate([                                                                      
                     {$match: param},
@@ -618,9 +615,9 @@ if (req.query.cat_type && Number(req.query.cat_type) && typeof param.categories 
                             return el._id.supplierId+'';
                             });
    
-                            var sort_criteria = [["rates.ahprank", -1],
-                                                 ["bayesian_overall_rate", -1],    
-                                                 ["name", 1]]    
+                            var sort_criteria = [//["rates.ahprank", -1],
+                                                 ["rates.bayesian_overall_rate", -1]    
+                                                 , ["name", 1]]    
                             /*var sort_criteria = {"rates.overall_rate": -1,
                                                  name:1
                                                 }*/    
@@ -666,15 +663,16 @@ Product.aggregate([
                                     
                 ])
 .then(function (result){
-    
+                     
    var suppliersIds = _.map(result, function (el) {
         return el._id.supplierId+'';
         });
    
     
-       var sort_criteria = [["rates.ahprank", -1],
-                            ["bayesian_overall_rate", -1],    
-                            ["name", 1]]    
+       var sort_criteria = [//["rates.ahprank", -1],
+                            ["rates.bayesian_overall_rate", -1]    
+                            , ["name", 1]
+                            ]    
     return User.paginate(
                 {
                     _id: {$in: suppliersIds}
