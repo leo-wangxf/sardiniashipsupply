@@ -273,6 +273,12 @@ router.get('/products',
         
         if (query.hasOwnProperty('page')) delete query.page;
         if (query.hasOwnProperty('limit')) delete query.limit;
+
+        if (query.hasOwnProperty('dd'))
+        { 
+           delete query.dd;
+           req.query.limit = 100000;
+        }
         //query.name = new RegExp(req.query.name, "i");
         
         
