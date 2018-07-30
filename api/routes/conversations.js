@@ -11,6 +11,7 @@ var ObjectId = require('mongoose').Types.ObjectId;
 var app = require("./../app");
 var email = require('../util/email');
 var config = require('propertiesmanager').conf;
+var sms = require('../util/sms');
 
 var fs = require('fs');
 var Messaging = require('../util/messaging');
@@ -189,7 +190,8 @@ router.post('/conversations',
 
                 if(result.phone && result.phoneVerified == true)
                 {
-                  // SEND SMS
+                  var phoneNumber = result.phone.replace(" ", "").replace("-", "");
+                  sms.send(phoneNumber, "Cagliari Port 2020 - You have a new RfQ: '" + req.body.subject + "'");
                 }
                 
 

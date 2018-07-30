@@ -11,6 +11,7 @@ var uu = require('../util/users');
 var fu = require('../util/files');
 var config = require('propertiesmanager').conf;
 var eu = require('../util/email');
+var sms = require('../util/sms');
 var strUtil = require('../util/string');
 
 var fs = require('fs');
@@ -2003,6 +2004,7 @@ router.post('/users/actions/phone/verification',
     }).then(function(doc)
     {
       var email = doc.email;
+      var phoneNumber = doc.phone.replace(" ", "").replace("-", "");
 
       // un -> uppercase + numbers
       code = strUtil.randomString(5, "un");
@@ -2010,10 +2012,13 @@ router.post('/users/actions/phone/verification',
       User.findOneAndUpdate({"email": doc.email}, {"$set": {"phoneVerificationCode": code}}).exec();
 
       // TODO send SMS
-      return eu.sendMail(email, "Please verify your telephone number", undefined, "This is your verification code<br>" + code, undefined, "Cagliari Port 2020");
+      return sms.send(phoneNumber, "Cagliari Port 2020 - This is your verification code " + code); 
+      //return eu.sendMail(email, "Please verify your telephone number", undefined, "This is your verification code<br>" + code, undefined, "Cagliari Port 2020");
 
-    }).then(function(result)
+    }).then(function(body)
     {
+      console.log(body);
+      /*
       if(!(result.response.statusCode == 200 && result.body.valid == true))
       {
         console.log(result.body);
@@ -2030,6 +2035,7 @@ router.post('/users/actions/phone/verification',
         err.statusCode = result.response.statusCode;
         throw err;
       }
+      */
 
       return res.send({"success": true}); 
     }).catch(function(err)
@@ -2121,8 +2127,8 @@ router.post('/users/actions/phone/verify',
         throw err;
       }
 
-      console.log(verificationCode);
-      console.log(vCode);
+      //console.log(verificationCode);
+      //console.log(vCode);
       if(verificationCode != vCode)
       {
         var err = new Error();
