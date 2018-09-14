@@ -500,6 +500,7 @@ router.delete('/admin/users/:id',
 
         return res.status(result.response.statusCode).send(result.body);
       }).then(function(result){
+        Product.remove({"supplierId": id}).exec();
         return res.status(204).send();         
       }).catch(function(err)
       { 
