@@ -27,7 +27,7 @@ var joiUserSchema = Joi.object({
     //certification: Joi.array().items(Joi.string()),
     certifications: Joi.array().items({date: Joi.string(), name: Joi.string(), description: Joi.string()}),
     categories: Joi.array().items(Joi.string()),
-    attachments: Joi.object(),
+    attachments: Joi.object().keys({files: Joi.array()}),
     favoriteSupplier : Joi.array().items(Joi.string()),
     language: Joi.string(),
     references: Joi.object().keys({name: Joi.string(), surname: Joi.string()}),
