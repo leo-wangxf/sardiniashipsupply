@@ -50,9 +50,10 @@ router.post('/products',[tokenMiddleware,
 
         }).catch(function (err) {
             if (err.name === 'ValidationError') {
-                console.log(err);
-                return res.boom.badData(err);
+                return res.boom.badRequest(err);
             }
+            else if (err.name === 'CastError')
+                res.boom.badRequest(err); // Error 400
             // Error 422
             else
                 return res.boom.badImplementation(err);// Error 500
@@ -144,10 +145,12 @@ router.put('/products/:id',[tokenMiddleware,
             else
                 res.send(entities);  // HTTP 200 ok
         }).catch(function (err) {
+            
             if (err.name === 'ValidationError')
-                res.boom.badData(err.message); // Error 422
+                res.boom.badRequest(err); // Error 400
             else if (err.name === 'CastError')
-                res.boom.badData('Id malformed'); // Error 422
+                res.boom.badRequest(err); // Error 400
+                //res.boom.badData('Id malformed'); // Error 422
             else
                 res.boom.badImplementation(err);// Error 500
         });
