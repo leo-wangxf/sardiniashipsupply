@@ -402,7 +402,7 @@ function resetPassword(uid, password, token)
 {
   var options =
   {
-    url: config.userMsUrl + "/users/" + email + "/actions/setpassword",
+    url: config.userMsUrl + "/users/" + uid + "/actions/setpassword",
     //url: config.authMsUrl + "/authuser/" + uid + "/actions/setpassword",
     method: 'POST',
     json: true,
