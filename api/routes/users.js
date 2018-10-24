@@ -367,9 +367,10 @@ router.put('/users',
         else if(userType === "supplier")
         {          
           schemaOpt.description = Joi.string();
-          schemaOpt.web = Joi.string().uri();
-          schemaOpt.pIva = Joi.number();
+          schemaOpt.web = Joi.string().uri().allow('');
+          schemaOpt.pIva = Joi.string().regex(/^[0-9]{11}$/);
         }
+        
 
         var schema = Joi.object().keys(schemaOpt);
 

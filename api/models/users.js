@@ -19,7 +19,7 @@ var joiUserSchema = Joi.object({
     phoneVerified: Joi.boolean().default(false).required(),
     phoneVerificationCode: Joi.string(),
     description: Joi.string(),
-    web: Joi.string().uri(),
+    web: Joi.string().uri().allow(''),
     email : Joi.string().email(),
     //////password : Joi.string().required(),
     id: Joi.string().required().meta({ type: 'ObjectId'}),
@@ -31,7 +31,7 @@ var joiUserSchema = Joi.object({
     favoriteSupplier : Joi.array().items(Joi.string()),
     language: Joi.string(),
     references: Joi.object().keys({name: Joi.string(), surname: Joi.string()}),
-    pIva: Joi.string(),
+    pIva: Joi.string().regex(/^[0-9]{11}$/),
     rates: Joi.object()
     //certification : Joi.object().keys({})
 });
