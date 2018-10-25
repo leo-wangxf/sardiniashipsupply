@@ -8,6 +8,7 @@ var au = require('audoku');
 var mongoose = require('mongoose');
 var tokenMiddleware = require('../util/middlewares').tokenMiddleware;
 var fu = require('../util/files');
+var Joi = require('joi');
 
 // INSERT PRODUCT
 
@@ -38,9 +39,33 @@ router.post('/products',[tokenMiddleware,
           return res.boom.forbidden("Only supplier can use this function");          
         }
 
+        var schemaOpt = 
+        {
+          name: Joi.string().required(),
+          description: Joi.string().required(),
+          categories: Joi.array(),
+          images:Joi.array().optional(),
+          unit: Joi.string().optional(),
+          language: Joi.string(),
+          translation: Joi.array().items({language:Joi.string(), name:Joi.string().empty(''), description:Joi.string().empty('')}),
+          price: Joi.number().min(0).optional(),
+          deliveryIn: Joi.number().min(0).optional(),
+          minNum:Joi.number().min(0).optional(),
+          maxNum:Joi.number().min(0).optional(),
+          availability:Joi.number().min(0).optional()
+        };
+
+        var schema = Joi.object().keys(schemaOpt);
+
+        var  vResult = Joi.validate(req.body, schema);
+
+        if(vResult.error)
+        {
+          return res.boom.badData(vResult.error);
+        }
+
         req.body.supplierId = require("mongoose").Types.ObjectId(req.user.id);
-
-
+      
         Product.create(req.body).then(function (entities) {
 
             if (_.isEmpty(entities))
@@ -135,6 +160,31 @@ router.put('/products/:id',[tokenMiddleware,
         var newVals = req.body; // body already parsed
 
         var supId = require("mongoose").Types.ObjectId(req.user.id);
+
+        var schemaOpt = 
+        {
+          name: Joi.string().required(),
+          description: Joi.string().required(),
+          categories: Joi.array(),
+          images:Joi.array().optional(),
+          unit: Joi.string().optional(),
+          language: Joi.string(),
+          translation: Joi.array().items({language:Joi.string(), name:Joi.string().empty(''), description:Joi.string().empty('')}),
+          price: Joi.number().min(0).optional(),
+          deliveryIn: Joi.number().min(0).optional(),
+          minNum:Joi.number().min(0).optional(),
+          maxNum:Joi.number().min(0).optional(),
+          availability:Joi.number().min(0).optional()
+        };
+
+        var schema = Joi.object().keys(schemaOpt);
+
+        var  vResult = Joi.validate(newVals, schema);
+
+        if(vResult.error)
+        {
+          return res.boom.badData(vResult.error);
+        }
 
 
         //Product.findByIdAndUpdate(id, newVals).then(function (entities) {
