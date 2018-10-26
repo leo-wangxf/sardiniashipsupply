@@ -456,9 +456,9 @@ function changePassword(uid, token, oldPassword, newPassword)
     body: {"oldpassword" : oldPassword, "newpassword" : newPassword},
     headers:
     {
-      //'Authorization': 'Bearer ' + token,
+      'Authorization': 'Bearer ' + token,
       //'Authorization': 'Bearer ' + config.authMsToken,
-      'Authorization': 'Bearer ' + config.userMsToken,
+      //'Authorization': 'Bearer ' + config.userMsToken,
       'content-type': 'application/json'
     }
   };
