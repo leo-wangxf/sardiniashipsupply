@@ -505,6 +505,12 @@ router.post('/users/signup',
         "type": 'string', 
         "required": true
       },
+      "rfqApproval": 
+      {
+        "description": 'The approval to be contacted by other users (RfQ)',
+        "type": 'boolean', 
+        "required": true
+      }
     }
   }),
   function (req, res) {
@@ -513,6 +519,7 @@ router.post('/users/signup',
     var password = req.body.password;
     var name = req.body.name;
     var type = req.body.type;
+    var rfqApproval = req.body.rfqApproval;
 
     var obj = {
       "email": email,
@@ -526,20 +533,23 @@ router.post('/users/signup',
     {
       umsRet = result.body;
       //==========================================================
-      if(result.response.statusCode == 201)
+      if(rfqApproval == true)
       {
-        obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
-        //obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
-        obj["id"] = obj["_id"];        
-        return User.create(obj);
-      }
-      else
-      {
-        var err = new Error();
-        err.result = result;
-        throw err;
+        if(result.response.statusCode == 201)
+        {
+          obj["_id"] = require("mongoose").Types.ObjectId(result.body["created_resource"]["_id"]);        
+          //obj["_id"] = require("mongoose").Types.ObjectId(result.body["userId"]);        
+          obj["id"] = obj["_id"];        
+          return User.create(obj);
+        }
+        else
+        {
+          var err = new Error();
+          err.result = result;
+          throw err;
 
-        //return res.status(result.response.statusCode).send(result.body);        
+          //return res.status(result.response.statusCode).send(result.body);        
+        }
       }
     }).then(function(result)
     {
