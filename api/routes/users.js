@@ -78,6 +78,7 @@ router.get('/users',
 
     var options = {
       //select: "_id name description address email logo certification pIva",
+      select: "-email -surname -phone -phoneVerificationCode -phoneVerified -address -references",
       page: req.query.page,
       limit: req.query.limit
     };
@@ -121,7 +122,7 @@ router.get('/users/supplier/:supId',
     };
 
 
-    User.find(query).limit(1).exec().then(function(result)
+    User.find(query, "-email -surname -phone -phoneVerified -phoneVerificationCode -address -references").limit(1).exec().then(function(result)
     {
       if(result.length == 0)
       {
