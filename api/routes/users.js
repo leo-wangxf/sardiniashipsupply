@@ -771,7 +771,7 @@ router.post('/users/actions/askresetpassword',
       var body = template.replace("$$BODY_TITLE$$", mTitle).replace("$$BODY$$", mBody);
      
 
-      return eu.sendMail(email, mTitle, undefined, body, undefined, "Cagliari Port 2020");
+      return eu.sendMail(email, mTitle, undefined, body, undefined, "Sardinia Ship Supply");
     }).then(function(result)
     {
       if(!(result.response.statusCode == 200 && result.body.valid == true))
@@ -2024,7 +2024,7 @@ router.post('/users/actions/phone/verification',
       User.findOneAndUpdate({"email": doc.email}, {"$set": {"phoneVerificationCode": code}}).exec();
 
       // TODO send SMS
-      return sms.send(phoneNumber, "Cagliari Port 2020 - This is your verification code " + code); 
+      return sms.send(phoneNumber, "Sardinia Ship Supply - This is your verification code " + code); 
       //return eu.sendMail(email, "Please verify your telephone number", undefined, "This is your verification code<br>" + code, undefined, "Cagliari Port 2020");
 
     }).then(function(body)

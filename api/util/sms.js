@@ -7,6 +7,7 @@ const sms = new SMS(config.smsUsername, config.smsPassword);
 
 function sendSMS(phoneNumber, message)
 {
+  phoneNumber = phoneNumber.replace(" ", "");
   return sms.send(phoneNumber, message, "Smart", "+393313106278");
 }
 
