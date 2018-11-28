@@ -1020,6 +1020,12 @@ router.get('/admin/products',
       return res.boom.badData("Missing supplier id");
     }
 
+    var opt = 
+    {
+      page: req.query.page,
+      limit: req.query.limit
+    };
+
     var token = req.token;
 
     if(token === undefined)
@@ -1039,7 +1045,7 @@ router.get('/admin/products',
         }
       }
 
-      return Product.paginate({"supplierId": require("mongoose").Types.ObjectId(sid)});
+      return Product.paginate({"supplierId": require("mongoose").Types.ObjectId(sid)}, opt);
     }).then(function (entities) 
     {     
       if (_.isEmpty(entities))
