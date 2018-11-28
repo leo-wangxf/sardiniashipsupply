@@ -21,6 +21,7 @@ var joiProductSchema = Joi.object({
     images:Joi.array().items({imageId:Joi.string().required()}),
     tags: Joi.array().items(Joi.string()),
     price:Joi.number().default(0),
+    salesTaxIncluded:Joi.boolean().default(true),
     deliveryIn:Joi.number(),
     minNum:Joi.number().default(0).optional(),
     maxNum:Joi.number().default(0).optional(),
